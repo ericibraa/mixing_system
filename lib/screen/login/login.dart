@@ -1,0 +1,142 @@
+import 'package:dumping_system/bloc/auth_bloc.dart';
+import 'package:dumping_system/screen/login/bloc/login_bloc.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+class LoginScreen extends StatefulWidget {
+  // ignore: use_super_parameters
+  const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final _loginBloc = LoginBloc();
+  final passwordController = TextEditingController();
+  final usernameController = TextEditingController();
+  bool obscurePasswordText = true;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: BlocProvider(
+      create: (context) => _loginBloc,
+      child: BlocListener<LoginBloc, LoginState>(
+        listener: (context, state) {
+          if (state is LoginSuccess) {
+            print("Login success");
+            BlocProvider.of<AuthBloc>(context)
+                .add(ChangeAuthStatus(token: state.token));
+            context.push("/validation");
+          } else if (state is LoginError) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: const Text("Invalid username or password"),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ));
+          }
+        },
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            return SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(50),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.only(top: 200, bottom: 70),
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        "assets/images/logo/dumping_system.png",
+                        fit: BoxFit.cover,
+                        width: 270,
+                      ),
+                    ),
+                    Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.only(bottom: 30),
+                              child: TextFormField(
+                                controller: usernameController,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                  label: const Text("User SAP"),
+                                  hintStyle:
+                                      const TextStyle(color: Colors.grey),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'User SAP required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.only(bottom: 50),
+                              child: TextFormField(
+                                controller: passwordController,
+                                obscureText: obscurePasswordText,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                  label: const Text("Password"),
+                                  hintStyle:
+                                      const TextStyle(color: Colors.grey),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Password required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                _loginBloc.add(SendLoginData(
+                                    username: usernameController.text,
+                                    password: passwordController.text));
+                              },
+                              style: TextButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  minimumSize: const Size.fromHeight(50)),
+                              child: const Text(
+                                "Masuk",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ))
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ));
+  }
+}
