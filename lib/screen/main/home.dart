@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   AuthBloc authBloc = AuthBloc();
+  String plant = '';
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is Authenticated) {
+          plant = state.weerks;
           if (state.token.isNotEmpty &&
               state.nrpOperator.isNotEmpty &&
               state.nrpPengawas.isNotEmpty &&
@@ -88,37 +90,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              GestureDetector(
-                  child: Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      alignment: Alignment.center,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        image: const DecorationImage(
-                            image: AssetImage(
-                                "assets/images/bg_image/bg_mixing.jpg"),
-                            fit: BoxFit.cover,
-                            opacity: .4),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Handover",
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall!
-                                .merge(const TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ) // button text
-                      ),
-                  onTap: () {
-                    context.push("/handover-mixing");
-                  }),
+              if (plant == '0101') ...[
+                GestureDetector(
+                    child: Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        alignment: Alignment.center,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          image: const DecorationImage(
+                              image: AssetImage(
+                                  "assets/images/bg_image/bg_mixing.jpg"),
+                              fit: BoxFit.cover,
+                              opacity: .4),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Handover",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall!
+                                  .merge(const TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ) // button text
+                        ),
+                    onTap: () {
+                      context.push("/handover");
+                    }),
+              ],
               GestureDetector(
                   child: Container(
                       margin: const EdgeInsets.only(bottom: 20),
@@ -170,10 +174,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             .textTheme
                             .headlineSmall!
                             .merge(const TextStyle(color: Colors.white)),
-                      ) // button text
-                      ),
+                      )),
                   onTap: () {
-                    print("you clicked me");
+                    context.push("/weighing");
                   }),
               GestureDetector(
                   child: Container(

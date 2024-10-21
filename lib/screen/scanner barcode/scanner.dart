@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScanBarcodeScreen extends StatefulWidget {
@@ -11,7 +12,7 @@ class ScanBarcodeScreen extends StatefulWidget {
 
 class _ScanBarcodeScreenState extends State<ScanBarcodeScreen> {
   Barcode? _barcode;
-
+  int isLoading = 1;
   Widget _buildBarcode(Barcode? value) {
     if (value == null) {
       return const Text(
@@ -34,6 +35,10 @@ class _ScanBarcodeScreenState extends State<ScanBarcodeScreen> {
         _barcode = barcodes.barcodes.firstOrNull;
       });
       widget.onBarcodeScanned(_barcode);
+      if (isLoading == 1) {
+        isLoading++;
+        context.pop();
+      }
     }
   }
 

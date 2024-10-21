@@ -1,20 +1,20 @@
-part of 'operation_bloc.dart';
+part of 'order_bloc.dart';
 
 @immutable
-abstract class OperationEvent extends Equatable {
-  const OperationEvent();
+abstract class OrderEvent extends Equatable {
+  const OrderEvent();
 
   @override
   List<Object> get props => [];
 }
 
-class SendDataOperation extends OperationEvent {
+class SendDataOrder extends OrderEvent {
   final String startDate;
   final String materialCode;
   final String plant;
   final String operationType;
 
-  const SendDataOperation(
+  const SendDataOrder(
       {required this.plant,
       required this.materialCode,
       required this.operationType,
