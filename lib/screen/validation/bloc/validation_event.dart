@@ -10,9 +10,11 @@ abstract class ValidationEvent extends Equatable {
 
 class SendValidation extends ValidationEvent {
   final String nrp;
+  final String name;
   final String title;
 
-  const SendValidation({required this.nrp, required this.title});
+  const SendValidation(
+      {required this.nrp, required this.name, required this.title});
   @override
-  List<Object> get props => [nrp, title];
+  List<Object> get props => [nrp, name, title];
 }

@@ -13,6 +13,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ChangeAuthStatus>((event, emit) async {
       if (event.token != '') {
         await _authRepository.persistToken(event.token);
+        await _authRepository.persistCsrfToken(event.csrfToken);
         emit(Authenticated(token: event.token));
       } else {
         emit(Unauthenticated());
@@ -62,21 +63,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final hasnrpOperation = await _authRepository.hasOperation();
         final hasnrpPengawas = await _authRepository.hasPengawas();
         final hasWeerks = await _authRepository.hasWeerks();
+        final hasCsrfToken = await _authRepository.hasCsrfToken();
+        final hasNameOperator = await _authRepository.hasNameOperator();
+        final hasNamePengawas = await _authRepository.hasNamePengawas();
         print("Init has credentials = $hasCredentials");
         print("Init has operator = $hasnrpOperation");
         print("Init has pengawas = $hasnrpPengawas");
         print("Init has weerks = $hasWeerks");
+        print("Init has csrf token = $hasCsrfToken");
+        print("Init has name Operator = $hasNameOperator");
+        print("Init has name Pengawas = $hasNamePengawas");
         if (hasCredentials == "") {
           emit(Unauthenticated());
         } else {
           await _authRepository.persistToken(hasCredentials);
           await _authRepository.persistUser(
               hasnrpOperation, hasnrpPengawas, hasWeerks);
+          await _authRepository.persistCsrfToken(hasCsrfToken);
           emit(Authenticated(
               token: hasCredentials,
               nrpOperator: hasnrpOperation,
               nrpPengawas: hasnrpPengawas,
-              weerks: hasWeerks));
+              weerks: hasWeerks,
+              csrfToken: hasCsrfToken,
+              nameOperator: hasNameOperator,
+              namePengawas: hasNamePengawas));
         }
       } catch (error) {
         print("Error during initialization: $error");

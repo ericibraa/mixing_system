@@ -4,7 +4,7 @@ class MaterialResponse {
   MaterialResponse({this.d});
 
   MaterialResponse.fromJson(Map<String, dynamic> json) {
-    d = json['d'] != null ? new D.fromJson(json['d']) : null;
+    d = json['d'] != null ? D.fromJson(json['d']) : null;
   }
 }
 
@@ -17,7 +17,7 @@ class D {
     if (json['results'] != null) {
       results = <ResultsMaterial>[];
       json['results'].forEach((v) {
-        results!.add(new ResultsMaterial.fromJson(v));
+        results!.add(ResultsMaterial.fromJson(v));
       });
     }
   }
@@ -34,7 +34,7 @@ class ResultsMaterial {
 
   ResultsMaterial.fromJson(Map<String, dynamic> json) {
     mMetadata = json['__metadata'] != null
-        ? new Metadata.fromJson(json['__metadata'])
+        ? Metadata.fromJson(json['__metadata'])
         : null;
     plant = json['Plant'];
     material = json['Material'];

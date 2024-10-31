@@ -32,6 +32,8 @@ class ResultOperation extends Equatable {
   final String? controlKey;
   final String? operationDesc;
   final String? controlRecipe;
+  final String? operationType;
+  final String? operationApps;
 
   const ResultOperation(
       {this.routingNo,
@@ -39,17 +41,20 @@ class ResultOperation extends Equatable {
       this.activityNo,
       this.controlKey,
       this.operationDesc,
-      this.controlRecipe});
+      this.controlRecipe,
+      this.operationType,
+      this.operationApps});
 
   factory ResultOperation.fromJson(Map<String, dynamic> json) =>
       ResultOperation(
-        routingNo: json['RoutingNo'],
-        internalCntr: json['InternalCntr'],
-        activityNo: json['ActivityNo'],
-        controlKey: json['ControlKey'],
-        operationDesc: json['OperationDesc'],
-        controlRecipe: json['ControlRecipe'],
-      );
+          routingNo: json['RoutingNo'],
+          internalCntr: json['InternalCntr'],
+          activityNo: json['ActivityNo'],
+          controlKey: json['ControlKey'],
+          operationDesc: json['OperationDesc'],
+          controlRecipe: json['ControlRecipe'],
+          operationType: json['OperationType'],
+          operationApps: json['OperationApps']);
 
   @override
   List<Object?> get props => [
@@ -59,6 +64,8 @@ class ResultOperation extends Equatable {
         controlKey,
         operationDesc,
         controlRecipe,
-        operationDesc
+        operationDesc,
+        operationType,
+        operationApps
       ];
 }

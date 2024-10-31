@@ -12,7 +12,7 @@ class AuthRepository {
     ),
   );
 
-  Future<String> login(String username, String password) async {
+  Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final token = await _provider.login(username, password);
       return token;
@@ -37,14 +37,33 @@ class AuthRepository {
     return nrpPengawas ?? '';
   }
 
+  Future<String> hasNameOperator() async {
+    var nameOperator = await storage.read(key: 'nameOperator');
+    return nameOperator ?? '';
+  }
+
+  Future<String> hasNamePengawas() async {
+    var namePengawas = await storage.read(key: 'namePengawas');
+    return namePengawas ?? '';
+  }
+
   Future<String> hasWeerks() async {
     var weerks = await storage.read(key: "weerks");
     return weerks ?? '';
   }
 
+  Future<String> hasCsrfToken() async {
+    var csrfToken = await storage.read(key: "csrf-token");
+    return csrfToken ?? '';
+  }
+
   Future<void> persistToken(String token) async {
     await DioClient().setBasicAuth(token);
     await storage.write(key: "token", value: token);
+  }
+
+  Future<void> persistCsrfToken(String csrfToken) async {
+    await storage.write(key: 'csrf-token', value: csrfToken);
   }
 
   Future<void> persistUser(
@@ -58,5 +77,7 @@ class AuthRepository {
     await storage.delete(key: "nrpOperator");
     await storage.delete(key: "nrpPengawas");
     await storage.delete(key: "weerks");
+    await storage.delete(key: 'nameOperator');
+    await storage.delete(key: 'namePengawas');
   }
 }

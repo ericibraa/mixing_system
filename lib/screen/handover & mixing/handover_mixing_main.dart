@@ -47,9 +47,7 @@ class _MainViewState extends State<MainView> {
       body: BlocProvider(
         create: (context) => handoverCubit,
         child: BlocListener<HandoverCubit, HandoverState>(
-          listener: (context, state) {
-            print(state.tab);
-          },
+          listener: (context, state) {},
           child: BlocBuilder<HandoverCubit, HandoverState>(
             builder: (context, state) {
               return IndexedStack(

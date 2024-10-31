@@ -30,15 +30,13 @@ class _ScanBarcodeScreenState extends State<ScanBarcodeScreen> {
   }
 
   void _handleBarcode(BarcodeCapture barcodes) {
-    if (mounted) {
+    if (mounted && isLoading == 1) {
       setState(() {
         _barcode = barcodes.barcodes.firstOrNull;
       });
       widget.onBarcodeScanned(_barcode);
-      if (isLoading == 1) {
-        isLoading++;
-        context.pop();
-      }
+      isLoading++;
+      context.pop();
     }
   }
 

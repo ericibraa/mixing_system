@@ -1,5 +1,6 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
+import 'package:dumping_system/screen/weighing/widgets/choose_tong.dart';
 import 'package:dumping_system/screen/weighing/widgets/scale_weighing.dart';
 import 'package:dumping_system/screen/weighing/widgets/weighing.dart';
 import 'package:flutter/material.dart';
@@ -45,7 +46,11 @@ class _MainViewState extends State<MainView> {
             builder: (context, state) {
               return IndexedStack(
                 index: state.tab.index,
-                children: const [WeighingScreen(), ScaleWeighingScreen()],
+                children: const [
+                  WeighingScreen(),
+                  ChooseTongScreen(),
+                  ScaleWeighingScreen()
+                ],
               );
             },
           ),

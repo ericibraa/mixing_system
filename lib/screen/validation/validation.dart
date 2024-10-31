@@ -1,5 +1,6 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/models/response/validation.dart';
+import 'package:dumping_system/provider/submit_handover_provider.dart';
 import 'package:dumping_system/screen/login/login.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:dumping_system/screen/validation/bloc/validation_bloc.dart';
@@ -21,6 +22,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
   late ValidationBloc validationBloc;
   Results validations = Results();
   String scannedBarcode = "";
+  List<String> hasScanned = [];
   String valueOperator = '';
   String valuePengawas = '';
 
@@ -36,19 +38,24 @@ class _ValidationScreenState extends State<ValidationScreen> {
     super.initState();
   }
 
+  List<String> parseStringAndWrapInMap(String input) {
+    List<String> parts = input.split(';');
+    return parts;
+  }
+
   void _scanOperator(Barcode? barcode, String title) async {
     if (barcode != null && barcode.displayValue != null) {
       setState(() {
         scannedBarcode = barcode.displayValue!;
       });
-      validationBloc.add(SendValidation(nrp: scannedBarcode, title: title));
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const ValidationScreen(),
-          ),
-        );
+      hasScanned = parseStringAndWrapInMap(scannedBarcode);
+      if (title == 'OPERATOR') {
+        await storage.write(key: 'nameOperator', value: hasScanned[1]);
+      } else {
+        await storage.write(key: 'namePengawas', value: hasScanned[1]);
       }
+      validationBloc.add(SendValidation(
+          nrp: hasScanned[0], name: hasScanned[1], title: title));
     }
   }
 
@@ -89,11 +96,11 @@ class _ValidationScreenState extends State<ValidationScreen> {
                     }
                     if (validations.title == 'OPERATOR') {
                       BlocProvider.of<AuthBloc>(context).add(ChangeUserEvent(
-                          nrpOperator: scannedBarcode,
+                          nrpOperator: hasScanned[0],
                           weerks: validations.werks));
                     } else {
                       BlocProvider.of<AuthBloc>(context)
-                          .add(ChangeUserEvent(nrpPengawas: scannedBarcode));
+                          .add(ChangeUserEvent(nrpPengawas: hasScanned[0]));
                     }
                   }
                 } else if (state is ValidationError) {

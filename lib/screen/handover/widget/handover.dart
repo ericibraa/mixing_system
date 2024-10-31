@@ -59,6 +59,8 @@ class _HandoverScreenState extends State<HandoverScreen> {
     var data = authBloc.state;
     if (data is Authenticated) {
       plant.text = data.weerks;
+      _handoverCubit.setOperator(data.nameOperator);
+      _handoverCubit.setPengawas(data.namePengawas);
     }
     materialBloc.add(SendPlant(plant: plant.text));
     _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
@@ -405,7 +407,8 @@ class _HandoverScreenState extends State<HandoverScreen> {
               _handoverCubit.setOrderList(listOrder);
               operationBloc.add(SendDataOperation(
                   operationType: listOrder.operationType!,
-                  routingNo: listOrder.routingNo!));
+                  routingNo: listOrder.routingNo!,
+                  operationApps: "eq '1'"));
               return _showOperationNo(context);
             },
           );
@@ -609,6 +612,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                     ),
                                     onTap: () {
                                       _handoverCubit.setOperation(operationNo);
+                                      _handoverCubit.setOperationApps('2');
                                       _handoverCubit
                                           .setTab(HandoverStatus.scantong);
                                       Navigator.of(context).pop();

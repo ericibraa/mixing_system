@@ -33,8 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
         listener: (context, state) {
           if (state is LoginSuccess) {
             print("Login success");
-            BlocProvider.of<AuthBloc>(context)
-                .add(ChangeAuthStatus(token: state.token));
+            BlocProvider.of<AuthBloc>(context).add(ChangeAuthStatus(
+                token: state.token, csrfToken: state.csrfToken));
             context.push("/validation");
           } else if (state is LoginError) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(

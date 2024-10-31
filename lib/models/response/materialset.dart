@@ -36,6 +36,7 @@ class ResultsMaterialset extends Equatable {
   final String uom;
   final String recipient;
   final String counter;
+  final String priority;
   final bool isScanned;
 
   const ResultsMaterialset(
@@ -49,6 +50,7 @@ class ResultsMaterialset extends Equatable {
       required this.uom,
       required this.recipient,
       required this.counter,
+      required this.priority,
       this.isScanned = false});
 
   ResultsMaterialset copyWith({required bool isScanned}) {
@@ -63,6 +65,7 @@ class ResultsMaterialset extends Equatable {
         uom: uom,
         recipient: recipient,
         counter: counter,
+        priority: priority,
         isScanned: isScanned);
   }
 
@@ -77,7 +80,8 @@ class ResultsMaterialset extends Equatable {
           quantity: json['Quantity'],
           uom: json['Uom'],
           recipient: json['Recipient'],
-          counter: json['Counter']);
+          counter: json['Counter'],
+          priority: json['Priority']);
 
   @override
   List<Object?> get props => [
@@ -91,6 +95,7 @@ class ResultsMaterialset extends Equatable {
         uom,
         recipient,
         counter,
+        priority,
         isScanned
       ];
 }

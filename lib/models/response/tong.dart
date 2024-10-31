@@ -26,30 +26,36 @@ class D {
 }
 
 class ResultTong extends Equatable {
-  final String routingNo;
-  final String internalCntr;
-  final String material;
-  final String orderNo;
-  final String operationDesc;
-  final String activityNo;
-  final String cntrReciDest;
-  final String sortString;
-  final bool isScanned;
+  final String? routingNo;
+  final String? internalCntr;
+  final String? material;
+  final String? orderNo;
+  final String? operationDesc;
+  final String? activityNo;
+  final String? cntrReciDest;
+  final String? sortString;
+  final bool? isScanned;
   final String? operationType;
-  final WadToMatNav wadToMatNav;
+  final String? activityWh;
+  final String? controlRecipe;
+  final String? operationApps;
+  final WadToMatNav? wadToMatNav;
 
   const ResultTong(
-      {required this.routingNo,
-      required this.internalCntr,
-      required this.material,
-      required this.orderNo,
-      required this.operationDesc,
-      required this.activityNo,
-      required this.cntrReciDest,
-      required this.sortString,
+      {this.routingNo = '',
+      this.internalCntr = '',
+      this.material = '',
+      this.orderNo = '',
+      this.operationDesc = '',
+      this.activityNo = '',
+      this.cntrReciDest = '',
+      this.sortString = '',
       this.isScanned = false,
-      required this.operationType,
-      required this.wadToMatNav});
+      this.operationType = '',
+      this.activityWh = '',
+      this.controlRecipe = '',
+      this.operationApps = '',
+      this.wadToMatNav});
   ResultTong copyWith({required bool isScanned}) {
     return ResultTong(
         routingNo: routingNo,
@@ -61,6 +67,9 @@ class ResultTong extends Equatable {
         cntrReciDest: cntrReciDest,
         sortString: sortString,
         operationType: operationType,
+        activityWh: activityWh,
+        controlRecipe: controlRecipe,
+        operationApps: operationApps,
         isScanned: isScanned,
         wadToMatNav: wadToMatNav);
   }
@@ -75,6 +84,9 @@ class ResultTong extends Equatable {
         cntrReciDest: json['CntrReciDest'],
         sortString: json['SortString'],
         operationType: json['OperationType'],
+        activityWh: json['ActivityWh'],
+        controlRecipe: json['ControlRecipe'],
+        operationApps: json['OperationApps'],
         wadToMatNav: json['WadToMatNav'] != null
             ? WadToMatNav.fromJson(json['WadToMatNav'])
             : WadToMatNav(),
@@ -92,6 +104,9 @@ class ResultTong extends Equatable {
         sortString,
         isScanned,
         operationType,
+        activityWh,
+        controlRecipe,
+        operationApps,
         wadToMatNav
       ];
 }
@@ -122,6 +137,7 @@ class ResultsFullPack extends Equatable {
   final String uom;
   final String recipient;
   final String counter;
+  final String priority;
   final bool isScannedFullpack;
 
   const ResultsFullPack(
@@ -135,6 +151,7 @@ class ResultsFullPack extends Equatable {
       required this.uom,
       required this.recipient,
       required this.counter,
+      required this.priority,
       this.isScannedFullpack = false});
   ResultsFullPack copyWith({required bool isScannedFullpack}) {
     return ResultsFullPack(
@@ -148,22 +165,23 @@ class ResultsFullPack extends Equatable {
         uom: uom,
         recipient: recipient,
         counter: counter,
+        priority: priority,
         isScannedFullpack: isScannedFullpack);
   }
 
   factory ResultsFullPack.fromJson(Map<String, dynamic> json) =>
       ResultsFullPack(
-        routingNo: json['RoutingNo'],
-        activityNo: json['ActivityNo'],
-        operationType: json['OperationType'],
-        bOMItem: json['BOMItem'],
-        materialNo: json['MaterialNo'],
-        materialDesc: json['MaterialDesc'],
-        quantity: json['Quantity'],
-        uom: json['Uom'],
-        recipient: json['Recipient'],
-        counter: json['Counter'],
-      );
+          routingNo: json['RoutingNo'],
+          activityNo: json['ActivityNo'],
+          operationType: json['OperationType'],
+          bOMItem: json['BOMItem'],
+          materialNo: json['MaterialNo'],
+          materialDesc: json['MaterialDesc'],
+          quantity: json['Quantity'],
+          uom: json['Uom'],
+          recipient: json['Recipient'],
+          counter: json['Counter'],
+          priority: json['Priority']);
 
   @override
   List<Object?> get props => [
@@ -177,6 +195,7 @@ class ResultsFullPack extends Equatable {
         uom,
         recipient,
         counter,
+        priority,
         isScannedFullpack
       ];
 }

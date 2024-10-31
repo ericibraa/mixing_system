@@ -10,11 +10,12 @@ abstract class AuthEvent extends Equatable {
 
 class ChangeAuthStatus extends AuthEvent {
   final String token;
+  final String csrfToken;
 
-  const ChangeAuthStatus({required this.token});
+  const ChangeAuthStatus({required this.token, required this.csrfToken});
 
   @override
-  List<Object> get props => [token];
+  List<Object> get props => [token, csrfToken];
 }
 
 class ChangeUserEvent extends AuthEvent {

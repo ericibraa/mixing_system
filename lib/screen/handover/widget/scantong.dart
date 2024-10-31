@@ -1,9 +1,11 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/bloc/tong_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
+import 'package:dumping_system/bloc/post_handover_bloc.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScanTongScreen extends StatefulWidget {
@@ -18,13 +20,15 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
   AuthBloc authBloc = AuthBloc();
   HandoverCubit _handoverCubit = HandoverCubit();
   TongBloc tongBloc = TongBloc();
+  SubmitHandoverBloc submitHandoverBloc = SubmitHandoverBloc();
   String scannedBarcode = "";
   final line = TextEditingController();
 
-  String parseStringAndWrapInMap(String input) {
+  List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
-    String scanned;
-    scanned = parts.length > 6 ? parts[6] : parts[3];
+    List<String> scanned = [];
+    scanned = parts;
+
     return scanned;
   }
 
@@ -32,10 +36,30 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
     if (barcode != null && barcode.displayValue != null) {
       setState(() {
         scannedBarcode = barcode.displayValue!;
-        print(scannedBarcode);
         _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
-        print(scannedBarcode);
       });
+      if (mounted) {
+        if (_handoverCubit.state.isChecked) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data is Scanned"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+        }
+        if (_handoverCubit.state.isNullData) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data not found"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+        }
+      }
     }
   }
 
@@ -52,6 +76,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
       providers: [
         BlocProvider.value(value: _handoverCubit),
         BlocProvider.value(value: tongBloc),
+        BlocProvider.value(value: submitHandoverBloc)
       ],
       child: MultiBlocListener(
         listeners: [
@@ -61,7 +86,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                 _handoverCubit.setResultTong(state.tong.d!.resultsTong!);
                 for (var fullpack in state.tong.d!.resultsTong!) {
                   _handoverCubit
-                      .setFullpack(fullpack.wadToMatNav.resultsFullPack!);
+                      .setFullpack(fullpack.wadToMatNav!.resultsFullPack!);
                 }
               }
             },
@@ -88,8 +113,46 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                         ? _handoverCubit.state.selectedOperation.operationType!
                         : ""));
               }
+              line.text = state.line;
             },
           ),
+          BlocListener<SubmitHandoverBloc, SubmitHandoverState>(
+              listener: (context, state) {
+            if (state is SubmitHandoverLoaded) {
+              if (state.submitHandover == 'success') {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text("Send data successfully"),
+                  backgroundColor: Colors.black,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+                Future.delayed(const Duration(seconds: 2), () {
+                  // ignore: use_build_context_synchronously
+                  context.go("/home");
+                });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text("Server Error"),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              }
+            } else if (state is SubmitHandoverError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: const Text("Server Error"),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
+            }
+          })
         ],
         child: BlocBuilder<HandoverCubit, HandoverState>(
           builder: (context, handoverState) {
@@ -296,7 +359,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                     child: handoverState.isComplete == true
                         ? TextButton(
                             onPressed: () {
-                              print("Complete");
+                              submitHandoverBloc.add(
+                                  SubmitHandover(orderData: handoverState));
                             },
                             style: TextButton.styleFrom(
                               backgroundColor: Colors.green,

@@ -4,16 +4,48 @@ import 'package:dio/dio.dart';
 import 'package:dumping_system/provider/provider.dart';
 
 class AuthProvider extends Provider {
-  Future<String> login(String username, String password) async {
+  Future<Map<String, dynamic>> login(String username, String password) async {
     try {
-      await dio.get("${apiUrl.dumpingApi}/\$metadata",
+      Response response = await dio.get("${apiUrl.dumpingApi}/\$metadata",
           options: Options(
             headers: {
               'Authorization':
                   'Basic ${base64Encode(utf8.encode('$username:$password'))}',
+              'x-csrf-token': 'fetch'
             },
           ));
-      return base64Encode(utf8.encode('$username:$password'));
+
+      String? csrfToken = response.headers['x-csrf-token']?.first;
+
+      return {
+        'token': base64Encode(utf8.encode('$username:$password')),
+        'csrfToken': csrfToken ?? 'No CSRF token found'
+      };
+    } catch (error, stacktrace) {
+      print("Exception occurred: $error stackTrace: $stacktrace");
+      throw Exception("Exception occurred: $error stackTrace: $stacktrace");
+    }
+  }
+
+  Future<Map<String, dynamic>> loginWithToken(String token) async {
+    try {
+      Response response = await dio.get("${apiUrl.dumpingApi}/\$metadata",
+          options: Options(
+            headers: {
+              'Authorization': 'Basic $token',
+              'x-csrf-token': 'fetch',
+            },
+          ));
+
+      String? csrfToken = response.headers['x-csrf-token']?.first;
+      String? cookie =
+          "${response.headers['set-cookie']![0]} ${response.headers['set-cookie']![2]}"
+              .replaceAll("path=/", "");
+      return {
+        'token': token,
+        'csrfToken': csrfToken ?? 'No CSRF token found',
+        'cookie': cookie
+      };
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

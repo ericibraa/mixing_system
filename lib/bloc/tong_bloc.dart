@@ -13,12 +13,8 @@ class TongBloc extends Bloc<TongEvent, TongState> {
     on<SendDataTong>((event, emit) async {
       emit(TongLoading());
       try {
-        print("===============SENDDATATONG===================");
-
         final tong = await _tongRepository.fetchtong(event.routingNo,
             event.activityNo, event.controlRecipe, event.operationType);
-        print("---------------------------------------------");
-        print(tong.d);
         emit(TongLoaded(tong));
       } catch (e) {
         emit(TongError());

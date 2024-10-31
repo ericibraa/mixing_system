@@ -2,9 +2,11 @@ import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/bloc/tong_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/bloc/material_set_bloc.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/bloc/submit_handover_mixing_bloc.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScanTongMaterialSetScreen extends StatefulWidget {
@@ -21,21 +23,57 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
   HandoverCubit _handoverCubit = HandoverCubit();
   TongBloc tongBloc = TongBloc();
   MaterialSetBloc materialSetBloc = MaterialSetBloc();
+  SubmitHandoverMixingBloc submitHandoverMixingBloc =
+      SubmitHandoverMixingBloc();
   String scannedBarcode = "";
 
-  String parseStringAndWrapInMap(String input) {
+  List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
-    String scanned;
-    scanned = parts.length > 6 ? parts[6] : parts[3];
+    List<String> scanned = [];
+    scanned = parts;
+
     return scanned;
   }
 
   void _scanOperator(Barcode? barcode) async {
+    var hasScanned = [];
     if (barcode != null && barcode.displayValue != null) {
       setState(() {
         scannedBarcode = barcode.displayValue!;
         _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+        hasScanned = parseStringAndWrapInMap(scannedBarcode);
       });
+      if (mounted) {
+        if (hasScanned.length == 4) {
+          _handoverCubit.resetCompleteMaterial(false);
+          materialSetBloc.add(SendDataMaterialset(
+              routingNo:
+                  _handoverCubit.state.selectedOperationNumber.routingNo!,
+              activityNo: hasScanned[3],
+              operationType:
+                  _handoverCubit.state.selectedOperation.operationType!));
+        }
+        if (_handoverCubit.state.isChecked) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data is Scanned"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+        }
+        if (_handoverCubit.state.isNullData) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data not found"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+        }
+      }
     }
   }
 
@@ -52,7 +90,8 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
       providers: [
         BlocProvider.value(value: _handoverCubit),
         BlocProvider.value(value: tongBloc),
-        BlocProvider.value(value: materialSetBloc)
+        BlocProvider.value(value: materialSetBloc),
+        BlocProvider.value(value: submitHandoverMixingBloc),
       ],
       child: MultiBlocListener(
         listeners: [
@@ -62,11 +101,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                 _handoverCubit.setResultTong(state.tong.d!.resultsTong!);
                 for (var fullpack in state.tong.d!.resultsTong!) {
                   _handoverCubit
-                      .setFullpack(fullpack.wadToMatNav.resultsFullPack!);
-                  materialSetBloc.add(SendDataMaterialset(
-                      routingNo: fullpack.routingNo,
-                      activityNo: fullpack.activityNo,
-                      operationType: fullpack.operationType!));
+                      .setFullpack(fullpack.wadToMatNav!.resultsFullPack!);
                 }
               }
             },
@@ -99,6 +134,41 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
               listener: (context, state) {
             if (state is MaterialSetLoaded) {
               _handoverCubit.setMaterialSet(state.materialset.d!.results!);
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return _showMaterialSets(context);
+                },
+              );
+            }
+          }),
+          BlocListener<SubmitHandoverMixingBloc, SubmitHandoverMixingState>(
+              listener: (context, state) {
+            if (state is SubmitHandoverMixingLoaded) {
+              if (state.submitHandoverMixing == 'success') {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text("Send data successfully"),
+                  backgroundColor: Colors.black,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+                Future.delayed(const Duration(seconds: 1), () {
+                  // ignore: use_build_context_synchronously
+                  _handoverCubit.setTab(HandoverStatus.scantongmaterial);
+                  _handoverCubit.resetCompleteMaterial(false);
+                });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text("Server Error"),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              }
             }
           })
         ],
@@ -276,7 +346,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                     child: handoverState.isCompleteTong
                         ? TextButton(
                             onPressed: () {
-                              print("Complete");
+                              context.go("/home");
                             },
                             style: TextButton.styleFrom(
                               backgroundColor: Colors.green,
@@ -367,135 +437,199 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
           builder: (context, handoverState) {
         return SingleChildScrollView(
           child: Container(
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.only(top: 5),
-            decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            child: !handoverState.isComplete
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        alignment: Alignment.center,
-                        child: Text(
-                          "List Wadah & Fullpack",
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge!
-                              .copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const Divider(endIndent: 10, indent: 10),
-                      for (var tong in handoverState.tongs) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Text(
-                                  '${tong.operationDesc} ${tong.activityNo}',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ),
-                              if (tong.isScanned == false) ...[
-                                const Icon(Icons.qr_code_scanner_rounded)
-                              ] else ...[
-                                const Icon(
-                                  Icons.check,
-                                  color: Colors.green,
-                                )
-                              ]
-                            ],
-                          ),
-                        ),
-                        const Divider(
-                          endIndent: 10,
-                          indent: 10,
-                        ),
-                      ],
-                      for (var fullpack in handoverState.fullpack) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Text(
-                                  '${fullpack.materialDesc} ${fullpack.counter}',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ),
-                              if (fullpack.isScannedFullpack == false) ...[
-                                const Icon(Icons.qr_code_scanner_rounded)
-                              ] else ...[
-                                const Icon(
-                                  Icons.check,
-                                  color: Colors.green,
-                                )
-                              ]
-                            ],
-                          ),
-                        ),
-                        const Divider(
-                          endIndent: 10,
-                          indent: 10,
-                        ),
-                      ]
-                    ],
-                  )
-                : Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        alignment: Alignment.center,
-                        child: Text(
-                          "List Material",
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge!
-                              .copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const Divider(endIndent: 10, indent: 10),
-                      for (var materialSet in handoverState.materialSet) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Text(
-                                  '${materialSet.materialDesc} ${materialSet.bOMItem}',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ),
-                              if (materialSet.isScanned == false) ...[
-                                const Icon(Icons.qr_code_scanner_rounded)
-                              ] else ...[
-                                const Icon(
-                                  Icons.check,
-                                  color: Colors.green,
-                                )
-                              ]
-                            ],
-                          ),
-                        ),
-                        const Divider(
-                          endIndent: 10,
-                          indent: 10,
-                        ),
-                      ],
-                    ],
+              height: MediaQuery.of(context).size.height,
+              padding: const EdgeInsets.only(top: 5),
+              decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(10))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    alignment: Alignment.center,
+                    child: Text(
+                      "Containers",
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge!
+                          .copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ),
-          ),
+                  const Divider(endIndent: 10, indent: 10),
+                  for (var tong in handoverState.tongs) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10, right: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Text(
+                              '${tong.operationDesc} ${tong.activityNo}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          if (tong.isScanned == false) ...[
+                            const Icon(Icons.qr_code_scanner_rounded)
+                          ] else ...[
+                            const Icon(
+                              Icons.check,
+                              color: Colors.green,
+                            )
+                          ]
+                        ],
+                      ),
+                    ),
+                    const Divider(
+                      endIndent: 10,
+                      indent: 10,
+                    ),
+                  ],
+                ],
+              )),
         );
       }),
+    );
+  }
+
+  Widget _showMaterialSets(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [BlocProvider.value(value: _handoverCubit)],
+      child: BlocBuilder<HandoverCubit, HandoverState>(
+        builder: (context, handoverState) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text("Materials"),
+            ),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 10),
+              child: Column(
+                children: [
+                  for (var materialSet in handoverState.materialSet) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10, right: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Text(
+                              '${materialSet.materialDesc} - ${materialSet.bOMItem} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          if (materialSet.isScanned == false) ...[
+                            const Icon(Icons.qr_code_scanner_rounded)
+                          ] else ...[
+                            const Icon(
+                              Icons.check,
+                              color: Colors.green,
+                            )
+                          ]
+                        ],
+                      ),
+                    ),
+                    const Divider(
+                      endIndent: 10,
+                      indent: 10,
+                    ),
+                  ]
+                ],
+              ),
+            ),
+            bottomNavigationBar: BottomAppBar(
+              elevation: 10,
+              color: Colors.transparent,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: handoverState.isCompleteMaterials
+                      ? TextButton(
+                          onPressed: () {
+                            submitHandoverMixingBloc.add(SubmitHandoverMixing(
+                                handoverMixingData: handoverState));
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                "Save",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ScanBarcodeScreen(
+                                  onBarcodeScanned: (barcode) {
+                                    _scanOperator(barcode);
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.qr_code_scanner_rounded,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                "Scan Barcode",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

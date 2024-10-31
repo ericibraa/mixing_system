@@ -15,7 +15,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         final user =
             await _loginRepository.login(event.username, event.password);
         print(user);
-        emit(LoginSuccess(user));
+        emit(LoginSuccess(user['token'], user['csrfToken']));
       } catch (e) {
         emit(LoginError());
       }

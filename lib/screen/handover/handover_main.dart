@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HandoverMainPage extends StatelessWidget {
-  const HandoverMainPage({Key? key}) : super(key: key);
+  const HandoverMainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +46,7 @@ class _MainViewState extends State<MainView> {
       body: BlocProvider(
         create: (context) => handoverCubit,
         child: BlocListener<HandoverCubit, HandoverState>(
-          listener: (context, state) {
-            print(state.tab);
-          },
+          listener: (context, state) {},
           child: BlocBuilder<HandoverCubit, HandoverState>(
             builder: (context, state) {
               return IndexedStack(

@@ -16,6 +16,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   AuthBloc authBloc = AuthBloc();
   String plant = '';
+  String nameOperator = '';
+  String nrpOperator = '';
 
   @override
   void initState() {
@@ -29,6 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, state) {
         if (state is Authenticated) {
           plant = state.weerks;
+          nameOperator = state.nameOperator;
+          nrpOperator = state.nrpOperator;
           if (state.token.isNotEmpty &&
               state.nrpOperator.isNotEmpty &&
               state.nrpPengawas.isNotEmpty &&
@@ -66,11 +70,24 @@ class _HomeScreenState extends State<HomeScreen> {
           width: 150,
         ),
         actions: [
-          IconButton(
-              onPressed: () {
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: GestureDetector(
+              onTap: () {
                 context.read<AuthBloc>().add(DeleteUserEvent());
               },
-              icon: const Icon(Icons.logout_outlined))
+              child: Row(
+                children: [
+                  Text('$nameOperator ($nrpOperator)'),
+                  const SizedBox(width: 10),
+                  const Icon(
+                    Icons.logout_outlined,
+                    size: 20,
+                  )
+                ],
+              ),
+            ),
+          )
         ],
       ),
       body: SingleChildScrollView(

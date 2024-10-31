@@ -11,7 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-const List<String> optionsMaterial = <String>['DECOCT', 'CB', 'CK'];
+List<Map<String, String>> optionsMaterial = [
+  {'id': '3', 'title': 'DECOCT'},
+  {'id': '4', 'title': 'CB'},
+  {'id': '5', 'title': 'CK'}
+];
 
 class HandoverMixingScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -29,7 +33,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
   List<ResultsMaterial> listMaterials = List.empty();
   List<ResultsOrder> listOrder = List.empty();
   List<ResultOperation> listOperation = List.empty();
-  String materialValue = optionsMaterial.first;
+  String? materialValue = optionsMaterial[0]['id'];
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
@@ -37,6 +41,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
       "${option.material!} - ${option.materialDesc}";
   String selectedOperation = '';
   HandoverCubit _handoverCubit = HandoverCubit();
+  String title = '';
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? picked = await showDatePicker(
@@ -59,6 +64,8 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
     var data = authBloc.state;
     if (data is Authenticated) {
       plant.text = data.weerks;
+      _handoverCubit.setOperator(data.nameOperator);
+      _handoverCubit.setPengawas(data.namePengawas);
     }
     materialBloc.add(SendPlant(plant: plant.text));
     _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
@@ -110,7 +117,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
           builder: (context, handoverState) {
             return Scaffold(
               appBar: AppBar(
-                title: const Text("Handover"),
+                title: const Text("Handover & Mixing"),
               ),
               body: SingleChildScrollView(
                 child: Padding(
@@ -248,15 +255,27 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                 value: materialValue,
                                 items: optionsMaterial
                                     .map<DropdownMenuItem<String>>(
-                                        (String value) {
+                                        (Map<String, String> item) {
                                   return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
+                                    value: item['id'],
+                                    child: Text(item['title']!),
                                   );
                                 }).toList(),
-                                onChanged: (String? value) {
+                                onChanged: (String? newValue) {
                                   setState(() {
-                                    materialValue = value!;
+                                    materialValue = newValue!;
+                                    switch (materialValue) {
+                                      case '3':
+                                        title = 'DECOCT';
+                                        break;
+                                      case '4':
+                                        title = 'CB';
+                                        break;
+                                      case '5':
+                                        title = 'CK';
+                                        break;
+                                    }
+                                    _handoverCubit.setOperationApps(newValue);
                                   });
                                 },
                                 iconEnabledColor: Colors.black,
@@ -348,25 +367,25 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                     height: 50,
                     child: TextButton(
                       onPressed: plant.text.isNotEmpty &&
-                              materialValue.isNotEmpty &&
+                              materialValue!.isNotEmpty &&
                               productCode.text.isNotEmpty &&
                               _dateController.text.isNotEmpty
                           ? () {
                               orderBloc.add(SendDataOrder(
                                   plant: plant.text,
                                   materialCode: productCode.text,
-                                  operationType: materialValue,
+                                  operationType: title,
                                   startDate: _dateController.text));
                               _handoverCubit.setDataOrder(
                                   plant.text,
                                   productCode.text,
                                   _dateController.text,
-                                  materialValue);
+                                  title);
                             }
                           : null,
                       style: TextButton.styleFrom(
                         backgroundColor: plant.text.isNotEmpty &&
-                                materialValue.isNotEmpty &&
+                                materialValue!.isNotEmpty &&
                                 productCode.text.isNotEmpty &&
                                 _dateController.text.isNotEmpty
                             ? Colors.black
@@ -405,7 +424,8 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
               _handoverCubit.setOrderList(listOrder);
               operationBloc.add(SendDataOperation(
                   operationType: listOrder.operationType!,
-                  routingNo: listOrder.routingNo!));
+                  routingNo: listOrder.routingNo!,
+                  operationApps: "ge '2'"));
               return _showOperationNo(context);
             },
           );
@@ -603,14 +623,53 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                                 ),
                                               ],
                                             ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  "Operation Apps",
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: isSelected
+                                                            ? Colors.white
+                                                            : Colors.black,
+                                                      ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  operationNo.operationApps ??
+                                                      '',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyLarge
+                                                      ?.copyWith(
+                                                        color: isSelected
+                                                            ? Colors.white
+                                                            : Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                           ],
                                         ),
                                       ],
                                     ),
                                     onTap: () {
                                       _handoverCubit.setOperation(operationNo);
-                                      _handoverCubit
-                                          .setTab(HandoverStatus.scantong);
+                                      var number =
+                                          int.parse(operationNo.operationApps!);
+                                      if (number > 2) {
+                                        _handoverCubit.setTab(
+                                            HandoverStatus.scantongmaterial);
+                                      } else {
+                                        _handoverCubit
+                                            .setTab(HandoverStatus.scantong);
+                                      }
                                       Navigator.of(context).pop();
                                     },
                                   ),
