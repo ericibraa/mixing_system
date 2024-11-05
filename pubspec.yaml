@@ -50,6 +50,10 @@ dependencies:
   xml: ^6.1.0
   image_picker: ^1.1.2
   loading_animation_widget: ^1.2.0+4
+  pdf: ^3.11.1
+  printing: ^5.13.4
+  htmltopdfwidgets: ^1.0.4
+  flutter_esc_pos_utils: ^1.0.1
 
 dev_dependencies:
   flutter_test:

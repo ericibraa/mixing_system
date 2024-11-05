@@ -6,12 +6,13 @@ class OperationProvider extends Provider {
   Future<OperationResponse> fetchoperation(
       String routingNo, String operationType, String operationApps) async {
     try {
-      Response response =
-          await dio.get("${apiUrl.orderApi}/OperationSet", queryParameters: {
-        "\$filter":
-            " RoutingNo eq '$routingNo' and OperationType eq '$operationType' and OperationApps $operationApps",
-        "\$format": 'json'
-      });
+      Response response = await dio.get(
+          "${apiUrl.dumpingApi}/ZDMP_GET_ORDER_SRV/OperationSet",
+          queryParameters: {
+            "\$filter":
+                " RoutingNo eq '$routingNo' and OperationType eq '$operationType' and OperationApps $operationApps",
+            "\$format": 'json'
+          });
       return OperationResponse.fromJson(response.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");

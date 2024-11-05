@@ -1,40 +1,63 @@
 import 'package:equatable/equatable.dart';
 
 class Scale extends Equatable {
-  final String? temperature;
-  final String? moistureContent;
-  final String? numberOfContainer;
-  final String? scale;
-  final String? bruto;
-  final String? tara;
-  final String? netto;
+  final String temperature;
+  final String moistureContent;
+  final String numberOfContainer;
+  final String scaleName;
+  final double bruto;
+  final double tara;
+  final double netto;
+  final String unit;
+  final String scaleId;
+  final String urlAddress;
+  final String regex;
+  final String createDate;
+  final String expiredDate;
 
   const Scale(
       {this.temperature = '',
       this.moistureContent = '',
       this.numberOfContainer = '',
-      this.scale = '',
-      this.bruto = '',
-      this.tara = '',
-      this.netto = ''});
+      this.scaleName = '',
+      this.bruto = 0.0,
+      this.tara = 0.0,
+      this.netto = 0.0,
+      this.unit = 'g',
+      this.scaleId = '',
+      this.urlAddress = '',
+      this.regex = '',
+      this.createDate = '',
+      this.expiredDate = ''});
 
-  Scale copyWith({
-    String? temperature,
-    String? moistureContent,
-    String? numberOfContainer,
-    String? scale,
-    String? bruto,
-    String? tara,
-    String? netto,
-  }) {
+  Scale copyWith(
+      {String? temperature,
+      String? moistureContent,
+      String? numberOfContainer,
+      String? scaleName,
+      double? bruto,
+      double? tara,
+      double? netto,
+      String? unit,
+      String? scaleId,
+      String? urlAddress,
+      String? regex,
+      String? createDate,
+      String? expiredDate}) {
     return Scale(
         temperature: temperature ?? this.temperature,
         moistureContent: moistureContent ?? this.moistureContent,
         numberOfContainer: numberOfContainer ?? this.numberOfContainer,
-        scale: scale ?? this.scale,
+        scaleName: scaleName ?? this.scaleName,
         bruto: bruto ?? this.bruto,
         tara: tara ?? this.tara,
-        netto: netto ?? this.netto);
+        netto: netto ?? this.netto,
+        unit: unit ?? this.unit,
+        scaleId: scaleId ?? this.scaleId,
+        urlAddress: urlAddress ?? this.urlAddress,
+        regex: regex ?? this.regex,
+        createDate: createDate ?? this.createDate,
+        expiredDate: expiredDate ?? this.expiredDate);
   }
 
   @override
@@ -42,10 +65,16 @@ class Scale extends Equatable {
         temperature,
         moistureContent,
         numberOfContainer,
-        scale,
+        scaleName,
         bruto,
         tara,
-        netto
+        netto,
+        unit,
+        scaleId,
+        urlAddress,
+        regex,
+        createDate,
+        expiredDate
       ];
 }
 
@@ -74,25 +103,29 @@ class D {
   }
 }
 
-class ResultScale {
-  String? equipmentNo;
-  String? equipmentDesc;
-  String? plant;
-  String? urlAddress;
-  String? regex;
+class ResultScale extends Equatable {
+  final String equipmentNo;
+  final String equipmentDesc;
+  final String plant;
+  final String urlAddress;
+  final String regex;
 
-  ResultScale(
-      {this.equipmentNo,
-      this.equipmentDesc,
-      this.plant,
-      this.urlAddress,
-      this.regex});
+  const ResultScale(
+      {this.equipmentNo = '',
+      this.equipmentDesc = '',
+      this.plant = '',
+      this.urlAddress = '',
+      this.regex = ''});
 
-  ResultScale.fromJson(Map<String, dynamic> json) {
-    equipmentNo = json['EquipmentNo'];
-    equipmentDesc = json['EquipmentDesc'];
-    plant = json['Plant'];
-    urlAddress = json['UrlAddress'];
-    regex = json['Regex'];
-  }
+  factory ResultScale.fromJson(Map<String, dynamic> json) => ResultScale(
+        equipmentNo: json['EquipmentNo'],
+        equipmentDesc: json['EquipmentDesc'],
+        plant: json['Plant'],
+        urlAddress: json['UrlAddress'],
+        regex: json['Regex'],
+      );
+
+  @override
+  List<Object> get props =>
+      [equipmentNo, equipmentDesc, plant, urlAddress, regex];
 }

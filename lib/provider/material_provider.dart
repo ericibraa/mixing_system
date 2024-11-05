@@ -6,7 +6,7 @@ class MaterialProvider extends Provider {
   Future<MaterialResponse> fetchmaterial(String plant) async {
     try {
       Response response = await dio.get(
-          "${apiUrl.dumpingApi}/FImp_Material?Plant='$plant'&\$format=json");
+          "${apiUrl.dumpingApi}/ZDMP_GET_MATERIAL_SRV/FImp_Material?Plant='$plant'&\$format=json");
       return MaterialResponse.fromJson(response.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");

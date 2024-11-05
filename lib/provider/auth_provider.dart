@@ -6,14 +6,15 @@ import 'package:dumping_system/provider/provider.dart';
 class AuthProvider extends Provider {
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
-      Response response = await dio.get("${apiUrl.dumpingApi}/\$metadata",
-          options: Options(
-            headers: {
-              'Authorization':
-                  'Basic ${base64Encode(utf8.encode('$username:$password'))}',
-              'x-csrf-token': 'fetch'
-            },
-          ));
+      Response response =
+          await dio.get("${apiUrl.dumpingApi}/ZDMP_GET_MATERIAL_SRV/\$metadata",
+              options: Options(
+                headers: {
+                  'Authorization':
+                      'Basic ${base64Encode(utf8.encode('$username:$password'))}',
+                  'x-csrf-token': 'fetch'
+                },
+              ));
 
       String? csrfToken = response.headers['x-csrf-token']?.first;
 
@@ -29,13 +30,14 @@ class AuthProvider extends Provider {
 
   Future<Map<String, dynamic>> loginWithToken(String token) async {
     try {
-      Response response = await dio.get("${apiUrl.dumpingApi}/\$metadata",
-          options: Options(
-            headers: {
-              'Authorization': 'Basic $token',
-              'x-csrf-token': 'fetch',
-            },
-          ));
+      Response response =
+          await dio.get("${apiUrl.dumpingApi}/ZDMP_GET_MATERIAL_SRV/\$metadata",
+              options: Options(
+                headers: {
+                  'Authorization': 'Basic $token',
+                  'x-csrf-token': 'fetch',
+                },
+              ));
 
       String? csrfToken = response.headers['x-csrf-token']?.first;
       String? cookie =

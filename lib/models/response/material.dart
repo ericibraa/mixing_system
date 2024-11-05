@@ -24,34 +24,18 @@ class D {
 }
 
 class ResultsMaterial {
-  Metadata? mMetadata;
   String? plant;
   String? material;
   String? materialDesc;
+  String? productiSupervisor;
 
   ResultsMaterial(
-      {this.mMetadata, this.plant, this.material, this.materialDesc});
+      {this.plant, this.material, this.materialDesc, this.productiSupervisor});
 
   ResultsMaterial.fromJson(Map<String, dynamic> json) {
-    mMetadata = json['__metadata'] != null
-        ? Metadata.fromJson(json['__metadata'])
-        : null;
     plant = json['Plant'];
     material = json['Material'];
     materialDesc = json['Material_Desc'];
-  }
-}
-
-class Metadata {
-  String? id;
-  String? uri;
-  String? type;
-
-  Metadata({this.id, this.uri, this.type});
-
-  Metadata.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    uri = json['uri'];
-    type = json['type'];
+    productiSupervisor = json['ProductiSupervisor'];
   }
 }

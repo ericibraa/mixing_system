@@ -5,9 +5,10 @@ import 'package:dumping_system/provider/provider.dart';
 class ScaleProvider extends Provider {
   Future<ScaleResponse> fetchscale(String plant) async {
     try {
-      Response response = await dio.get("${apiUrl.scaleApi}/EquipmentSet",
+      Response response = await dio.get(
+          "${apiUrl.dumpingApi}/ZDMP_GET_WEIGHT_SRV/EquipmentSet",
           queryParameters: {
-            "\$filter": " Plant eq '0101'",
+            "\$filter": " Plant eq '$plant'",
             "\$format": 'json'
           });
       return ScaleResponse.fromJson(response.data);

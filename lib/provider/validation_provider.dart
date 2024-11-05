@@ -5,7 +5,8 @@ import 'package:dumping_system/provider/provider.dart';
 class ValidationProvider extends Provider {
   Future<ValidationResponse> validation(String nrp, String title) async {
     try {
-      Response response = await dio.get("${apiUrl.dumpingApi}/FImp_User",
+      Response response = await dio.get(
+          "${apiUrl.dumpingApi}/ZDMP_GET_MATERIAL_SRVFImp_User",
           queryParameters: {
             'Nrp': "'$nrp'",
             'Title': "'$title'",

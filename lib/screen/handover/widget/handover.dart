@@ -244,39 +244,42 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                 },
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: DropdownButtonFormField(
-                                value: materialValue,
-                                items: optionsMaterial
-                                    .map<DropdownMenuItem<String>>(
-                                        (String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                }).toList(),
-                                onChanged: (String? value) {
-                                  setState(() {
-                                    materialValue = value!;
-                                  });
-                                },
-                                iconEnabledColor: Colors.black,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                                dropdownColor: Colors.white,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                            if (plant.text.isNotEmpty &&
+                                productCode.text.isNotEmpty &&
+                                _dateController.text.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: DropdownButtonFormField(
+                                  value: materialValue,
+                                  items: optionsMaterial
+                                      .map<DropdownMenuItem<String>>(
+                                          (String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? value) {
+                                    setState(() {
+                                      materialValue = value!;
+                                    });
+                                  },
+                                  iconEnabledColor: Colors.black,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 16,
                                   ),
-                                  labelText: 'Operation Type',
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
+                                  dropdownColor: Colors.white,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    labelText: 'Operation Type',
+                                    filled: true,
+                                    fillColor: Colors.grey.shade100,
+                                  ),
                                 ),
                               ),
-                            ),
                             BlocBuilder<OrderBloc, OrderState>(
                               builder: (context, state) {
                                 if (state is OrderLoaded) {
@@ -408,7 +411,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
               operationBloc.add(SendDataOperation(
                   operationType: listOrder.operationType!,
                   routingNo: listOrder.routingNo!,
-                  operationApps: "eq '1'"));
+                  operationApps: "eq '10'"));
               return _showOperationNo(context);
             },
           );

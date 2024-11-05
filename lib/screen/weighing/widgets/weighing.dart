@@ -5,6 +5,7 @@ import 'package:dumping_system/bloc/order_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/order.dart';
+import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/weighing_bloc.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
 import 'package:dumping_system/widgets/loading.dart';
@@ -13,9 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 List<Map<String, String>> optionsMaterial = [
-  {'id': '3', 'title': 'DECOCT'},
-  {'id': '4', 'title': 'CB'},
-  {'id': '5', 'title': 'CK'}
+  {'id': '31', 'title': 'DECOCT'},
+  {'id': '32', 'title': 'CB'},
+  {'id': '33', 'title': 'CK'}
 ];
 
 class WeighingScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
   OrderBloc orderBloc = OrderBloc();
   OperationBloc operationBloc = OperationBloc();
   WeighingBloc weighingBloc = WeighingBloc();
+  ScaleBloc scaleBloc = ScaleBloc();
   List<ResultOperation> listOperation = List.empty();
   ResultOperation operation = const ResultOperation();
   String? materialValue = optionsMaterial[0]['id'];
@@ -65,9 +67,12 @@ class _WeighingScreenState extends State<WeighingScreen> {
     _weighingCubit = BlocProvider.of<WeighingCubit>(context);
     var data = authBloc.state;
     if (data is Authenticated) {
+      _weighingCubit.setOperator(data.nameOperator);
+      _weighingCubit.setPengawas(data.namePengawas);
       plant.text = data.weerks;
     }
     materialBloc.add(SendPlant(plant: plant.text));
+    scaleBloc.add(SendDataScale(plant: plant.text));
     _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
     super.initState();
   }
@@ -84,6 +89,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
           BlocProvider.value(value: orderBloc),
           BlocProvider<WeighingBloc>(
               create: (BuildContext context) => weighingBloc),
+          BlocProvider<ScaleBloc>(create: (BuildContext context) => scaleBloc)
         ],
         child: MultiBlocListener(
             listeners: [
@@ -104,6 +110,9 @@ class _WeighingScreenState extends State<WeighingScreen> {
                     _weighingCubit.setTab(WeighingStatus.scaleWeighing);
                   } else {
                     _weighingCubit.setWeighing(state.weighing.d!.resultsTong!);
+                    for (var selected in state.weighing.d!.resultsTong!) {
+                      _weighingCubit.selectedWeighing(selected);
+                    }
                     _weighingCubit.setTab(WeighingStatus.scale);
                   }
                 }
@@ -113,7 +122,16 @@ class _WeighingScreenState extends State<WeighingScreen> {
                   var order = state.order.d!.results!;
                   _weighingCubit.setOrders(order);
                 }
-              })
+              }),
+              BlocListener<ScaleBloc, ScaleState>(
+                listener: (context, state) {
+                  if (state is ScaleLoaded) {
+                    for (var scale in state.scale.d!.results!) {
+                      _weighingCubit.setScale(scale);
+                    }
+                  }
+                },
+              ),
             ],
             child: BlocBuilder<WeighingCubit, WeighingState>(
                 builder: (context, weighingState) {
@@ -221,6 +239,9 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                                     productCode.text =
                                                         option.material!;
                                                   });
+                                                  _weighingCubit
+                                                      .setProductiSupervisor(option
+                                                          .productiSupervisor!);
                                                 },
                                                 title: Text(
                                                   _displayStringForOption(
@@ -255,51 +276,54 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                   },
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
-                                child: DropdownButtonFormField(
-                                  value: materialValue,
-                                  items: optionsMaterial
-                                      .map<DropdownMenuItem<String>>(
-                                          (Map<String, String> item) {
-                                    return DropdownMenuItem<String>(
-                                      value: item['id'],
-                                      child: Text(item['title']!),
-                                    );
-                                  }).toList(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      materialValue = newValue!;
-                                      switch (materialValue) {
-                                        case '3':
-                                          title = 'DECOCT';
-                                          break;
-                                        case '4':
-                                          title = 'CB';
-                                          break;
-                                        case '5':
-                                          title = 'CK';
-                                          break;
-                                      }
-                                      _weighingCubit.setOrders([]);
-                                    });
-                                  },
-                                  iconEnabledColor: Colors.black,
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                  ),
-                                  dropdownColor: Colors.white,
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                              if (plant.text.isNotEmpty &&
+                                  productCode.text.isNotEmpty &&
+                                  _dateController.text.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  child: DropdownButtonFormField(
+                                    value: materialValue,
+                                    items: optionsMaterial
+                                        .map<DropdownMenuItem<String>>(
+                                            (Map<String, String> item) {
+                                      return DropdownMenuItem<String>(
+                                        value: item['id'],
+                                        child: Text(item['title']!),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        materialValue = newValue!;
+                                        switch (materialValue) {
+                                          case '31':
+                                            title = 'DECOCT';
+                                            break;
+                                          case '32':
+                                            title = 'CB';
+                                            break;
+                                          case '33':
+                                            title = 'CK';
+                                            break;
+                                        }
+                                        _weighingCubit.setOrders([]);
+                                      });
+                                    },
+                                    iconEnabledColor: Colors.black,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
                                     ),
-                                    labelText: 'Operation Type',
-                                    filled: true,
-                                    fillColor: Colors.grey.shade100,
+                                    dropdownColor: Colors.white,
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      labelText: 'Operation Type',
+                                      filled: true,
+                                      fillColor: Colors.grey.shade100,
+                                    ),
                                   ),
                                 ),
-                              ),
                               if (weighingState.orders.isNotEmpty)
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,

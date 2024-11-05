@@ -9,12 +9,13 @@ class OrderProvider extends Provider {
     var date = DateFormat('yyyyMMdd')
         .format(DateFormat('dd-MM-yyyy').parse(startDate));
     try {
-      Response response =
-          await dio.get("${apiUrl.orderApi}/OrderSet", queryParameters: {
-        "\$filter":
-            "StartDate eq '$date' and Material eq '$materialCode' and Plant eq '$plant' and OperationType eq '${operationType.toUpperCase()}'",
-        "\$format": 'json'
-      });
+      Response response = await dio.get(
+          "${apiUrl.dumpingApi}/ZDMP_GET_ORDER_SRV/OrderSet",
+          queryParameters: {
+            "\$filter":
+                "StartDate eq '$date' and Material eq '$materialCode' and Plant eq '$plant' and OperationType eq '${operationType.toUpperCase()}'",
+            "\$format": 'json'
+          });
       return OrderResponse.fromJson(response.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");

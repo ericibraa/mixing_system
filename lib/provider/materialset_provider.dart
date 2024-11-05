@@ -6,12 +6,13 @@ class MaterialsetProvider extends Provider {
   Future<ResponseMaterialset> fetchmaterialset(
       String routingNo, String activityNo, String operationType) async {
     try {
-      Response response =
-          await dio.get("${apiUrl.orderApi}/MaterialSet", queryParameters: {
-        "\$filter":
-            "RoutingNo eq '$routingNo' and ActivityNo eq '$activityNo' and OperationType eq '${operationType.toUpperCase()}'",
-        "\$format": 'json'
-      });
+      Response response = await dio.get(
+          "${apiUrl.dumpingApi}/ZDMP_GET_ORDER_SRV/MaterialSet",
+          queryParameters: {
+            "\$filter":
+                "RoutingNo eq '$routingNo' and ActivityNo eq '$activityNo' and OperationType eq '${operationType.toUpperCase()}'",
+            "\$format": 'json'
+          });
       return ResponseMaterialset.fromJson(response.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");

@@ -18,6 +18,13 @@ class WeighingState extends Equatable {
   final Scale scaleWeighing;
   final List<ResultTong> weighingList;
   final ResultTong selectedWeighing;
+  final ResultsLabel label;
+  final ResultScale scaleUnit;
+  final String operator;
+  final String pengawas;
+  final List<ResultScaleList> resultScaleList;
+  final int containerCounter;
+  final String productiSupervisor;
 
   const WeighingState(
       {this.plant = "",
@@ -33,7 +40,14 @@ class WeighingState extends Equatable {
       this.isConnectedTcp = false,
       this.scaleWeighing = const Scale(),
       this.weighingList = const [],
-      this.selectedWeighing = const ResultTong()});
+      this.selectedWeighing = const ResultTong(),
+      this.label = const ResultsLabel(),
+      this.scaleUnit = const ResultScale(),
+      this.operator = "",
+      this.pengawas = "",
+      this.resultScaleList = const [],
+      this.containerCounter = 0,
+      this.productiSupervisor = ''});
 
   WeighingState copyWith(
       {String? plant,
@@ -49,7 +63,14 @@ class WeighingState extends Equatable {
       bool? isConnectedTcp,
       Scale? scaleWeighing,
       List<ResultTong>? weighingList,
-      ResultTong? selectedWeighing}) {
+      ResultTong? selectedWeighing,
+      ResultsLabel? label,
+      ResultScale? scaleUnit,
+      String? operator,
+      String? pengawas,
+      List<ResultScaleList>? resultScaleList,
+      int? containerCounter,
+      String? productiSupervisor}) {
     return WeighingState(
         plant: plant ?? this.plant,
         materialCode: materialCode ?? this.materialCode,
@@ -65,7 +86,14 @@ class WeighingState extends Equatable {
         isConnectedTcp: isConnectedTcp ?? this.isConnectedTcp,
         scaleWeighing: scaleWeighing ?? this.scaleWeighing,
         weighingList: weighingList ?? this.weighingList,
-        selectedWeighing: selectedWeighing ?? this.selectedWeighing);
+        selectedWeighing: selectedWeighing ?? this.selectedWeighing,
+        label: label ?? this.label,
+        scaleUnit: scaleUnit ?? this.scaleUnit,
+        operator: operator ?? this.operator,
+        pengawas: pengawas ?? this.pengawas,
+        resultScaleList: resultScaleList ?? this.resultScaleList,
+        containerCounter: containerCounter ?? this.containerCounter,
+        productiSupervisor: productiSupervisor ?? this.productiSupervisor);
   }
 
   @override
@@ -83,6 +111,13 @@ class WeighingState extends Equatable {
         isConnectedTcp,
         scaleWeighing,
         weighingList,
-        selectedWeighing
+        selectedWeighing,
+        label,
+        scaleUnit,
+        operator,
+        pengawas,
+        resultScaleList,
+        containerCounter,
+        productiSupervisor
       ];
 }

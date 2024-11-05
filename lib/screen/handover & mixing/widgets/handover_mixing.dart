@@ -249,51 +249,54 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                 },
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: DropdownButtonFormField(
-                                value: materialValue,
-                                items: optionsMaterial
-                                    .map<DropdownMenuItem<String>>(
-                                        (Map<String, String> item) {
-                                  return DropdownMenuItem<String>(
-                                    value: item['id'],
-                                    child: Text(item['title']!),
-                                  );
-                                }).toList(),
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    materialValue = newValue!;
-                                    switch (materialValue) {
-                                      case '3':
-                                        title = 'DECOCT';
-                                        break;
-                                      case '4':
-                                        title = 'CB';
-                                        break;
-                                      case '5':
-                                        title = 'CK';
-                                        break;
-                                    }
-                                    _handoverCubit.setOperationApps(newValue);
-                                  });
-                                },
-                                iconEnabledColor: Colors.black,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                                dropdownColor: Colors.white,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                            if (plant.text.isNotEmpty &&
+                                productCode.text.isNotEmpty &&
+                                _dateController.text.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: DropdownButtonFormField(
+                                  value: materialValue,
+                                  items: optionsMaterial
+                                      .map<DropdownMenuItem<String>>(
+                                          (Map<String, String> item) {
+                                    return DropdownMenuItem<String>(
+                                      value: item['id'],
+                                      child: Text(item['title']!),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      materialValue = newValue!;
+                                      switch (materialValue) {
+                                        case '3':
+                                          title = 'DECOCT';
+                                          break;
+                                        case '4':
+                                          title = 'CB';
+                                          break;
+                                        case '5':
+                                          title = 'CK';
+                                          break;
+                                      }
+                                      _handoverCubit.setOperationApps(newValue);
+                                    });
+                                  },
+                                  iconEnabledColor: Colors.black,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 16,
                                   ),
-                                  labelText: 'Operation Type',
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
+                                  dropdownColor: Colors.white,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    labelText: 'Operation Type',
+                                    filled: true,
+                                    fillColor: Colors.grey.shade100,
+                                  ),
                                 ),
                               ),
-                            ),
                             BlocBuilder<OrderBloc, OrderState>(
                               builder: (context, state) {
                                 if (state is OrderLoaded) {
@@ -425,7 +428,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
               operationBloc.add(SendDataOperation(
                   operationType: listOrder.operationType!,
                   routingNo: listOrder.routingNo!,
-                  operationApps: "ge '2'"));
+                  operationApps: "ge '20'"));
               return _showOperationNo(context);
             },
           );

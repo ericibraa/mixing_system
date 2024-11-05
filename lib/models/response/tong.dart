@@ -39,6 +39,7 @@ class ResultTong extends Equatable {
   final String? activityWh;
   final String? controlRecipe;
   final String? operationApps;
+  final String? lot;
   final WadToMatNav? wadToMatNav;
 
   const ResultTong(
@@ -55,6 +56,7 @@ class ResultTong extends Equatable {
       this.activityWh = '',
       this.controlRecipe = '',
       this.operationApps = '',
+      this.lot = '',
       this.wadToMatNav});
   ResultTong copyWith({required bool isScanned}) {
     return ResultTong(
@@ -71,6 +73,7 @@ class ResultTong extends Equatable {
         controlRecipe: controlRecipe,
         operationApps: operationApps,
         isScanned: isScanned,
+        lot: lot,
         wadToMatNav: wadToMatNav);
   }
 
@@ -87,6 +90,7 @@ class ResultTong extends Equatable {
         activityWh: json['ActivityWh'],
         controlRecipe: json['ControlRecipe'],
         operationApps: json['OperationApps'],
+        lot: json['Lot'],
         wadToMatNav: json['WadToMatNav'] != null
             ? WadToMatNav.fromJson(json['WadToMatNav'])
             : WadToMatNav(),
@@ -107,6 +111,7 @@ class ResultTong extends Equatable {
         activityWh,
         controlRecipe,
         operationApps,
+        lot,
         wadToMatNav
       ];
 }
