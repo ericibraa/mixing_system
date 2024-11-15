@@ -51,6 +51,8 @@ class SubmitHandoverBloc
                   operator: event.orderData.operator,
                   pengawas: event.orderData.pengawas)
             ]);
+        print("=====================");
+        print(submitHandover.toJson());
         String handover =
             await _submitHandoverRepository.submitHandover(submitHandover);
         emit(SubmitHandoverLoaded(submitHandover: handover));

@@ -29,6 +29,8 @@ class HandoverState extends Equatable {
   final String operationApps;
   final bool isChecked;
   final bool isNullData;
+  final List<ResultsOprType> operationTypeList;
+  final bool isNext;
 
   const HandoverState(
       {this.operator = '',
@@ -55,7 +57,9 @@ class HandoverState extends Equatable {
       this.line = "",
       this.operationApps = "",
       this.isChecked = false,
-      this.isNullData = false});
+      this.isNullData = false,
+      this.operationTypeList = const [],
+      this.isNext = false});
 
   HandoverState copyWith(
       {String? operator,
@@ -82,7 +86,9 @@ class HandoverState extends Equatable {
       String? line,
       String? operationApps,
       bool? isChecked,
-      bool? isNullData}) {
+      bool? isNullData,
+      List<ResultsOprType>? operationTypeList,
+      bool? isNext}) {
     return HandoverState(
         operator: operator ?? this.operator,
         pengawas: pengawas ?? this.pengawas,
@@ -110,7 +116,9 @@ class HandoverState extends Equatable {
         line: line ?? this.line,
         operationApps: operationApps ?? this.operationApps,
         isChecked: isChecked ?? this.isChecked,
-        isNullData: isNullData ?? this.isNullData);
+        isNullData: isNullData ?? this.isNullData,
+        operationTypeList: operationTypeList ?? this.operationTypeList,
+        isNext: isNext ?? this.isNext);
   }
 
   @override
@@ -139,6 +147,8 @@ class HandoverState extends Equatable {
         isCompleteMaterials,
         isCompleteTong,
         isChecked,
-        isNullData
+        isNullData,
+        operationTypeList,
+        isNext
       ];
 }

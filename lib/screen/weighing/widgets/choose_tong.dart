@@ -1,6 +1,7 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/models/response/label.dart';
 import 'package:dumping_system/screen/weighing/bloc/label_bloc.dart';
+import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
 import 'package:flutter/material.dart';
@@ -19,11 +20,13 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
   LabelBloc labelBloc = LabelBloc();
   ResultsLabel label = const ResultsLabel();
   ScaleBloc scaleBloc = ScaleBloc();
+  ResultScaleBloc resultScaleBloc = ResultScaleBloc();
 
   @override
   void initState() {
     super.initState();
     _weighingCubit = BlocProvider.of<WeighingCubit>(context);
+    resultScaleBloc = BlocProvider.of<ResultScaleBloc>(context);
   }
 
   @override
@@ -41,17 +44,39 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
         providers: [
           BlocProvider.value(value: _weighingCubit),
           BlocProvider.value(value: labelBloc),
-          BlocProvider.value(value: scaleBloc)
+          BlocProvider.value(value: scaleBloc),
         ],
-        child: BlocListener<LabelBloc, LabelState>(
-          listener: (context, state) {
-            if (state is LabelLoaded) {
-              for (var data in state.label.d!.resultsLabel!) {
-                label = data;
-              }
-              _weighingCubit.setLabel(label);
-            }
-          },
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<LabelBloc, LabelState>(
+              listener: (context, state) {
+                if (state is LabelLoaded) {
+                  for (var data in state.label.d!.resultsLabel!) {
+                    label = data;
+                  }
+                  _weighingCubit.setLabel(label);
+                }
+              },
+            ),
+            BlocListener<ResultScaleBloc, ResultScaleState>(
+              listener: (context, state) {
+                if (state is ResultScaleLoaded) {
+                  _weighingCubit.setContainerCounter(
+                      state.resultScale.d!.results!.length + 1);
+                  for (var data in state.resultScale.d!.results!) {
+                    _weighingCubit.setTotalContainer(data.totalWadah!);
+                  }
+                }
+              },
+            ),
+            BlocListener<ScaleBloc, ScaleState>(
+              listener: (context, state) {
+                if (state is ScaleLoaded) {
+                  _weighingCubit.setEquipments(state.scale.d!.results!);
+                }
+              },
+            ),
+          ],
           child: BlocBuilder<WeighingCubit, WeighingState>(
             builder: (context, weighingState) {
               return SingleChildScrollView(
@@ -72,7 +97,7 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  dataWeighing.operationDesc ?? '',
+                                  '${dataWeighing.activityWh} - ${dataWeighing.operationDesc}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium
@@ -150,6 +175,17 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                                   orderNo: weighingState.orderList.orderNo!,
                                   activityNo:
                                       weighingState.operationList.activityNo!));
+                              resultScaleBloc.add(SendDataResultScale(
+                                  orderNo:
+                                      weighingState.orderList.orderNo != null
+                                          ? weighingState.orderList.orderNo!
+                                          : '',
+                                  activityNo: dataWeighing.activityNo != null
+                                      ? dataWeighing.activityNo!
+                                      : '',
+                                  activityWh: dataWeighing.activityWh != null
+                                      ? dataWeighing.activityWh!
+                                      : ''));
                               _weighingCubit.setTab(WeighingStatus.scale);
                             },
                           ),

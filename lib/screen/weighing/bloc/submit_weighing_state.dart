@@ -12,10 +12,12 @@ final class SubmitWeighingLoading extends SubmitWeighingState {}
 
 final class SubmitWeighingSuccess extends SubmitWeighingState {
   final String submitWeighing;
-  SubmitWeighingSuccess({required this.submitWeighing});
+  final bool isPrinted;
+  SubmitWeighingSuccess(
+      {required this.submitWeighing, required this.isPrinted});
 
   @override
-  List<Object> get props => [submitWeighing];
+  List<Object> get props => [submitWeighing, isPrinted];
 }
 
 final class SubmitWeighingError extends SubmitWeighingState {}

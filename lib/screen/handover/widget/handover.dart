@@ -1,6 +1,8 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
+import 'package:dumping_system/bloc/operation_type_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
+import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/bloc/material_bloc.dart';
 import 'package:dumping_system/bloc/operation_bloc.dart';
@@ -10,8 +12,6 @@ import 'package:dumping_system/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-
-const List<String> optionsMaterial = <String>['DECOCT', 'CB', 'CK'];
 
 class HandoverScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -29,7 +29,8 @@ class _HandoverScreenState extends State<HandoverScreen> {
   List<ResultsMaterial> listMaterials = List.empty();
   List<ResultsOrder> listOrder = List.empty();
   List<ResultOperation> listOperation = List.empty();
-  String materialValue = optionsMaterial.first;
+  OperationTypeBloc operationTypeBloc = OperationTypeBloc();
+  String? materialValue;
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
@@ -49,6 +50,10 @@ class _HandoverScreenState extends State<HandoverScreen> {
       setState(() {
         _dateController.text = DateFormat('dd-MM-yyyy').format(picked);
       });
+      operationTypeBloc.add(SendDataOperationType(
+          startDate: _dateController.text,
+          materialCode: productCode.text,
+          plant: plant.text));
     }
   }
 
@@ -81,7 +86,9 @@ class _HandoverScreenState extends State<HandoverScreen> {
           create: (BuildContext context) => orderBloc,
         ),
         BlocProvider<HandoverCubit>(
-            create: (BuildContext context) => _handoverCubit)
+            create: (BuildContext context) => _handoverCubit),
+        BlocProvider<OperationTypeBloc>(
+            create: (BuildContext context) => operationTypeBloc)
       ],
       child: MultiBlocListener(
         listeners: [
@@ -107,6 +114,16 @@ class _HandoverScreenState extends State<HandoverScreen> {
               listener: (context, state) {
             if (state is OperationLoaded) {}
           }),
+          BlocListener<OperationTypeBloc, OperationTypeState>(
+              listener: (context, state) {
+            if (state is OperationTypeLoaded) {
+              var oprType = state.operationType.d!.results!;
+              for (var data in oprType) {
+                _handoverCubit
+                    .setOperationType(data.oprTypToDescNav!.resultsOprType!);
+              }
+            }
+          })
         ],
         child: BlocBuilder<HandoverCubit, HandoverState>(
           builder: (context, handoverState) {
@@ -212,6 +229,14 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                                   productCode.text =
                                                       option.material!;
                                                 });
+                                                operationTypeBloc.add(
+                                                    SendDataOperationType(
+                                                        startDate:
+                                                            _dateController
+                                                                .text,
+                                                        materialCode:
+                                                            productCode.text,
+                                                        plant: plant.text));
                                               },
                                               title: Text(
                                                 _displayStringForOption(option),
@@ -244,19 +269,17 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                 },
                               ),
                             ),
-                            if (plant.text.isNotEmpty &&
-                                productCode.text.isNotEmpty &&
-                                _dateController.text.isNotEmpty)
+                            if (handoverState.operationTypeList.isNotEmpty) ...[
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 20),
                                 child: DropdownButtonFormField(
                                   value: materialValue,
-                                  items: optionsMaterial
+                                  items: handoverState.operationTypeList
                                       .map<DropdownMenuItem<String>>(
-                                          (String value) {
+                                          (ResultsOprType value) {
                                     return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value),
+                                      value: value.operationType,
+                                      child: Text(value.operationType!),
                                     );
                                   }).toList(),
                                   onChanged: (String? value) {
@@ -280,6 +303,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                   ),
                                 ),
                               ),
+                            ],
                             BlocBuilder<OrderBloc, OrderState>(
                               builder: (context, state) {
                                 if (state is OrderLoaded) {
@@ -353,25 +377,25 @@ class _HandoverScreenState extends State<HandoverScreen> {
                     height: 50,
                     child: TextButton(
                       onPressed: plant.text.isNotEmpty &&
-                              materialValue.isNotEmpty &&
+                              materialValue != null &&
                               productCode.text.isNotEmpty &&
                               _dateController.text.isNotEmpty
                           ? () {
                               orderBloc.add(SendDataOrder(
                                   plant: plant.text,
                                   materialCode: productCode.text,
-                                  operationType: materialValue,
+                                  operationType: materialValue!,
                                   startDate: _dateController.text));
                               _handoverCubit.setDataOrder(
                                   plant.text,
                                   productCode.text,
                                   _dateController.text,
-                                  materialValue);
+                                  materialValue!);
                             }
                           : null,
                       style: TextButton.styleFrom(
                         backgroundColor: plant.text.isNotEmpty &&
-                                materialValue.isNotEmpty &&
+                                materialValue != null &&
                                 productCode.text.isNotEmpty &&
                                 _dateController.text.isNotEmpty
                             ? Colors.black
@@ -615,7 +639,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                     ),
                                     onTap: () {
                                       _handoverCubit.setOperation(operationNo);
-                                      _handoverCubit.setOperationApps('2');
+                                      _handoverCubit.setOperationApps('20');
                                       _handoverCubit
                                           .setTab(HandoverStatus.scantong);
                                       Navigator.of(context).pop();

@@ -1,3 +1,4 @@
+import 'package:dumping_system/screen/confirmation/confirmation_main.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/handover_mixing_main.dart';
 import 'package:dumping_system/screen/handover/handover_main.dart';
 import 'package:dumping_system/screen/login/login.dart';
@@ -31,6 +32,10 @@ class AppRouter {
         GoRoute(
           path: "/weighing",
           builder: (context, state) => const WeighingMainPage(),
+        ),
+        GoRoute(
+          path: "/confirmation",
+          builder: (context, state) => const ConfirmationMainPage(),
         )
       ],
       errorBuilder: errorWidget);

@@ -156,7 +156,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                 ));
                 Future.delayed(const Duration(seconds: 1), () {
                   // ignore: use_build_context_synchronously
-                  _handoverCubit.setTab(HandoverStatus.scantongmaterial);
+                  context.go("/home");
                   _handoverCubit.resetCompleteMaterial(false);
                 });
               } else {
@@ -343,10 +343,11 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 50,
-                    child: handoverState.isCompleteTong
+                    child: handoverState.isComplete
                         ? TextButton(
                             onPressed: () {
-                              context.go("/home");
+                              submitHandoverMixingBloc.add(SubmitHandoverMixing(
+                                  handoverMixingData: handoverState));
                             },
                             style: TextButton.styleFrom(
                               backgroundColor: Colors.green,

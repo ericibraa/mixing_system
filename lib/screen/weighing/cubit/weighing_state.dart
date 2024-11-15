@@ -19,12 +19,19 @@ class WeighingState extends Equatable {
   final List<ResultTong> weighingList;
   final ResultTong selectedWeighing;
   final ResultsLabel label;
-  final ResultScale scaleUnit;
+  final List<ResultScale> equipments;
+  final ResultScale selectedEquipment;
   final String operator;
   final String pengawas;
   final List<ResultScaleList> resultScaleList;
   final int containerCounter;
   final String productiSupervisor;
+  final String line;
+  final List<ResultsOprType> operationTypeList;
+  final ResultsOperationType resultsOpr;
+  final String totalContainer;
+  final DateTime? startWork;
+  final bool onChangeStartWork;
 
   const WeighingState(
       {this.plant = "",
@@ -42,12 +49,19 @@ class WeighingState extends Equatable {
       this.weighingList = const [],
       this.selectedWeighing = const ResultTong(),
       this.label = const ResultsLabel(),
-      this.scaleUnit = const ResultScale(),
+      this.equipments = const [],
+      this.selectedEquipment = const ResultScale(),
       this.operator = "",
       this.pengawas = "",
       this.resultScaleList = const [],
-      this.containerCounter = 0,
-      this.productiSupervisor = ''});
+      this.containerCounter = 1,
+      this.productiSupervisor = '',
+      this.line = "",
+      this.operationTypeList = const [],
+      this.resultsOpr = const ResultsOperationType(),
+      this.totalContainer = '',
+      this.startWork,
+      this.onChangeStartWork = false});
 
   WeighingState copyWith(
       {String? plant,
@@ -65,12 +79,19 @@ class WeighingState extends Equatable {
       List<ResultTong>? weighingList,
       ResultTong? selectedWeighing,
       ResultsLabel? label,
-      ResultScale? scaleUnit,
+      List<ResultScale>? equipments,
+      ResultScale? selectedEquipment,
       String? operator,
       String? pengawas,
       List<ResultScaleList>? resultScaleList,
       int? containerCounter,
-      String? productiSupervisor}) {
+      String? productiSupervisor,
+      String? line,
+      List<ResultsOprType>? operationTypeList,
+      ResultsOperationType? resultsOpr,
+      String? totalContainer,
+      DateTime? startWork,
+      bool? onChangeStartWork}) {
     return WeighingState(
         plant: plant ?? this.plant,
         materialCode: materialCode ?? this.materialCode,
@@ -88,12 +109,19 @@ class WeighingState extends Equatable {
         weighingList: weighingList ?? this.weighingList,
         selectedWeighing: selectedWeighing ?? this.selectedWeighing,
         label: label ?? this.label,
-        scaleUnit: scaleUnit ?? this.scaleUnit,
+        equipments: equipments ?? this.equipments,
+        selectedEquipment: selectedEquipment ?? this.selectedEquipment,
         operator: operator ?? this.operator,
         pengawas: pengawas ?? this.pengawas,
         resultScaleList: resultScaleList ?? this.resultScaleList,
         containerCounter: containerCounter ?? this.containerCounter,
-        productiSupervisor: productiSupervisor ?? this.productiSupervisor);
+        productiSupervisor: productiSupervisor ?? this.productiSupervisor,
+        line: line ?? this.line,
+        operationTypeList: operationTypeList ?? this.operationTypeList,
+        resultsOpr: resultsOpr ?? this.resultsOpr,
+        totalContainer: totalContainer ?? this.totalContainer,
+        startWork: startWork ?? this.startWork,
+        onChangeStartWork: onChangeStartWork ?? this.onChangeStartWork);
   }
 
   @override
@@ -113,11 +141,17 @@ class WeighingState extends Equatable {
         weighingList,
         selectedWeighing,
         label,
-        scaleUnit,
+        equipments,
+        selectedEquipment,
         operator,
         pengawas,
         resultScaleList,
         containerCounter,
-        productiSupervisor
+        productiSupervisor,
+        line,
+        operationTypeList,
+        resultsOpr,
+        totalContainer,
+        onChangeStartWork
       ];
 }

@@ -53,7 +53,7 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.4
   htmltopdfwidgets: ^1.0.4
-  flutter_esc_pos_utils: ^1.0.1
+  zsdk: ^3.2.0+3
 
 dev_dependencies:
   flutter_test:

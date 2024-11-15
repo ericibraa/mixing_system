@@ -1,19 +1,17 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
-import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
-import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
-import 'package:dumping_system/screen/weighing/widgets/choose_tong.dart';
-import 'package:dumping_system/screen/weighing/widgets/scale_weighing.dart';
-import 'package:dumping_system/screen/weighing/widgets/weighing.dart';
+import 'package:dumping_system/screen/confirmation/cubit/confirmation_cubit.dart';
+import 'package:dumping_system/screen/confirmation/widgets/confirmation.dart';
+import 'package:dumping_system/screen/confirmation/widgets/form_confirmation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class WeighingMainPage extends StatelessWidget {
-  const WeighingMainPage({Key? key}) : super(key: key);
+class ConfirmationMainPage extends StatelessWidget {
+  const ConfirmationMainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => WeighingCubit(),
+      create: (_) => ConfirmationCubit(),
       child: const MainView(),
     );
   }
@@ -28,8 +26,7 @@ class MainView extends StatefulWidget {
 
 class _MainViewState extends State<MainView> {
   AuthBloc authBloc = AuthBloc();
-  WeighingCubit weighingCubit = WeighingCubit();
-  ResultScaleBloc resultScaleBloc = ResultScaleBloc();
+  ConfirmationCubit confirmationCubit = ConfirmationCubit();
 
   @override
   void initState() {
@@ -43,22 +40,18 @@ class _MainViewState extends State<MainView> {
       body: MultiBlocProvider(
         providers: [
           BlocProvider(
-            create: (context) => weighingCubit,
-          ),
-          BlocProvider<ResultScaleBloc>(
-            create: (context) => resultScaleBloc,
-          ),
+            create: (context) => confirmationCubit,
+          )
         ],
-        child: BlocListener<WeighingCubit, WeighingState>(
+        child: BlocListener<ConfirmationCubit, ConfirmationState>(
           listener: (context, state) {},
-          child: BlocBuilder<WeighingCubit, WeighingState>(
+          child: BlocBuilder<ConfirmationCubit, ConfirmationState>(
             builder: (context, state) {
               return IndexedStack(
                 index: state.tab.index,
                 children: const [
-                  WeighingScreen(),
-                  ChooseTongScreen(),
-                  ScaleWeighingScreen()
+                  ConfirmationScreen(),
+                  FormConfirmationScreen()
                 ],
               );
             },

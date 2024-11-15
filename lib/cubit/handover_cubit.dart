@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:dumping_system/models/response/materialset.dart';
 import 'package:dumping_system/models/response/operation.dart';
+import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/models/response/tong.dart';
 import 'package:equatable/equatable.dart';
@@ -192,7 +193,8 @@ class HandoverCubit extends Cubit<HandoverState> {
   }
 
   void resetFullpackWadah() {
-    emit(state.copyWith(tongs: [], fullpack: [], isComplete: false));
+    emit(state.copyWith(
+        tongs: [], fullpack: [], isComplete: false, isCompleteTong: false));
   }
 
   void setMaterialSet(List<ResultsMaterialset> materialSet) {
@@ -210,5 +212,13 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   void resetCompleteMaterial(bool material) {
     emit(state.copyWith(isCompleteMaterials: material, materialSet: []));
+  }
+
+  void setOperationType(List<ResultsOprType> operationTypeList) {
+    emit(state.copyWith(operationTypeList: operationTypeList));
+  }
+
+  void isNext(bool isNext) {
+    emit(state.copyWith(isNext: isNext));
   }
 }

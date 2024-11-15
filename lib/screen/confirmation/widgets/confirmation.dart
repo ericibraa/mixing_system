@@ -1,54 +1,55 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/bloc/material_bloc.dart';
-import 'package:dumping_system/bloc/operation_bloc.dart';
 import 'package:dumping_system/bloc/operation_type_bloc.dart';
 import 'package:dumping_system/bloc/order_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
-import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/models/response/order.dart';
-import 'package:dumping_system/screen/weighing/bloc/label_bloc.dart';
-import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
-import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
-import 'package:dumping_system/screen/weighing/bloc/weighing_bloc.dart';
-import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
-import 'package:dumping_system/widgets/loading.dart';
+import 'package:dumping_system/screen/confirmation/bloc/operation_confirmation_bloc.dart';
+import 'package:dumping_system/screen/confirmation/bloc/yield_set_bloc.dart';
+import 'package:dumping_system/screen/confirmation/cubit/confirmation_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:zsdk/zsdk.dart';
 
-class WeighingScreen extends StatefulWidget {
-  // ignore: use_super_parameters
-  const WeighingScreen({Key? key}) : super(key: key);
+class ConfirmationScreen extends StatefulWidget {
+  const ConfirmationScreen({super.key});
 
   @override
-  State<WeighingScreen> createState() => _WeighingScreenState();
+  State<ConfirmationScreen> createState() => _ConfirmationScreenState();
 }
 
-class _WeighingScreenState extends State<WeighingScreen> {
+class _ConfirmationScreenState extends State<ConfirmationScreen> {
   AuthBloc authBloc = AuthBloc();
+  ConfirmationCubit _confirmationCubit = ConfirmationCubit();
   MaterialsBloc materialBloc = MaterialsBloc();
   OrderBloc orderBloc = OrderBloc();
-  OperationBloc operationBloc = OperationBloc();
-  WeighingBloc weighingBloc = WeighingBloc();
-  ScaleBloc scaleBloc = ScaleBloc();
   OperationTypeBloc operationTypeBloc = OperationTypeBloc();
-  List<ResultOperation> listOperation = List.empty();
-  LabelBloc labelBloc = LabelBloc();
-  ResultOperation operation = const ResultOperation();
-  String? materialValue;
-  List<ResultsMaterial> listMaterials = List.empty();
+  OperationConfirmationBloc operationConfirmationBloc =
+      OperationConfirmationBloc();
+  YieldSetBloc yieldSetBloc = YieldSetBloc();
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
   static String _displayStringForOption(ResultsMaterial option) =>
       "${option.material!} - ${option.materialDesc}";
   String selectedOperation = '';
-  WeighingCubit _weighingCubit = WeighingCubit();
-  String title = '';
-  final zsdk = ZSDK();
-  ResultScaleBloc resultScaleBloc = ResultScaleBloc();
+  String? materialValue;
+
+  @override
+  void initState() {
+    authBloc = BlocProvider.of<AuthBloc>(context);
+    _confirmationCubit = BlocProvider.of<ConfirmationCubit>(context);
+    var data = authBloc.state;
+    if (data is Authenticated) {
+      _confirmationCubit.setOperator(data.nameOperator);
+      _confirmationCubit.setPengawas(data.namePengawas);
+      plant.text = data.weerks;
+    }
+    materialBloc.add(SendPlant(plant: plant.text));
+    _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    super.initState();
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? picked = await showDatePicker(
@@ -69,132 +70,67 @@ class _WeighingScreenState extends State<WeighingScreen> {
   }
 
   @override
-  void initState() {
-    authBloc = BlocProvider.of<AuthBloc>(context);
-    _weighingCubit = BlocProvider.of<WeighingCubit>(context);
-    resultScaleBloc = BlocProvider.of<ResultScaleBloc>(context);
-    var data = authBloc.state;
-    if (data is Authenticated) {
-      _weighingCubit.setOperator(data.nameOperator);
-      _weighingCubit.setPengawas(data.namePengawas);
-      plant.text = data.weerks;
-    }
-    materialBloc.add(SendPlant(plant: plant.text));
-    _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
         providers: [
           BlocProvider<MaterialsBloc>(
             create: (BuildContext context) => materialBloc,
           ),
-          BlocProvider<WeighingCubit>(
-              create: (BuildContext context) => _weighingCubit),
-          BlocProvider.value(value: orderBloc),
-          BlocProvider<WeighingBloc>(
-              create: (BuildContext context) => weighingBloc),
-          BlocProvider<ScaleBloc>(create: (BuildContext context) => scaleBloc),
           BlocProvider<OperationTypeBloc>(
               create: (BuildContext context) => operationTypeBloc),
-          BlocProvider<LabelBloc>(create: (BuildContext context) => labelBloc)
+          BlocProvider<OrderBloc>(create: (BuildContext context) => orderBloc),
+          BlocProvider<OperationConfirmationBloc>(
+              create: (BuildContext context) => operationConfirmationBloc),
+          BlocProvider<YieldSetBloc>(
+              create: (BuildContext contex) => yieldSetBloc)
         ],
         child: MultiBlocListener(
             listeners: [
               BlocListener<MaterialsBloc, MaterialsState>(
                   listener: (context, state) {
                 if (state is MaterialsLoaded) {
-                  setState(() {
-                    listMaterials = state.material.d!.results!;
-                  });
+                  _confirmationCubit.setMaterials(state.material.d!.results!);
                 }
               }),
-              BlocListener<WeighingBloc, WeighingBlocState>(
+              BlocListener<OperationTypeBloc, OperationTypeState>(
                   listener: (context, state) {
-                if (state is WeighingLoaded) {
-                  var weighing = state.weighing.d!.resultsTong!;
-                  if (weighing.length > 2) {
-                    _weighingCubit.setWeighing(state.weighing.d!.resultsTong!);
-                    _weighingCubit.setTab(WeighingStatus.scaleWeighing);
-                  } else {
-                    _weighingCubit.setWeighing(state.weighing.d!.resultsTong!);
-                    for (var selected in state.weighing.d!.resultsTong!) {
-                      _weighingCubit.selectedWeighing(selected);
-                      scaleBloc.add(
-                          SendDataScale(plant: _weighingCubit.state.plant));
-                      labelBloc.add(SendDataLabel(
-                          orderNo:
-                              _weighingCubit.state.orderList.orderNo != null
-                                  ? _weighingCubit.state.orderList.orderNo!
-                                  : '',
-                          activityNo: selected.activityNo != null
-                              ? selected.activityNo!
-                              : ''));
-                      resultScaleBloc.add(SendDataResultScale(
-                          orderNo:
-                              _weighingCubit.state.orderList.orderNo != null
-                                  ? _weighingCubit.state.orderList.orderNo!
-                                  : '',
-                          activityNo: selected.activityNo != null
-                              ? selected.activityNo!
-                              : '',
-                          activityWh: selected.activityWh != null
-                              ? selected.activityWh!
-                              : ''));
-                    }
-                    _weighingCubit.setTab(WeighingStatus.scale);
+                if (state is OperationTypeLoaded) {
+                  for (var operationType in state.operationType.d!.results!) {
+                    _confirmationCubit.setOperationTypes(
+                        operationType.oprTypToDescNav!.resultsOprType!);
                   }
                 }
               }),
               BlocListener<OrderBloc, OrderState>(listener: (context, state) {
                 if (state is OrderLoaded) {
                   var order = state.order.d!.results!;
-                  _weighingCubit.setOrders(order);
+                  _confirmationCubit.setOrders(order);
                 }
               }),
-              BlocListener<ScaleBloc, ScaleState>(
-                listener: (context, state) {
-                  if (state is ScaleLoaded) {
-                    _weighingCubit.setEquipments(state.scale.d!.results!);
-                  }
-                },
-              ),
-              BlocListener<OperationTypeBloc, OperationTypeState>(
+              BlocListener<OperationConfirmationBloc,
+                  OperationConfirmationState>(listener: (context, state) {
+                if (state is OperationConfirmationSuccess) {
+                  _confirmationCubit.setOperations(
+                      state.operationConfirmation.d!.resultsOperationNo!);
+                }
+              }),
+              BlocListener<YieldSetBloc, YieldSetState>(
                   listener: (context, state) {
-                if (state is OperationTypeLoaded) {
-                  var oprType = state.operationType.d!.results!;
-                  for (var data in oprType) {
-                    _weighingCubit.setMaterialsFull(data);
-                    _weighingCubit.setOperationTypeList(
-                        data.oprTypToDescNav!.resultsOprType!);
+                if (state is YieldSetSuccess) {
+                  for (var yieldSet in state.yieldSet.d!.results!) {
+                    _confirmationCubit.setYieldSet(yieldSet);
                   }
-                }
-              }),
-              BlocListener<LabelBloc, LabelState>(listener: (context, state) {
-                if (state is LabelLoaded) {
-                  for (var label in state.label.d!.resultsLabel!) {
-                    _weighingCubit.setLabel(label);
-                  }
-                }
-              }),
-              BlocListener<ResultScaleBloc, ResultScaleState>(
-                  listener: (context, state) {
-                if (state is ResultScaleLoaded) {
-                  _weighingCubit
-                      .setResultScaleList(state.resultScale.d!.results!);
-                  for (var data in state.resultScale.d!.results!) {
-                    _weighingCubit.setTotalContainer(data.totalWadah!);
-                  }
+                  _confirmationCubit
+                      .setTab(ConfirmationStatus.formConfirmation);
+                  _confirmationCubit.setStartDate();
                 }
               })
             ],
-            child: BlocBuilder<WeighingCubit, WeighingState>(
-                builder: (context, weighingState) {
+            child: BlocBuilder<ConfirmationCubit, ConfirmationState>(
+                builder: (context, confirmationState) {
               return Scaffold(
                 appBar: AppBar(
-                  title: const Text("Weighing"),
+                  title: const Text("Confirmation"),
                 ),
                 body: SingleChildScrollView(
                   child: Padding(
@@ -258,7 +194,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                       return const Iterable<
                                           ResultsMaterial>.empty();
                                     }
-                                    return listMaterials
+                                    return confirmationState.materials
                                         .where((ResultsMaterial material) {
                                       return material.material!
                                           .toLowerCase()
@@ -296,7 +232,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                                     productCode.text =
                                                         option.material!;
                                                   });
-                                                  _weighingCubit
+                                                  _confirmationCubit
                                                       .setProductiSupervisor(option
                                                           .productiSupervisor!);
                                                   operationTypeBloc.add(
@@ -341,13 +277,13 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                   },
                                 ),
                               ),
-                              if (weighingState
-                                  .operationTypeList.isNotEmpty) ...[
+                              if (confirmationState
+                                  .operationTypes.isNotEmpty) ...[
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 20),
                                   child: DropdownButtonFormField(
                                     value: materialValue,
-                                    items: weighingState.operationTypeList
+                                    items: confirmationState.operationTypes
                                         .map<DropdownMenuItem<String>>(
                                             (ResultsOprType item) {
                                       return DropdownMenuItem<String>(
@@ -358,7 +294,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                     onChanged: (String? newValue) {
                                       setState(() {
                                         materialValue = newValue!;
-                                        _weighingCubit.setOrders([]);
+                                        _confirmationCubit.setOrders([]);
                                       });
                                     },
                                     iconEnabledColor: Colors.black,
@@ -378,7 +314,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                   ),
                                 ),
                               ],
-                              if (weighingState.orders.isNotEmpty)
+                              if (confirmationState.orders.isNotEmpty)
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -392,11 +328,12 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                             .titleLarge,
                                       ),
                                     ),
-                                    if (weighingState.orders.isNotEmpty) ...[
+                                    if (confirmationState
+                                        .orders.isNotEmpty) ...[
                                       for (var dataOrder
-                                          in weighingState.orders)
-                                        _orderList(
-                                            context, dataOrder, weighingState),
+                                          in confirmationState.orders)
+                                        _orderList(context, dataOrder,
+                                            confirmationState),
                                     ] else ...[
                                       Center(
                                         child: Padding(
@@ -446,7 +383,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                               materialCode: productCode.text,
                               operationType: materialValue!,
                               startDate: _dateController.text));
-                          _weighingCubit.setDataOrder(
+                          _confirmationCubit.setDataOrder(
                               plant.text,
                               productCode.text,
                               _dateController.text,
@@ -464,7 +401,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                           ),
                         ),
                         child: Text(
-                          "Show Weighing List",
+                          "Show Confirmation List",
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.white,
@@ -480,8 +417,8 @@ class _WeighingScreenState extends State<WeighingScreen> {
             })));
   }
 
-  Widget _orderList(BuildContext context, ResultsOrder listOrder,
-      WeighingState weighingState) {
+  Widget _orderList(BuildContext context, ResultsOrder order,
+      ConfirmationState confirmationState) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: InkWell(
@@ -489,11 +426,11 @@ class _WeighingScreenState extends State<WeighingScreen> {
           showDialog(
             context: context,
             builder: (BuildContext context) {
-              _weighingCubit.setOrderList(listOrder);
-              operationBloc.add(SendDataOperation(
-                  operationType: listOrder.operationType!,
-                  routingNo: listOrder.routingNo!,
-                  operationApps: "eq '${weighingState.operationApps}'"));
+              _confirmationCubit.setSelectedOrder(order);
+              operationConfirmationBloc.add(GetOperationConfirmation(
+                  order.routingNo!,
+                  order.operationType!,
+                  "eq '${confirmationState.operationApps}'"));
               return _showOperationNo(context);
             },
           );
@@ -511,7 +448,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '(${listOrder.material!}) ${listOrder.materialDesc}',
+                  '(${order.material!}) ${order.materialDesc}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -533,7 +470,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          listOrder.orderNo!,
+                          order.orderNo!,
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     color: Colors.black87,
@@ -554,7 +491,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          listOrder.batchFG!,
+                          order.batchFG!,
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     color: Colors.black87,
@@ -576,194 +513,164 @@ class _WeighingScreenState extends State<WeighingScreen> {
   Widget _showOperationNo(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider.value(value: _weighingCubit),
-        BlocProvider.value(value: operationBloc),
-        BlocProvider.value(value: weighingBloc)
+        BlocProvider.value(value: _confirmationCubit),
+        BlocProvider.value(value: yieldSetBloc)
       ],
-      child: Dialog(
-        insetPadding: EdgeInsets.zero,
-        child: BlocBuilder<WeighingCubit, WeighingState>(
-          builder: (context, weighingState) {
-            return BlocBuilder<OperationBloc, OperationState>(
-              builder: (context, state) {
-                if (state is OperationLoading) {
-                  return const Loading();
-                }
-                if (state is OperationLoaded) {
-                  for (var operations
-                      in state.operation.d!.resultsOperationNo!) {
-                    operation = operations;
-                  }
-                  listOperation = state.operation.d!.resultsOperationNo!;
-                  return Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Choose Operation No'),
-                      automaticallyImplyLeading: false,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    ),
-                    body: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Please choose an operation number:',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge!
-                                .copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+      child: BlocBuilder<ConfirmationCubit, ConfirmationState>(
+        builder: (context, confirmationState) {
+          return Dialog(
+            insetPadding: EdgeInsets.zero,
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('Choose Operation No'),
+                automaticallyImplyLeading: false,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Please choose an operation number:',
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: listOperation.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final operationNo = listOperation[index];
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: confirmationState.operations.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final selectedOperation =
+                              confirmationState.operations[index];
 
-                                final isSelected =
-                                    weighingState.operationList.activityNo ==
-                                        operationNo.activityNo;
+                          final isSelected =
+                              confirmationState.selectedOperation.activityNo ==
+                                  selectedOperation.activityNo;
 
-                                return Card(
-                                  elevation: 5,
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 8),
-                                  color: isSelected
-                                      ? Colors.black
-                                      : Colors.grey[200],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                          return Card(
+                            elevation: 5,
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            color: isSelected ? Colors.black : Colors.grey[200],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    selectedOperation.operationDesc ?? '',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : Colors.black),
                                   ),
-                                  child: ListTile(
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          operationNo.operationDesc ?? '',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Operation number",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
                                                   color: isSelected
                                                       ? Colors.white
-                                                      : Colors.black),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  "Operation number",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                      ),
+                                                      : Colors.black,
                                                 ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  operationNo.activityNo ?? '',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyLarge
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            selectedOperation.activityNo ?? '',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Colors.black,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
-                                              ],
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "Operation Apps",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                      ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Operation Apps",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Colors.black,
                                                 ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  operationNo.operationApps ??
-                                                      '',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyLarge
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            selectedOperation.operationApps ??
+                                                '',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Colors.black,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    onTap: () {
-                                      _weighingCubit
-                                          .setOperationList(operation);
-                                      weighingBloc.add(SendDataWeighing(
-                                          routingNo: operationNo.routingNo!,
-                                          internalCntr:
-                                              operationNo.internalCntr!,
-                                          activityNo: operationNo.activityNo!,
-                                          operationType:
-                                              weighingState.operationType,
-                                          operationApps:
-                                              weighingState.operationApps));
-                                      if (mounted) {
-                                        Navigator.of(context).pop();
-                                      }
-                                    },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                );
+                                ],
+                              ),
+                              onTap: () {
+                                _confirmationCubit
+                                    .setSelectedOperation(selectedOperation);
+                                yieldSetBloc.add(GetYieldSet(
+                                    selectedOperation.routingNo!,
+                                    selectedOperation.internalCntr!,
+                                    selectedOperation.activityNo!));
+                                if (mounted) {
+                                  Navigator.of(context).pop();
+                                }
                               },
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ),
-                  );
-                } else {
-                  return const Center();
-                }
-              },
-            );
-          },
-        ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

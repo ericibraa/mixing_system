@@ -1,6 +1,8 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
+import 'package:dumping_system/bloc/operation_type_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
+import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/bloc/material_bloc.dart';
 import 'package:dumping_system/bloc/operation_bloc.dart';
@@ -10,12 +12,6 @@ import 'package:dumping_system/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-
-List<Map<String, String>> optionsMaterial = [
-  {'id': '3', 'title': 'DECOCT'},
-  {'id': '4', 'title': 'CB'},
-  {'id': '5', 'title': 'CK'}
-];
 
 class HandoverMixingScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -33,7 +29,8 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
   List<ResultsMaterial> listMaterials = List.empty();
   List<ResultsOrder> listOrder = List.empty();
   List<ResultOperation> listOperation = List.empty();
-  String? materialValue = optionsMaterial[0]['id'];
+  OperationTypeBloc operationTypeBloc = OperationTypeBloc();
+  String? materialValue;
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
@@ -54,6 +51,10 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
       setState(() {
         _dateController.text = DateFormat('dd-MM-yyyy').format(picked);
       });
+      operationTypeBloc.add(SendDataOperationType(
+          startDate: _dateController.text,
+          materialCode: productCode.text,
+          plant: plant.text));
     }
   }
 
@@ -86,7 +87,9 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
           create: (BuildContext context) => orderBloc,
         ),
         BlocProvider<HandoverCubit>(
-            create: (BuildContext context) => _handoverCubit)
+            create: (BuildContext context) => _handoverCubit),
+        BlocProvider<OperationTypeBloc>(
+            create: (BuildContext context) => operationTypeBloc)
       ],
       child: MultiBlocListener(
         listeners: [
@@ -112,6 +115,16 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
               listener: (context, state) {
             if (state is OperationLoaded) {}
           }),
+          BlocListener<OperationTypeBloc, OperationTypeState>(
+              listener: (context, state) {
+            if (state is OperationTypeLoaded) {
+              var oprType = state.operationType.d!.results!;
+              for (var data in oprType) {
+                _handoverCubit
+                    .setOperationType(data.oprTypToDescNav!.resultsOprType!);
+              }
+            }
+          })
         ],
         child: BlocBuilder<HandoverCubit, HandoverState>(
           builder: (context, handoverState) {
@@ -217,6 +230,14 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                                   productCode.text =
                                                       option.material!;
                                                 });
+                                                operationTypeBloc.add(
+                                                    SendDataOperationType(
+                                                        startDate:
+                                                            _dateController
+                                                                .text,
+                                                        materialCode:
+                                                            productCode.text,
+                                                        plant: plant.text));
                                               },
                                               title: Text(
                                                 _displayStringForOption(option),
@@ -249,36 +270,40 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                 },
                               ),
                             ),
-                            if (plant.text.isNotEmpty &&
-                                productCode.text.isNotEmpty &&
-                                _dateController.text.isNotEmpty)
+                            if (handoverState.operationTypeList.isNotEmpty) ...[
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 20),
                                 child: DropdownButtonFormField(
                                   value: materialValue,
-                                  items: optionsMaterial
+                                  items: handoverState.operationTypeList
                                       .map<DropdownMenuItem<String>>(
-                                          (Map<String, String> item) {
+                                          (ResultsOprType item) {
                                     return DropdownMenuItem<String>(
-                                      value: item['id'],
-                                      child: Text(item['title']!),
+                                      value: item.operationType,
+                                      child: Text(item.operationType!),
                                     );
                                   }).toList(),
                                   onChanged: (String? newValue) {
                                     setState(() {
                                       materialValue = newValue!;
                                       switch (materialValue) {
-                                        case '3':
-                                          title = 'DECOCT';
+                                        case 'DECOCT':
+                                          title = '31';
                                           break;
-                                        case '4':
-                                          title = 'CB';
+                                        case 'CB':
+                                          title = '32';
                                           break;
-                                        case '5':
-                                          title = 'CK';
+                                        case 'CK':
+                                          title = '33';
+                                          break;
+                                        case 'LIQUID MIXING':
+                                          title = '34';
+                                          break;
+                                        case 'SEMI SOLID MIXING':
+                                          title = '45';
                                           break;
                                       }
-                                      _handoverCubit.setOperationApps(newValue);
+                                      _handoverCubit.setOperationApps(title);
                                     });
                                   },
                                   iconEnabledColor: Colors.black,
@@ -297,6 +322,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                   ),
                                 ),
                               ),
+                            ],
                             BlocBuilder<OrderBloc, OrderState>(
                               builder: (context, state) {
                                 if (state is OrderLoaded) {
@@ -370,25 +396,25 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                     height: 50,
                     child: TextButton(
                       onPressed: plant.text.isNotEmpty &&
-                              materialValue!.isNotEmpty &&
+                              materialValue != null &&
                               productCode.text.isNotEmpty &&
                               _dateController.text.isNotEmpty
                           ? () {
                               orderBloc.add(SendDataOrder(
                                   plant: plant.text,
                                   materialCode: productCode.text,
-                                  operationType: title,
+                                  operationType: materialValue!,
                                   startDate: _dateController.text));
                               _handoverCubit.setDataOrder(
                                   plant.text,
                                   productCode.text,
                                   _dateController.text,
-                                  title);
+                                  materialValue!);
                             }
                           : null,
                       style: TextButton.styleFrom(
                         backgroundColor: plant.text.isNotEmpty &&
-                                materialValue!.isNotEmpty &&
+                                materialValue != null &&
                                 productCode.text.isNotEmpty &&
                                 _dateController.text.isNotEmpty
                             ? Colors.black
@@ -666,7 +692,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                       _handoverCubit.setOperation(operationNo);
                                       var number =
                                           int.parse(operationNo.operationApps!);
-                                      if (number > 2) {
+                                      if (number > 20) {
                                         _handoverCubit.setTab(
                                             HandoverStatus.scantongmaterial);
                                       } else {

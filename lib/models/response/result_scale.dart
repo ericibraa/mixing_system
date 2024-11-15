@@ -49,6 +49,8 @@ class ResultScaleList {
   String? resourceDesc;
   String? activityNoDesc;
   String? activityWhDesc;
+  String? lot;
+  String? line;
 
   ResultScaleList(
       {this.orderNo,
@@ -75,7 +77,9 @@ class ResultScaleList {
       this.equipmentDesc,
       this.resourceDesc,
       this.activityNoDesc,
-      this.activityWhDesc});
+      this.activityWhDesc,
+      this.lot,
+      this.line});
 
   ResultScaleList.fromJson(Map<String, dynamic> json) {
     orderNo = json['OrderNo'];
@@ -103,5 +107,7 @@ class ResultScaleList {
     resourceDesc = json['ResourceDesc'];
     activityNoDesc = json['ActivityNoDesc'];
     activityWhDesc = json['ActivityWhDesc'];
+    lot = json['Lot'];
+    line = json['Line'];
   }
 }

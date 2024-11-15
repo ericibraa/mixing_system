@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:dumping_system/screen/weighing/bloc/label_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
+import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/submit_weighing_bloc.dart';
-import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart' as printer;
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -14,6 +15,7 @@ import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:zsdk/zsdk.dart';
 
 class ScaleWeighingScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -28,8 +30,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   WeighingCubit _weighingCubit = WeighingCubit();
   ResultScale scaleData = const ResultScale();
   SubmitWeighingBloc submitWeighingBloc = SubmitWeighingBloc();
-  LabelBloc labelBloc = LabelBloc();
-  ResultScaleBloc resultScaleBloc = ResultScaleBloc();
   final temperature = TextEditingController();
   final moistureContent = TextEditingController();
   final numberOfContainer = TextEditingController();
@@ -37,8 +37,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   final bruto = TextEditingController();
   final tara = TextEditingController();
   final netto = TextEditingController();
-  late Socket socket;
-  String weight = "     ";
+  final line = TextEditingController();
+  Socket? socket;
+  String weight = "";
   String scannedBarcode = '';
   String plant = '';
   RegExp replaceZero = RegExp(r"^0{2,}", caseSensitive: true, multiLine: false);
@@ -46,88 +47,19 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   String gramasi = '';
   Scale scaleD = const Scale();
   final String title = '';
+  final zsdk = ZSDK();
+  ResultScaleBloc resultScaleBloc = ResultScaleBloc();
+  int totalCont = 0;
+  ScaleBloc scaleBloc = ScaleBloc();
 
-  Future<List<int>> prtintData() async {
-    final profile = await printer.CapabilityProfile.load();
-    // Set up a custom width for A7 paper
-    final generator = printer.Generator(printer.PaperSize.mm80, profile);
-    List<int> bytes = [];
-
-    bytes += generator.text('PRODUK DALAM PROSES',
-        styles: const printer.PosStyles(
-            align: printer.PosAlign.center,
-            bold: true,
-            height: printer.PosTextSize.size1));
-    bytes += generator.text('Product          001-00-03',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('BODREX/TAB 2X10\'S FBX',
-        styles:
-            const printer.PosStyles(align: printer.PosAlign.left, bold: true));
-    bytes += generator.text('Batch            091604',
-        styles:
-            const printer.PosStyles(align: printer.PosAlign.left, bold: true));
-
-    // Additional details, adjusted for A7 size
-    bytes += generator.text('PrO              200107367',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('Line             1.2',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('Scale            AND HW 150 KGL',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('Mesin            GRANULATION LT 1 - LINE 1',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('Operation/Lot    Ayak Kering / 1',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('Operator/PWS     TEST/TEST',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('Tgl. Timbang     03.09.2024 11:23:22',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('Holding Time     10.09.2024 11:23:22',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-    bytes += generator.text('CB',
-        styles: const printer.PosStyles(align: printer.PosAlign.left));
-
-    // Weight information for A7 size
-    bytes += generator.hr(); // Horizontal line
-    bytes += generator.row([
-      printer.PosColumn(
-          text: 'Nett',
-          width: 6,
-          styles: const printer.PosStyles(align: printer.PosAlign.left)),
-      printer.PosColumn(
-          text: '93,000',
-          width: 6,
-          styles: const printer.PosStyles(align: printer.PosAlign.right)),
-    ]);
-    bytes += generator.row([
-      printer.PosColumn(
-          text: 'Tara',
-          width: 6,
-          styles: const printer.PosStyles(align: printer.PosAlign.left)),
-      printer.PosColumn(
-          text: '1,000',
-          width: 6,
-          styles: const printer.PosStyles(align: printer.PosAlign.right)),
-    ]);
-    bytes += generator.row([
-      printer.PosColumn(
-          text: 'Bruto',
-          width: 6,
-          styles: const printer.PosStyles(align: printer.PosAlign.left)),
-      printer.PosColumn(
-          text: '92,000',
-          width: 6,
-          styles: const printer.PosStyles(align: printer.PosAlign.right)),
-    ]);
-
-    // Footer with pagination for A7 size
-    bytes += generator.text('1/6',
-        styles: const printer.PosStyles(align: printer.PosAlign.right));
-
-    bytes += generator.feed(2); // Add spacing at the end
-    bytes += generator.cut(); // Cut the paper
-
-    return bytes;
+  void scanLine(Barcode? barcode) async {
+    if (barcode != null && barcode.displayValue != null) {
+      setState(() {
+        scannedBarcode = barcode.displayValue!;
+      });
+      line.text = scannedBarcode;
+      _weighingCubit.setLine(line.text);
+    }
   }
 
   void _scanBarcode(Barcode? barcode) async {
@@ -137,17 +69,17 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
       });
       if (mounted) {
         _weighingCubit.resetScaleWeighing();
-        print(_weighingCubit.state.scaleUnit.equipmentNo == scannedBarcode);
-        if (_weighingCubit.state.scaleUnit.equipmentNo == scannedBarcode) {
-          _weighingCubit.setScaleWeighing(Scale(
-              scaleId: _weighingCubit.state.scaleUnit.equipmentNo,
-              scaleName: _weighingCubit.state.scaleUnit.equipmentDesc,
-              urlAddress: _weighingCubit.state.scaleUnit.urlAddress,
-              regex: _weighingCubit.state.scaleUnit.regex));
+        ResultScale selectedEquipment =
+            _weighingCubit.state.equipments.firstWhere(
+          (equpment) => equpment.equipmentNo == scannedBarcode,
+          orElse: () => const ResultScale(),
+        );
+        if (selectedEquipment.equipmentNo.isNotEmpty) {
+          _weighingCubit.setSelectedEquipment(selectedEquipment);
           tCPListen();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text("socket Error"),
+            content: const Text("Invalid equipment"),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -172,19 +104,12 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   void initState() {
     super.initState();
     _weighingCubit = BlocProvider.of<WeighingCubit>(context);
+    resultScaleBloc = BlocProvider.of<ResultScaleBloc>(context);
     var data = authBloc.state;
     if (data is Authenticated) {
       plant = data.weerks;
     }
-    tara.text = "0";
-    labelBloc.add(SendDataLabel(
-        orderNo: _weighingCubit.state.orderList.orderNo != null
-            ? _weighingCubit.state.orderList.orderNo!
-            : '',
-        activityNo: _weighingCubit.state.operationList.activityNo != null
-            ? _weighingCubit.state.operationList.activityNo!
-            : ''));
-    // resultScaleBloc.add(SendDataResultScale(orderNo: _weighingCubit.state, activityNo: activityNo, activityWh: activityWh))
+    tara.text = "";
   }
 
   void tCPListen() async {
@@ -203,14 +128,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
     try {
       RegExp regExp = RegExp(
         // ignore: unnecessary_string_escapes
-        r"" + _weighingCubit.state.scaleWeighing.regex.replaceAll("\s", " "),
+        r"" +
+            _weighingCubit.state.selectedEquipment.regex.replaceAll("\s", " "),
         caseSensitive: false,
         multiLine: true,
       );
-
       socket = await Socket.connect(
-          _weighingCubit.state.scaleWeighing.urlAddress, 4001);
+          _weighingCubit.state.selectedEquipment.urlAddress, 4001);
       print("Connected");
+      _weighingCubit.setStartWork();
       _weighingCubit.setConnectedStatus(true);
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -222,13 +148,14 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
           borderRadius: BorderRadius.circular(10.0),
         ),
       ));
-      socket.listen(
+      socket!.listen(
         (data) {
           if (counter == 20) {
             var dataReg = regExp.firstMatch(dataString);
-
             if (dataReg != null) {
-              var brutoFloat = double.parse(dataReg[3]!);
+              print("===================");
+              print(dataReg[1]!);
+              var brutoFloat = double.parse(dataReg[1]!);
               var nettoFloat = brutoFloat;
               var taraFloat = 0.0;
               if (tara.text.isNotEmpty) {
@@ -246,7 +173,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   bruto: brutoFloat,
                   netto: nettoFloat,
                   tara: taraFloat,
-                  unit: dataReg[4]!,
+                  unit: dataReg[2]!,
                   moistureContent: moistureContent.text,
                   numberOfContainer: numberOfContainer.text,
                   temperature: temperature.text);
@@ -262,7 +189,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
         },
         onDone: () {
           print('Server disconnected.');
-          socket.destroy();
+          socket!.destroy();
         },
         onError: (error) {
           print('Error: $error');
@@ -275,7 +202,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
-          socket.destroy();
+          socket!.destroy();
         },
       );
     } catch (e) {
@@ -294,7 +221,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   }
 
   void closeConnection() {
-    socket.close();
+    socket != null ? socket!.close() : '';
     _weighingCubit.setConnectedStatus(false);
     _weighingCubit.resetScaleWeighing();
   }
@@ -307,44 +234,71 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
           create: (context) => _weighingCubit,
         ),
         BlocProvider.value(value: submitWeighingBloc),
-        BlocProvider.value(value: labelBloc),
-        BlocProvider.value(value: resultScaleBloc)
       ],
       child: MultiBlocListener(
         listeners: [
           BlocListener<WeighingCubit, WeighingState>(
             listener: (context, state) {
-              scale.text = state.scaleWeighing.scaleName;
+              scale.text = state.selectedEquipment.equipmentDesc;
               bruto.text = state.scaleWeighing.bruto.toString();
-              netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
+              netto.text = state.scaleWeighing.netto.toStringAsFixed(1);
+              // ignore: unused_local_variable
+              if (state.resultScaleList.isNotEmpty) {
+                for (var data in state.resultScaleList) {
+                  temperature.text = data.temperature!;
+                  moistureContent.text = data.moistureContent!;
+                  numberOfContainer.text =
+                      int.parse(data.totalWadah!).toString();
+                  line.text = data.line!;
+                }
+              }
             },
           ),
-          BlocListener<LabelBloc, LabelState>(listener: (context, state) {
-            if (state is LabelLoaded) {
-              for (var expired in state.label.d!.resultsLabel!) {
-                _weighingCubit.setLabel(expired);
-              }
-            }
-          }),
-          BlocListener<ResultScaleBloc, ResultScaleState>(
-              listener: (context, state) {
-            if (state is ResultScaleLoaded) {
-              _weighingCubit.setResultScaleList(state.resultScale.d!.results!);
-            }
-          }),
           BlocListener<SubmitWeighingBloc, SubmitWeighingState>(
               listener: (context, state) {
             if (state is SubmitWeighingSuccess) {
               var sumCont = _weighingCubit.state.containerCounter;
-              if (sumCont >
-                  int.parse(
-                      _weighingCubit.state.scaleWeighing.numberOfContainer)) {
+              if (sumCont == int.parse(numberOfContainer.text)) {
                 print("All Done");
               } else {
-                _weighingCubit.setContainer(sumCont++);
+                _weighingCubit.setContainerCounter(sumCont + 1);
               }
+              resultScaleBloc.add(SendDataResultScale(
+                  orderNo: _weighingCubit.state.orderList.orderNo != null
+                      ? _weighingCubit.state.orderList.orderNo!
+                      : '',
+                  activityNo:
+                      _weighingCubit.state.operationList.activityNo != null
+                          ? _weighingCubit.state.operationList.activityNo!
+                          : '',
+                  activityWh:
+                      _weighingCubit.state.selectedWeighing.activityWh != null
+                          ? _weighingCubit.state.selectedWeighing.activityWh!
+                          : ''));
+              if (state.isPrinted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text("Label printed"),
+                  backgroundColor: Colors.black,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text("failed to print"),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              }
+              _weighingCubit.setStartWork();
             }
-          })
+          }),
+          BlocListener<ResultScaleBloc, ResultScaleState>(
+              listener: (context, state) {})
         ],
         child: BlocBuilder<WeighingCubit, WeighingState>(
           builder: (context, weighingState) {
@@ -498,6 +452,33 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                           ],
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: TextFormField(
+                          controller: line,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ScanBarcodeScreen(
+                                  onBarcodeScanned: (barcode) {
+                                    scanLine(barcode);
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              labelText: 'Scan Line',
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              suffixIcon:
+                                  const Icon(Icons.qr_code_scanner_rounded)),
+                          readOnly: true,
+                        ),
+                      ),
                       _formWeighing(context),
                     ],
                   ),
@@ -512,27 +493,87 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   child: SizedBox(
                       width: double.infinity,
                       height: 50,
-                      child: TextButton(
-                        onPressed: () {
-                          submitWeighingBloc.add(
-                              SendDataWeighing(weighingState: weighingState));
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          "Save & Print",
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                        ),
-                      )),
+                      child: weighingState.containerCounter <=
+                              int.parse(weighingState.totalContainer != ''
+                                  ? weighingState.totalContainer
+                                  : '0')
+                          ? TextButton(
+                              onPressed: temperature.text.isNotEmpty &&
+                                      moistureContent.text.isNotEmpty &&
+                                      numberOfContainer.text.isNotEmpty &&
+                                      bruto.text.isNotEmpty &&
+                                      tara.text.isNotEmpty &&
+                                      netto.text.isNotEmpty &&
+                                      line.text.isNotEmpty
+                                  ? () {
+                                      submitWeighingBloc.add(SendDataWeighing(
+                                          weighingState: weighingState));
+                                    }
+                                  : null,
+                              style: TextButton.styleFrom(
+                                backgroundColor: temperature.text.isNotEmpty &&
+                                        moistureContent.text.isNotEmpty &&
+                                        numberOfContainer.text.isNotEmpty &&
+                                        bruto.text.isNotEmpty &&
+                                        tara.text.isNotEmpty &&
+                                        netto.text.isNotEmpty &&
+                                        line.text.isNotEmpty
+                                    ? Colors.black
+                                    : Colors.grey,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                "Save & Print Label ${weighingState.containerCounter}/${int.parse(weighingState.totalContainer)}",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                              ),
+                            )
+                          : TextButton(
+                              onPressed: () {
+                                int.parse(weighingState.totalContainer != ''
+                                            ? weighingState.totalContainer
+                                            : '0') ==
+                                        0
+                                    ? null
+                                    : context.go('/home');
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: int.parse(
+                                            weighingState.totalContainer != ''
+                                                ? weighingState.totalContainer
+                                                : '0') ==
+                                        0
+                                    ? Colors.grey
+                                    : Colors.green,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                int.parse(weighingState.totalContainer != ''
+                                            ? weighingState.totalContainer
+                                            : '0') ==
+                                        0
+                                    ? "Save & Print Label"
+                                    : "Complete",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                              ),
+                            )),
                 ),
               ),
             );
@@ -559,6 +600,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       padding: const EdgeInsets.only(bottom: 20),
                       child: TextFormField(
                         controller: temperature,
+                        keyboardType: TextInputType.number,
+                        readOnly: weighingState.resultScaleList.isNotEmpty,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -567,14 +610,19 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                           filled: true,
                           fillColor: Colors.grey.shade100,
                           suffixIcon: Padding(
-                            padding: const EdgeInsets.only(bottom: 10.0),
+                            padding: const EdgeInsets.only(bottom: 7.0),
                             child: Align(
                               alignment: Alignment.bottomCenter,
                               widthFactor: 1.0,
                               heightFactor: 1.0,
                               child: Text(
                                 '°C',
-                                style: Theme.of(context).textTheme.titleLarge,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall!
+                                    .copyWith(
+                                        color: const Color.fromARGB(
+                                            255, 95, 95, 95)),
                               ),
                             ),
                           ),
@@ -585,6 +633,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       padding: const EdgeInsets.only(bottom: 20),
                       child: TextFormField(
                         controller: moistureContent,
+                        keyboardType: TextInputType.number,
+                        readOnly: weighingState.resultScaleList.isNotEmpty,
                         decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -599,6 +649,11 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       padding: const EdgeInsets.only(bottom: 20),
                       child: TextFormField(
                         controller: numberOfContainer,
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          _weighingCubit.setTotalContainer(value);
+                        },
+                        readOnly: weighingState.resultScaleList.isNotEmpty,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -629,7 +684,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              labelText: 'Scale',
+                              labelText: 'Scan Scale',
                               filled: true,
                               fillColor: Colors.grey.shade100,
                               suffixIcon:
@@ -647,9 +702,11 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 labelText: 'Bruto',
+                                hintText: '0.0',
                                 filled: true,
                                 fillColor: Colors.grey.shade100,
-                                suffix: Text(weighingState.scaleWeighing.unit)),
+                                suffix: Text(weighingState.scaleWeighing.unit
+                                    .toUpperCase())),
                             readOnly: true,
                           ),
                         ),
@@ -657,14 +714,17 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                           padding: const EdgeInsets.only(bottom: 20),
                           child: TextFormField(
                             controller: tara,
+                            keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 labelText: 'Tara',
+                                hintText: "0",
                                 filled: true,
                                 fillColor: Colors.grey.shade100,
-                                suffix: Text(weighingState.scaleWeighing.unit)),
+                                suffix: Text(weighingState.scaleWeighing.unit
+                                    .toUpperCase())),
                           ),
                         ),
                         Padding(
@@ -676,13 +736,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 labelText: 'Netto',
+                                hintText: "0.0",
                                 filled: true,
                                 fillColor: Colors.grey.shade100,
-                                suffix: Text(weighingState.scaleWeighing.unit)),
+                                suffix: Text(weighingState.scaleWeighing.unit
+                                    .toUpperCase())),
                             readOnly: true,
                           ),
                         ),
-                      ],
+                      ]
                     ] else ...[
                       Padding(
                         padding: const EdgeInsets.only(bottom: 20),
@@ -695,12 +757,11 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               labelText: 'Netto',
                               filled: true,
                               fillColor: Colors.grey.shade100,
-                              suffix: const Text("l")),
-                          readOnly: true,
+                              suffix: const Text("L")),
                         ),
                       ),
                     ],
-                    if (numberOfContainer.text != '')
+                    if (weighingState.resultScaleList.isNotEmpty)
                       DataTable(
                         columns: const [
                           DataColumn(label: Text('Container')),
@@ -710,16 +771,130 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                           DataColumn(label: Text('Act')),
                         ],
                         rows: [
-                          for (var i = 0;
-                              i < int.parse(numberOfContainer.text);
-                              i++)
+                          for (var dataLabel in weighingState.resultScaleList)
                             DataRow(cells: [
-                              DataCell(
-                                  Text('${i + 1}/${numberOfContainer.text}')),
-                              const DataCell(Text('2002.9')),
-                              const DataCell(Text('1000')),
-                              const DataCell(Text('1002.9')),
-                              const DataCell(Icon(Icons.print)),
+                              DataCell(Text(
+                                  '${int.parse(dataLabel.wadah!)}/${int.parse(dataLabel.totalWadah!)}')),
+                              DataCell(Text(double.parse(dataLabel.bruto != null
+                                      ? dataLabel.bruto!
+                                      : '')
+                                  .toStringAsFixed(1))),
+                              DataCell(Text(double.parse(dataLabel.tara != null
+                                      ? dataLabel.tara!
+                                      : '')
+                                  .toStringAsFixed(1))),
+                              DataCell(Text(double.parse(dataLabel.netto != null
+                                      ? dataLabel.netto!
+                                      : '')
+                                  .toStringAsFixed(1))),
+                              DataCell(IconButton(
+                                  onPressed: () {
+                                    if (weighingState.selectedEquipment
+                                        .ipPrinter.isNotEmpty) {
+                                      print(weighingState
+                                          .selectedEquipment.ipPrinter);
+                                      DateTime parsedDate = DateTime.parse(
+                                          dataLabel.createdDate!);
+                                      String hours = dataLabel.createdTime!
+                                          .substring(0, 2);
+                                      String minutes = dataLabel.createdTime!
+                                          .substring(2, 4);
+                                      String seconds = dataLabel.createdTime!
+                                          .substring(4, 6);
+                                      DateTime parsedExpDate = DateTime.parse(
+                                          dataLabel.expiredDate!);
+                                      String hoursExp = dataLabel.expiredTime!
+                                          .substring(0, 2);
+                                      String minutesExp = dataLabel.expiredTime!
+                                          .substring(2, 4);
+                                      String secondsExp = dataLabel.expiredTime!
+                                          .substring(4, 6);
+                                      String formattedDate =
+                                          DateFormat('dd.MM.yyyy')
+                                              .format(parsedDate);
+                                      String formattedExpDate =
+                                          DateFormat('dd.MM.yyyy')
+                                              .format(parsedExpDate);
+                                      String zplData = '''
+                                    ^XA
+                                    ^PW560                           ; Set print width for portrait A7 (560 dots, approximately 74mm)
+                                    ^LL800 
+                                    ^FO10,25^GB550,765,2^FS      ; Full border around the label
+                                    ^CF0, 22    ; General font
+                                    ^FO30,40^GFA,357,357,7,,::00JF3IFC,007IF3IF8,003IF3IF,001IF3FFE,K033,::0JFI3IFC,07IFI3IFC,07IFI3IF8,03IFI3IF,01IFI3FFE,J0J3,::7IFJ31IFC,7IFK3IFC,7IFK3IF8,3IFK3IF,1IFK3IF,1IFK3FFE,I0L3,::::::::::::::::::::::,:::^FS      ; Logo
+                                    ^FO0,55 ^FB570,,,C ^A0N,30^FDPRODUK DALAM PROSES^FS     ; Title 
+                                    ^FO30,110^FDProduct^FS
+                                    ^FO200,110^FD${weighingState.materialCode}^FS       ; Product code
+                                    ^FO28,145 ^FB355,2,,L^A0N,30^FD${weighingState.resultsOpr.materialDesc}^FS     ; Product name
+                                    ^FO28,215^A0N,30^FDBatch^FS
+                                    ^FO200,215^A0N,30^FD${weighingState.orderList.batchFG}^FS        ; Batch number
+                                    ^FO30,250 ^FDPrO^FS
+                                    ^FO200,250^FD${dataLabel.orderNo}^FS      ; PrO number
+                                    ^FO30,280^FDLine^FS
+                                    ^FO200,280^FD${line.text}^FS         ; Line number
+                                    ^FO30,310^FDScale^FS
+                                    ^FO200,310^FD${dataLabel.equipmentDesc}^FS       ; Scale information
+                                    ^FO30,340^FDMesin^FS
+                                    ^FO200,340^FD${dataLabel.resourceDesc}^FS      ; Machine info
+                                    ^FO30,370^FDOperation/Lot^FS
+                                    ^FO200,370^FD${dataLabel.activityNoDesc} / ${dataLabel.lot}^FS       ; Operation/lot
+                                    ^FO30,400^FDOperator/PWS^FS
+                                    ^FO200,400^FD${dataLabel.operator}/${dataLabel.pengawas}^FS             ; Operator/PWS info
+                                    ^FO30,430^FDTgl. Timbang^FS
+                                    ^FO200,430^FD$formattedDate $hours:$minutes:$seconds^FS        ; Date and time
+                                    ^FO30,460^FDHolding Time^FS
+                                    ^FO200,460^FD$formattedExpDate $hoursExp:$minutesExp:$secondsExp^FS       ; Holding time
+                                    ^FO30,490^A0N,30^FD${weighingState.operationType}^FS          ; CB label
+                                    ^FO395,114 ^FB200,,,R^BQN,2,4^FDQA,${dataLabel.orderNo};${weighingState.materialCode};${dataLabel.activityNo};${dataLabel.activityNo};${weighingState.operationType};${dataLabel.netto};${dataLabel.wadah}/${dataLabel.totalWadah}^FS          ; QR code at top right
+                                    ^FO470,540^A0N,20,20^FDJumlah^FS       
+                                    ^FO30,575^FDNetto^FS                   ; "Nett" label
+                                    ^FO290,575 ^FB200,,,R^FD${double.parse(dataLabel.netto != null ? dataLabel.netto! : '').toStringAsFixed(1)}^FS          ; Aligned value
+                                    ^FO330,575 ^FB200,,,R^FD${dataLabel.unitWeighing}^FS                    ; Aligned unit
+                                    ^FO30,610^FDTara^FS                   ; "Nett" label
+                                    ^FO290,610 ^FB200,,,R^FD${double.parse(dataLabel.tara != null ? dataLabel.tara! : '').toStringAsFixed(1)}^FS           ; Aligned value
+                                    ^FO330,610 ^FB200,,,R^FD${dataLabel.unitWeighing}^FS                    ; Aligned unit
+                                    ^FO30,645^FDBruto^FS                   ; "Nett" label
+                                    ^FO290,645 ^FB200,,,R^FD${double.parse(dataLabel.bruto != null ? dataLabel.netto! : '').toStringAsFixed(1)}^FS         ; Aligned value
+                                    ^FO330,645 ^FB200,,,R^FD${dataLabel.unitWeighing}^FS                    ; Aligned unit
+                                    ^FO485,755^FD${int.parse(dataLabel.wadah!)}/${int.parse(dataLabel.totalWadah!)}^FS        ; Page number
+                                    ^XZ
+                                    ''';
+
+                                      zsdk
+                                          .printZplDataOverTCPIP(
+                                              address: weighingState
+                                                  .selectedEquipment.ipPrinter,
+                                              port: 9100,
+                                              data: zplData)
+                                          .then((value) {
+                                        final printerResponse =
+                                            PrinterResponse.fromMap(value);
+                                        Status status =
+                                            printerResponse.statusInfo.status;
+                                        print(status);
+                                        if (printerResponse.errorCode ==
+                                            ErrorCode.SUCCESS) {
+                                          print("Label Printed");
+                                        } else {
+                                          Cause cause =
+                                              printerResponse.statusInfo.cause;
+                                          print(cause);
+                                        }
+                                      });
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(SnackBar(
+                                        content: const Text("Data is Scanned"),
+                                        backgroundColor: Colors.red,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                        ),
+                                      ));
+                                    }
+                                  },
+                                  icon: const Icon(Icons.print))),
                             ])
                         ],
                       ),

@@ -16,10 +16,13 @@ class SubmitWeighing {
   String? expiredTime;
   String? operator;
   String? pengawas;
-  String? createDate;
-  String? createTime;
+  String? startDate;
+  String? startTime;
   String? wadah;
   String? totalWadah;
+  String? line;
+  String? finishDate;
+  String? finishTime;
 
   SubmitWeighing(
       {this.orderNo,
@@ -39,10 +42,13 @@ class SubmitWeighing {
       this.expiredTime,
       this.operator,
       this.pengawas,
-      this.createDate,
-      this.createTime,
+      this.startDate,
+      this.startTime,
       this.wadah,
-      this.totalWadah});
+      this.totalWadah,
+      this.line,
+      this.finishDate,
+      this.finishTime});
 
   SubmitWeighing.fromJson(Map<String, dynamic> json) {
     orderNo = json['OrderNo'];
@@ -62,10 +68,13 @@ class SubmitWeighing {
     expiredTime = json['ExpiredTime'];
     operator = json['Operator'];
     pengawas = json['Pengawas'];
-    createDate = json['CreateDate'];
-    createTime = json['CreateTime'];
+    startDate = json['StartDate'];
+    startTime = json['StartTime'];
     wadah = json['Wadah'];
     totalWadah = json['TotalWadah'];
+    line = json['Line'];
+    finishDate = json['FinishDate'];
+    finishTime = json['FinishTime'];
   }
 
   Map<String, dynamic> toJson() {
@@ -87,10 +96,13 @@ class SubmitWeighing {
     data['ExpiredTime'] = expiredTime;
     data['Operator'] = operator;
     data['Pengawas'] = pengawas;
-    data['CreateDate'] = createDate;
-    data['CreateTime'] = createTime;
+    data['StartDate'] = startDate;
+    data['StartTime'] = startTime;
     data['Wadah'] = wadah;
     data['TotalWadah'] = totalWadah;
+    data['Line'] = line;
+    data['FinishDate'] = finishDate;
+    data['FinishTime'] = finishTime;
     return data;
   }
 }

@@ -217,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ) // button text
                       ),
                   onTap: () {
-                    print("you clicked me");
+                    context.push("/confirmation");
                   })
             ],
           ),

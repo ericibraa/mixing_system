@@ -1,12 +1,12 @@
 import 'package:bloc/bloc.dart';
 import 'package:dumping_system/models/response/label.dart';
 import 'package:dumping_system/models/response/operation.dart';
+import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/models/response/result_scale.dart';
 import 'package:dumping_system/models/response/scale.dart';
 import 'package:dumping_system/models/response/tong.dart';
 import 'package:equatable/equatable.dart';
-import 'package:intl/intl.dart';
 // ignore: depend_on_referenced_packages
 import 'package:meta/meta.dart';
 
@@ -15,8 +15,26 @@ part 'weighing_state.dart';
 class WeighingCubit extends Cubit<WeighingState> {
   WeighingCubit() : super(const WeighingState());
 
-  void setDataOrder(String plant, String materialCode, String date,
-      String operationApps, String operationType) {
+  void setDataOrder(
+      String plant, String materialCode, String date, String operationType) {
+    String? operationApps;
+    switch (operationType) {
+      case 'DECOCT':
+        operationApps = '31';
+        break;
+      case 'CB':
+        operationApps = '32';
+        break;
+      case 'CK':
+        operationApps = '33';
+        break;
+      case 'LIQUID MIXING':
+        operationApps = '34';
+        break;
+      case 'SEMI SOLID MIXING':
+        operationApps = '35';
+        break;
+    }
     emit(state.copyWith(
         plant: plant,
         materialCode: materialCode,
@@ -49,37 +67,9 @@ class WeighingCubit extends Cubit<WeighingState> {
   }
 
   void setScaleWeighing(Scale scale) {
-    var formattedDate = scale.createDate;
-    var expired = state.label.expiredNo;
-    var now = DateTime.now();
-    DateTime expiredDate;
-
-    if (formattedDate.isEmpty) {
-      // Check if expiredNo is not null and is a valid integer
-      int durationValue = 0;
-      if (state.label.expiredNo != null && state.label.expiredNo!.isNotEmpty) {
-        durationValue = int.tryParse(state.label.expiredNo!) ?? 0;
-      }
-
-      // Calculate expiredDate based on the unit
-      if (state.label.unit == "DAY") {
-        expiredDate = now.add(Duration(days: durationValue));
-      } else {
-        expiredDate = now.add(Duration(hours: durationValue));
-      }
-
-      // Format the dates
-      formattedDate = DateFormat('yyyyMMdd-HHmmss').format(now);
-      expired = DateFormat('yyyyMMdd-HHmmss').format(expiredDate);
-    }
-
-    // Update the scale and state
     scale = scale.copyWith(
       netto: scale.bruto - scale.tara,
-      createDate: formattedDate,
-      expiredDate: expired,
     );
-
     emit(state.copyWith(scaleWeighing: scale));
   }
 
@@ -99,8 +89,12 @@ class WeighingCubit extends Cubit<WeighingState> {
     emit(state.copyWith(scaleWeighing: const Scale()));
   }
 
-  void setScale(ResultScale resultScale) {
-    emit(state.copyWith(scaleUnit: resultScale));
+  void setEquipments(List<ResultScale> equipments) {
+    emit(state.copyWith(equipments: equipments));
+  }
+
+  void setSelectedEquipment(ResultScale selectedEqupment) {
+    emit(state.copyWith(selectedEquipment: selectedEqupment));
   }
 
   void setOperator(String operator) {
@@ -115,12 +109,32 @@ class WeighingCubit extends Cubit<WeighingState> {
     emit(state.copyWith(resultScaleList: resultScaleList));
   }
 
-  void setContainer(int sumContainer) {
-    print(sumContainer);
+  void setContainerCounter(int sumContainer) {
     emit(state.copyWith(containerCounter: sumContainer));
   }
 
   void setProductiSupervisor(String productiSupervisor) {
     emit(state.copyWith(productiSupervisor: productiSupervisor));
+  }
+
+  void setLine(String line) {
+    emit(state.copyWith(line: line));
+  }
+
+  void setOperationTypeList(List<ResultsOprType> operationTypeList) {
+    emit(state.copyWith(operationTypeList: operationTypeList));
+  }
+
+  void setMaterialsFull(ResultsOperationType resultsOpr) {
+    emit(state.copyWith(resultsOpr: resultsOpr));
+  }
+
+  void setTotalContainer(String total) {
+    emit(state.copyWith(totalContainer: total));
+  }
+
+  void setStartWork() {
+    emit(state.copyWith(onChangeStartWork: true));
+    emit(state.copyWith(startWork: DateTime.now(), onChangeStartWork: false));
   }
 }

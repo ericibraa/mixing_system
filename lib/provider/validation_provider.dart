@@ -6,7 +6,7 @@ class ValidationProvider extends Provider {
   Future<ValidationResponse> validation(String nrp, String title) async {
     try {
       Response response = await dio.get(
-          "${apiUrl.dumpingApi}/ZDMP_GET_MATERIAL_SRVFImp_User",
+          "${apiUrl.dumpingApi}/ZDMP_GET_MATERIAL_SRV/FImp_User",
           queryParameters: {
             'Nrp': "'$nrp'",
             'Title': "'$title'",

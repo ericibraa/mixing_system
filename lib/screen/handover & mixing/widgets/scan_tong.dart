@@ -127,10 +127,15 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
-                Future.delayed(const Duration(seconds: 2), () {
+                if (_handoverCubit.state.isNext) {
+                  Future.delayed(const Duration(seconds: 2), () {
+                    _handoverCubit.resetFullpackWadah();
+                    _handoverCubit.setTab(HandoverStatus.scantongmaterial);
+                  });
+                } else {
                   _handoverCubit.resetFullpackWadah();
-                  _handoverCubit.setTab(HandoverStatus.scantongmaterial);
-                });
+                  _handoverCubit.setTab(HandoverStatus.handover);
+                }
               }
             }
           })
@@ -337,13 +342,15 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 50,
-                    child: handoverState.isComplete == true
+                    child: handoverState.isComplete
                         ? Row(
                             children: [
                               Expanded(
                                 child: TextButton(
                                   onPressed: () {
-                                    print("save");
+                                    submitHandoverBloc.add(SubmitHandover(
+                                        orderData: handoverState));
+                                    _handoverCubit.isNext(false);
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.green,
@@ -378,11 +385,9 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                               Expanded(
                                 child: TextButton(
                                   onPressed: () {
-                                    // submitHandoverBloc.add(SubmitHandover(
-                                    //     orderData: handoverState));
-                                    _handoverCubit.resetFullpackWadah();
-                                    _handoverCubit.setTab(
-                                        HandoverStatus.scantongmaterial);
+                                    submitHandoverBloc.add(SubmitHandover(
+                                        orderData: handoverState));
+                                    _handoverCubit.isNext(true);
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.green,
