@@ -97,10 +97,12 @@ class _ValidationScreenState extends State<ValidationScreen> {
                     if (validations.title == 'OPERATOR') {
                       BlocProvider.of<AuthBloc>(context).add(ChangeUserEvent(
                           nrpOperator: hasScanned[0],
+                          nameOperator: hasScanned[1],
                           weerks: validations.werks));
                     } else {
-                      BlocProvider.of<AuthBloc>(context)
-                          .add(ChangeUserEvent(nrpPengawas: hasScanned[0]));
+                      BlocProvider.of<AuthBloc>(context).add(ChangeUserEvent(
+                          nrpPengawas: hasScanned[0],
+                          namePengawas: hasScanned[1]));
                     }
                   }
                 } else if (state is ValidationError) {
@@ -229,7 +231,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
           onPressed: valueOperator.isNotEmpty && valuePengawas.isNotEmpty
               ? () {
                   context.push('/home');
-                  print("Kesini");
                 }
               : null,
           child: Text(

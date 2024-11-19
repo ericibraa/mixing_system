@@ -21,13 +21,25 @@ class ChangeAuthStatus extends AuthEvent {
 class ChangeUserEvent extends AuthEvent {
   final String? nrpOperator;
   final String? nrpPengawas;
+  final String? nameOperator;
+  final String? namePengawas;
   final String? weerks;
 
-  const ChangeUserEvent({this.nrpOperator, this.nrpPengawas, this.weerks});
+  const ChangeUserEvent(
+      {this.nrpOperator,
+      this.nrpPengawas,
+      this.nameOperator,
+      this.namePengawas,
+      this.weerks});
 
   @override
-  List<Object> get props =>
-      [nrpOperator ?? '', nrpPengawas ?? '', weerks ?? ''];
+  List<Object> get props => [
+        nrpOperator ?? '',
+        nrpPengawas ?? '',
+        nameOperator ?? '',
+        namePengawas ?? '',
+        weerks ?? ''
+      ];
 }
 
 class DeleteUserEvent extends AuthEvent {}

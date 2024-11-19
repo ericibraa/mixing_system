@@ -76,11 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 context.read<AuthBloc>().add(DeleteUserEvent());
               },
-              child: Row(
+              child: const Row(
                 children: [
-                  Text('$nameOperator ($nrpOperator)'),
-                  const SizedBox(width: 10),
-                  const Icon(
+                  Text('Log Out'),
+                  SizedBox(width: 10),
+                  Icon(
                     Icons.logout_outlined,
                     size: 20,
                   )
@@ -96,8 +96,18 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               Container(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'hi, $nameOperator ($nrpOperator)',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(color: Colors.grey),
+                ),
+              ),
+              Container(
                 constraints: const BoxConstraints(maxWidth: 400),
-                padding: const EdgeInsets.only(top: 100, bottom: 100),
+                padding: const EdgeInsets.only(top: 80, bottom: 100),
                 child: Text(
                   "What do you want to do ?",
                   style: Theme.of(context)

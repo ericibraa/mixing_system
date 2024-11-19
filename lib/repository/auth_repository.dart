@@ -67,9 +67,16 @@ class AuthRepository {
   }
 
   Future<void> persistUser(
-      String nrpOperator, String nrpPengawas, String weerks) async {
+    String nrpOperator,
+    String nrpPengawas,
+    String nameOperator,
+    String namePengawas,
+    String weerks,
+  ) async {
     await storage.write(key: "nrpOperator", value: nrpOperator);
     await storage.write(key: "nrpPengawas", value: nrpPengawas);
+    await storage.write(key: "nameOperator", value: nameOperator);
+    await storage.write(key: "namePengawas", value: namePengawas);
     await storage.write(key: "weerks", value: weerks);
   }
 

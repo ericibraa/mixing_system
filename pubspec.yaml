@@ -54,6 +54,14 @@ dependencies:
   printing: ^5.13.4
   htmltopdfwidgets: ^1.0.4
   zsdk: ^3.2.0+3
+  flutter_launcher_icons: ^0.14.1
+
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo/dumping_icon.png"
+
 
 dev_dependencies:
   flutter_test:

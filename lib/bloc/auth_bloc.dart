@@ -25,23 +25,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (currentState is Authenticated) {
         var nrpOperator = currentState.nrpOperator;
         var nrpPengawas = currentState.nrpPengawas;
+        var nameOperator = currentState.nameOperator;
+        var namePengawas = currentState.namePengawas;
         var weerks = currentState.weerks;
         if (event.nrpOperator != null) {
           currentState.copyWith(
             nrpOperator: event.nrpOperator,
+            nameOperator: event.nameOperator,
             weerks: event.weerks ?? currentState.weerks,
           );
           nrpOperator = event.nrpOperator!;
+          nameOperator = event.nameOperator != null ? event.nameOperator! : '';
           weerks = event.weerks!;
         }
         if (event.nrpPengawas != null) {
-          currentState.copyWith(nrpPengawas: event.nrpPengawas);
+          currentState.copyWith(
+              nrpPengawas: event.nrpPengawas, namePengawas: event.namePengawas);
           nrpPengawas = event.nrpPengawas!;
+          namePengawas = event.namePengawas != null ? event.namePengawas! : '';
         }
-        await _authRepository.persistUser(nrpOperator, nrpPengawas, weerks);
+        await _authRepository.persistUser(
+            nrpOperator, nrpPengawas, nameOperator, namePengawas, weerks);
         emit(currentState.copyWith(
           nrpOperator: nrpOperator,
           nrpPengawas: nrpPengawas,
+          nameOperator: nameOperator,
+          namePengawas: namePengawas,
           weerks: weerks,
         ));
       }
@@ -77,8 +86,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(Unauthenticated());
         } else {
           await _authRepository.persistToken(hasCredentials);
-          await _authRepository.persistUser(
-              hasnrpOperation, hasnrpPengawas, hasWeerks);
+          await _authRepository.persistUser(hasnrpOperation, hasnrpPengawas,
+              hasNameOperator, hasNamePengawas, hasWeerks);
           await _authRepository.persistCsrfToken(hasCsrfToken);
           emit(Authenticated(
               token: hasCredentials,
