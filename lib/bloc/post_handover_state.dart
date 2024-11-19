@@ -19,4 +19,10 @@ final class SubmitHandoverLoaded extends SubmitHandoverState {
   List<Object> get props => [submitHandover];
 }
 
-final class SubmitHandoverError extends SubmitHandoverState {}
+final class SubmitHandoverError extends SubmitHandoverState {
+  final String error;
+  const SubmitHandoverError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

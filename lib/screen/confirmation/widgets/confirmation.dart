@@ -122,7 +122,6 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   }
                   _confirmationCubit
                       .setTab(ConfirmationStatus.formConfirmation);
-                  _confirmationCubit.setStartDate();
                 }
               })
             ],

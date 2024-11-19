@@ -118,8 +118,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
           ),
           BlocListener<SubmitHandoverBloc, SubmitHandoverState>(
               listener: (context, state) {
-            if (state is SubmitHandoverLoaded) {
-              if (state.submitHandover == 'success') {
+            switch (state) {
+              case SubmitHandoverLoaded():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: const Text("Send data successfully"),
                   backgroundColor: Colors.black,
@@ -132,25 +132,17 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                   // ignore: use_build_context_synchronously
                   context.go("/home");
                 });
-              } else {
+                break;
+              case SubmitHandoverError():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: const Text("Server Error"),
+                  content: Text(state.error),
                   backgroundColor: Colors.red,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
-              }
-            } else if (state is SubmitHandoverError) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: const Text("Server Error"),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ));
+                break;
             }
           })
         ],

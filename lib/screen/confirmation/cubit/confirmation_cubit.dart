@@ -89,6 +89,11 @@ class ConfirmationCubit extends Cubit<ConfirmationState> {
   }
 
   void setStartDate() {
-    emit(state.copyWith(startTime: DateTime.now()));
+    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(startTime: DateTime.now(), isLoading: false));
+  }
+
+  void setComplete(bool isComplete) {
+    emit(state.copyWith(isComplete: isComplete));
   }
 }

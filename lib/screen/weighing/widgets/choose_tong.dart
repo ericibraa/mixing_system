@@ -1,6 +1,6 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
-import 'package:dumping_system/models/response/label.dart';
-import 'package:dumping_system/screen/weighing/bloc/label_bloc.dart';
+import 'package:dumping_system/models/response/expired_set.dart';
+import 'package:dumping_system/screen/weighing/bloc/expired_set_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
@@ -17,8 +17,8 @@ class ChooseTongScreen extends StatefulWidget {
 class _ChooseTongScreenState extends State<ChooseTongScreen> {
   AuthBloc authBloc = AuthBloc();
   WeighingCubit _weighingCubit = WeighingCubit();
-  LabelBloc labelBloc = LabelBloc();
-  ResultsLabel label = const ResultsLabel();
+  ExpiredSetBloc expiredSetBloc = ExpiredSetBloc();
+  ResultsExpiredSet expiredSet = const ResultsExpiredSet();
   ScaleBloc scaleBloc = ScaleBloc();
   ResultScaleBloc resultScaleBloc = ResultScaleBloc();
 
@@ -43,18 +43,18 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
       body: MultiBlocProvider(
         providers: [
           BlocProvider.value(value: _weighingCubit),
-          BlocProvider.value(value: labelBloc),
+          BlocProvider.value(value: expiredSetBloc),
           BlocProvider.value(value: scaleBloc),
         ],
         child: MultiBlocListener(
           listeners: [
-            BlocListener<LabelBloc, LabelState>(
+            BlocListener<ExpiredSetBloc, ExpiredSetState>(
               listener: (context, state) {
-                if (state is LabelLoaded) {
-                  for (var data in state.label.d!.resultsLabel!) {
-                    label = data;
+                if (state is ExpiredSetLoaded) {
+                  for (var data in state.expiredSet.d!.resultsExpiredSet!) {
+                    expiredSet = data;
                   }
-                  _weighingCubit.setLabel(label);
+                  _weighingCubit.setExpired(expiredSet);
                 }
               },
             ),
@@ -84,7 +84,7 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      for (var dataWeighing in weighingState.weighingList) ...[
+                      for (var dataWeighing in weighingState.containers) ...[
                         Card(
                           elevation: 5,
                           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -171,14 +171,15 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                               _weighingCubit.selectedWeighing(dataWeighing);
                               scaleBloc.add(
                                   SendDataScale(plant: weighingState.plant));
-                              labelBloc.add(SendDataLabel(
-                                  orderNo: weighingState.orderList.orderNo!,
-                                  activityNo:
-                                      weighingState.operationList.activityNo!));
+                              expiredSetBloc.add(GetExpiredSet(
+                                  orderNo: weighingState.selectedOrder.orderNo!,
+                                  activityNo: weighingState
+                                      .selectedOperation.activityNo!));
                               resultScaleBloc.add(SendDataResultScale(
                                   orderNo:
-                                      weighingState.orderList.orderNo != null
-                                          ? weighingState.orderList.orderNo!
+                                      weighingState.selectedOrder.orderNo !=
+                                              null
+                                          ? weighingState.selectedOrder.orderNo!
                                           : '',
                                   activityNo: dataWeighing.activityNo != null
                                       ? dataWeighing.activityNo!

@@ -4,7 +4,7 @@ import 'package:dumping_system/provider/submit_confirmation.dart';
 class SubmitConfirmationRepository {
   final _provider = SubmitConfirmationProvider();
 
-  Future<String> submitConfirmation(
+  Future<SubmitConfirmationResponse> submitConfirmation(
       SubmitConfirmationRequest confirmationData) async {
     return _provider.submitConfirmation(confirmationData);
   }

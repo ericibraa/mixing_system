@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:dumping_system/models/request/submit_confirmation.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/repository/submit_confirmation.dart';
 import 'package:dumping_system/screen/confirmation/cubit/confirmation_cubit.dart';
 import 'package:equatable/equatable.dart';
@@ -40,11 +41,16 @@ class SubmitBloc extends Bloc<SubmitEvent, SubmitState> {
                 operationApps: '40',
                 operator: event.submitConfirmation.operator,
                 pengawas: event.submitConfirmation.pengawas);
-        String confirmation = await _submitConfirmationRepository
-            .submitConfirmation(submitConfirmationRequest);
+        SubmitConfirmationResponse confirmation =
+            await _submitConfirmationRepository
+                .submitConfirmation(submitConfirmationRequest);
         emit(SubmitSuccess(confirmation));
-      } catch (e) {
-        emit(SubmitError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(SubmitError(e.error!.message!.value!));
+        } else {
+          emit(const SubmitError('Server Error'));
+        }
       }
     });
   }

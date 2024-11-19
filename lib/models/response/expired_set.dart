@@ -1,31 +1,31 @@
 import 'package:equatable/equatable.dart';
 
-class LabelResponse {
+class ExpiredsetResponse {
   D? d;
 
-  LabelResponse({this.d});
+  ExpiredsetResponse({this.d});
 
-  LabelResponse.fromJson(Map<String, dynamic> json) {
+  ExpiredsetResponse.fromJson(Map<String, dynamic> json) {
     d = json['d'] != null ? D.fromJson(json['d']) : null;
   }
 }
 
 class D {
-  List<ResultsLabel>? resultsLabel;
+  List<ResultsExpiredSet>? resultsExpiredSet;
 
-  D({this.resultsLabel});
+  D({this.resultsExpiredSet});
 
   D.fromJson(Map<String, dynamic> json) {
     if (json['results'] != null) {
-      resultsLabel = <ResultsLabel>[];
+      resultsExpiredSet = <ResultsExpiredSet>[];
       json['results'].forEach((v) {
-        resultsLabel!.add(ResultsLabel.fromJson(v));
+        resultsExpiredSet!.add(ResultsExpiredSet.fromJson(v));
       });
     }
   }
 }
 
-class ResultsLabel extends Equatable {
+class ResultsExpiredSet extends Equatable {
   final String? orderNo;
   final String? activityNo;
   final String? expiredNo;
@@ -33,14 +33,14 @@ class ResultsLabel extends Equatable {
   final String? workCenter;
   final String? workCenterDesc;
 
-  const ResultsLabel(
+  const ResultsExpiredSet(
       {this.orderNo,
       this.activityNo,
       this.expiredNo,
       this.unit,
       this.workCenter,
       this.workCenterDesc});
-  ResultsLabel copyWith({
+  ResultsExpiredSet copyWith({
     String? orderNo,
     String? activityNo,
     String? expiredNo,
@@ -48,7 +48,7 @@ class ResultsLabel extends Equatable {
     String? workCenter,
     String? workCenterDesc,
   }) {
-    return ResultsLabel(
+    return ResultsExpiredSet(
         orderNo: orderNo ?? this.orderNo,
         activityNo: activityNo ?? this.activityNo,
         expiredNo: expiredNo ?? this.expiredNo,
@@ -57,7 +57,8 @@ class ResultsLabel extends Equatable {
         workCenterDesc: workCenterDesc ?? this.workCenterDesc);
   }
 
-  factory ResultsLabel.fromJson(Map<String, dynamic> json) => ResultsLabel(
+  factory ResultsExpiredSet.fromJson(Map<String, dynamic> json) =>
+      ResultsExpiredSet(
         orderNo: json['OrderNo'],
         activityNo: json['ActivityNo'],
         expiredNo: json['ExpiredNo'],

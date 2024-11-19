@@ -7,7 +7,7 @@ import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/models/response/order.dart';
-import 'package:dumping_system/screen/weighing/bloc/label_bloc.dart';
+import 'package:dumping_system/screen/weighing/bloc/expired_set_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/weighing_bloc.dart';
@@ -35,7 +35,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
   ScaleBloc scaleBloc = ScaleBloc();
   OperationTypeBloc operationTypeBloc = OperationTypeBloc();
   List<ResultOperation> listOperation = List.empty();
-  LabelBloc labelBloc = LabelBloc();
+  ExpiredSetBloc expiredSetBloc = ExpiredSetBloc();
   ResultOperation operation = const ResultOperation();
   String? materialValue;
   List<ResultsMaterial> listMaterials = List.empty();
@@ -99,7 +99,8 @@ class _WeighingScreenState extends State<WeighingScreen> {
           BlocProvider<ScaleBloc>(create: (BuildContext context) => scaleBloc),
           BlocProvider<OperationTypeBloc>(
               create: (BuildContext context) => operationTypeBloc),
-          BlocProvider<LabelBloc>(create: (BuildContext context) => labelBloc)
+          BlocProvider<ExpiredSetBloc>(
+              create: (BuildContext context) => expiredSetBloc)
         ],
         child: MultiBlocListener(
             listeners: [
@@ -124,18 +125,18 @@ class _WeighingScreenState extends State<WeighingScreen> {
                       _weighingCubit.selectedWeighing(selected);
                       scaleBloc.add(
                           SendDataScale(plant: _weighingCubit.state.plant));
-                      labelBloc.add(SendDataLabel(
+                      expiredSetBloc.add(GetExpiredSet(
                           orderNo:
-                              _weighingCubit.state.orderList.orderNo != null
-                                  ? _weighingCubit.state.orderList.orderNo!
+                              _weighingCubit.state.selectedOrder.orderNo != null
+                                  ? _weighingCubit.state.selectedOrder.orderNo!
                                   : '',
                           activityNo: selected.activityNo != null
                               ? selected.activityNo!
                               : ''));
                       resultScaleBloc.add(SendDataResultScale(
                           orderNo:
-                              _weighingCubit.state.orderList.orderNo != null
-                                  ? _weighingCubit.state.orderList.orderNo!
+                              _weighingCubit.state.selectedOrder.orderNo != null
+                                  ? _weighingCubit.state.selectedOrder.orderNo!
                                   : '',
                           activityNo: selected.activityNo != null
                               ? selected.activityNo!
@@ -172,10 +173,12 @@ class _WeighingScreenState extends State<WeighingScreen> {
                   }
                 }
               }),
-              BlocListener<LabelBloc, LabelState>(listener: (context, state) {
-                if (state is LabelLoaded) {
-                  for (var label in state.label.d!.resultsLabel!) {
-                    _weighingCubit.setLabel(label);
+              BlocListener<ExpiredSetBloc, ExpiredSetState>(
+                  listener: (context, state) {
+                if (state is ExpiredSetLoaded) {
+                  for (var expiredSet
+                      in state.expiredSet.d!.resultsExpiredSet!) {
+                    _weighingCubit.setExpired(expiredSet);
                   }
                 }
               }),
@@ -341,13 +344,12 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                   },
                                 ),
                               ),
-                              if (weighingState
-                                  .operationTypeList.isNotEmpty) ...[
+                              if (weighingState.operationTypes.isNotEmpty) ...[
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 20),
                                   child: DropdownButtonFormField(
                                     value: materialValue,
-                                    items: weighingState.operationTypeList
+                                    items: weighingState.operationTypes
                                         .map<DropdownMenuItem<String>>(
                                             (ResultsOprType item) {
                                       return DropdownMenuItem<String>(
@@ -629,9 +631,9 @@ class _WeighingScreenState extends State<WeighingScreen> {
                               itemBuilder: (BuildContext context, int index) {
                                 final operationNo = listOperation[index];
 
-                                final isSelected =
-                                    weighingState.operationList.activityNo ==
-                                        operationNo.activityNo;
+                                final isSelected = weighingState
+                                        .selectedOperation.activityNo ==
+                                    operationNo.activityNo;
 
                                 return Card(
                                   elevation: 5,

@@ -1,25 +1,39 @@
-class SubmitConfirmationRequest {
-  String? routingNo;
-  String? internalCntr;
-  String? orderNo;
-  String? activityNo;
-  String? yieldQty;
-  String? unitYield;
-  String? startDateOpr;
-  String? startTimeOpr;
-  String? startDateConf;
-  String? startTimeConf;
-  String? finishDate;
-  String? finishTime;
-  String? line;
-  String? postDate;
-  String? machineHour;
-  String? laborHour;
-  String? operationApps;
-  String? operator;
-  String? pengawas;
+import 'package:equatable/equatable.dart';
 
-  SubmitConfirmationRequest(
+class SubmitConfirmationResponse {
+  SubmitConfirmationRequest? submitConfirmationRequest;
+
+  SubmitConfirmationResponse({this.submitConfirmationRequest});
+
+  SubmitConfirmationResponse.fromJson(Map<String, dynamic> json) {
+    submitConfirmationRequest = json['d'] != null
+        ? SubmitConfirmationRequest.fromJson(json['d'])
+        : null;
+  }
+}
+
+class SubmitConfirmationRequest extends Equatable {
+  final String? routingNo;
+  final String? internalCntr;
+  final String? orderNo;
+  final String? activityNo;
+  final String? yieldQty;
+  final String? unitYield;
+  final String? startDateOpr;
+  final String? startTimeOpr;
+  final String? startDateConf;
+  final String? startTimeConf;
+  final String? finishDate;
+  final String? finishTime;
+  final String? line;
+  final String? postDate;
+  final String? machineHour;
+  final String? laborHour;
+  final String? operationApps;
+  final String? operator;
+  final String? pengawas;
+
+  const SubmitConfirmationRequest(
       {this.routingNo,
       this.internalCntr,
       this.orderNo,
@@ -40,27 +54,51 @@ class SubmitConfirmationRequest {
       this.operator,
       this.pengawas});
 
-  SubmitConfirmationRequest.fromJson(Map<String, dynamic> json) {
-    routingNo = json['RoutingNo'];
-    internalCntr = json['InternalCntr'];
-    orderNo = json['OrderNo'];
-    activityNo = json['ActivityNo'];
-    yieldQty = json['YieldQty'];
-    unitYield = json['UnitYield'];
-    startDateOpr = json['StartDateOpr'];
-    startTimeOpr = json['StartTimeOpr'];
-    startDateConf = json['StartDateConf'];
-    startTimeConf = json['StartTimeConf'];
-    finishDate = json['FinishDate'];
-    finishTime = json['FinishTime'];
-    line = json['Line'];
-    postDate = json['PostDate'];
-    machineHour = json['MachineHour'];
-    laborHour = json['LaborHour'];
-    operationApps = json['OperationApps'];
-    operator = json['Operator'];
-    pengawas = json['Pengawas'];
-  }
+  @override
+  List<Object?> get props => [
+        routingNo,
+        internalCntr,
+        orderNo,
+        activityNo,
+        yieldQty,
+        unitYield,
+        startDateOpr,
+        startTimeOpr,
+        startDateConf,
+        startTimeConf,
+        finishDate,
+        finishTime,
+        line,
+        postDate,
+        machineHour,
+        laborHour,
+        operationApps,
+        operator,
+        pengawas
+      ];
+
+  factory SubmitConfirmationRequest.fromJson(Map<String, dynamic> json) =>
+      SubmitConfirmationRequest(
+        routingNo: json['RoutingNo'],
+        internalCntr: json['InternalCntr'],
+        orderNo: json['OrderNo'],
+        activityNo: json['ActivityNo'],
+        yieldQty: json['YieldQty'],
+        unitYield: json['UnitYield'],
+        startDateOpr: json['StartDateOpr'],
+        startTimeOpr: json['StartTimeOpr'],
+        startDateConf: json['StartDateConf'],
+        startTimeConf: json['StartTimeConf'],
+        finishDate: json['FinishDate'],
+        finishTime: json['FinishTime'],
+        line: json['Line'],
+        postDate: json['PostDate'],
+        machineHour: json['MachineHour'],
+        laborHour: json['LaborHour'],
+        operationApps: json['OperationApps'],
+        operator: json['Operator'],
+        pengawas: json['Pengawas'],
+      );
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};

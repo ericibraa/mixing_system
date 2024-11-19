@@ -10,24 +10,24 @@ class WeighingState extends Equatable {
   final String operationApps;
   final String operationType;
   final WeighingStatus tab;
-  final ResultsOrder orderList;
+  final ResultsOrder selectedOrder;
   final List<ResultsOrder> orders;
-  final ResultOperation operationList;
+  final ResultOperation selectedOperation;
   final bool isResultOperationLoaded;
   final bool isConnectedTcp;
   final Scale scaleWeighing;
-  final List<ResultTong> weighingList;
-  final ResultTong selectedWeighing;
-  final ResultsLabel label;
+  final List<ResultTong> containers;
+  final ResultTong selectedContainer;
+  final ResultsExpiredSet expiredSet;
   final List<ResultScale> equipments;
   final ResultScale selectedEquipment;
   final String operator;
   final String pengawas;
-  final List<ResultScaleList> resultScaleList;
+  final List<ResultScaleList> resultScales;
   final int containerCounter;
   final String productiSupervisor;
   final String line;
-  final List<ResultsOprType> operationTypeList;
+  final List<ResultsOprType> operationTypes;
   final ResultsOperationType resultsOpr;
   final String totalContainer;
   final DateTime? startWork;
@@ -40,24 +40,24 @@ class WeighingState extends Equatable {
       this.operationApps = "",
       this.operationType = "",
       this.tab = WeighingStatus.weighing,
-      this.orderList = const ResultsOrder(),
+      this.selectedOrder = const ResultsOrder(),
       this.orders = const [],
-      this.operationList = const ResultOperation(),
+      this.selectedOperation = const ResultOperation(),
       this.isResultOperationLoaded = false,
       this.isConnectedTcp = false,
       this.scaleWeighing = const Scale(),
-      this.weighingList = const [],
-      this.selectedWeighing = const ResultTong(),
-      this.label = const ResultsLabel(),
+      this.containers = const [],
+      this.selectedContainer = const ResultTong(),
+      this.expiredSet = const ResultsExpiredSet(),
       this.equipments = const [],
       this.selectedEquipment = const ResultScale(),
       this.operator = "",
       this.pengawas = "",
-      this.resultScaleList = const [],
+      this.resultScales = const [],
       this.containerCounter = 1,
       this.productiSupervisor = '',
       this.line = "",
-      this.operationTypeList = const [],
+      this.operationTypes = const [],
       this.resultsOpr = const ResultsOperationType(),
       this.totalContainer = '',
       this.startWork,
@@ -70,24 +70,24 @@ class WeighingState extends Equatable {
       String? operationApps,
       String? operationType,
       WeighingStatus? tab,
-      ResultsOrder? orderList,
+      ResultsOrder? selectedOrder,
       List<ResultsOrder>? orders,
-      ResultOperation? operationList,
+      ResultOperation? selectedOperation,
       bool? isResultOperationLoaded,
       bool? isConnectedTcp,
       Scale? scaleWeighing,
-      List<ResultTong>? weighingList,
-      ResultTong? selectedWeighing,
-      ResultsLabel? label,
+      List<ResultTong>? containers,
+      ResultTong? selectedContainer,
+      ResultsExpiredSet? expiredSet,
       List<ResultScale>? equipments,
       ResultScale? selectedEquipment,
       String? operator,
       String? pengawas,
-      List<ResultScaleList>? resultScaleList,
+      List<ResultScaleList>? resultScales,
       int? containerCounter,
       String? productiSupervisor,
       String? line,
-      List<ResultsOprType>? operationTypeList,
+      List<ResultsOprType>? operationTypes,
       ResultsOperationType? resultsOpr,
       String? totalContainer,
       DateTime? startWork,
@@ -99,25 +99,25 @@ class WeighingState extends Equatable {
         operationApps: operationApps ?? this.operationApps,
         operationType: operationType ?? this.operationType,
         tab: tab ?? this.tab,
-        orderList: orderList ?? this.orderList,
+        selectedOrder: selectedOrder ?? this.selectedOrder,
         orders: orders ?? this.orders,
-        operationList: operationList ?? this.operationList,
+        selectedOperation: selectedOperation ?? this.selectedOperation,
         isResultOperationLoaded:
             isResultOperationLoaded ?? this.isResultOperationLoaded,
         isConnectedTcp: isConnectedTcp ?? this.isConnectedTcp,
         scaleWeighing: scaleWeighing ?? this.scaleWeighing,
-        weighingList: weighingList ?? this.weighingList,
-        selectedWeighing: selectedWeighing ?? this.selectedWeighing,
-        label: label ?? this.label,
+        containers: containers ?? this.containers,
+        selectedContainer: selectedContainer ?? this.selectedContainer,
+        expiredSet: expiredSet ?? this.expiredSet,
         equipments: equipments ?? this.equipments,
         selectedEquipment: selectedEquipment ?? this.selectedEquipment,
         operator: operator ?? this.operator,
         pengawas: pengawas ?? this.pengawas,
-        resultScaleList: resultScaleList ?? this.resultScaleList,
+        resultScales: resultScales ?? this.resultScales,
         containerCounter: containerCounter ?? this.containerCounter,
         productiSupervisor: productiSupervisor ?? this.productiSupervisor,
         line: line ?? this.line,
-        operationTypeList: operationTypeList ?? this.operationTypeList,
+        operationTypes: operationTypes ?? this.operationTypes,
         resultsOpr: resultsOpr ?? this.resultsOpr,
         totalContainer: totalContainer ?? this.totalContainer,
         startWork: startWork ?? this.startWork,
@@ -132,24 +132,24 @@ class WeighingState extends Equatable {
         operationApps,
         operationType,
         tab,
-        orderList,
+        selectedOrder,
         orders,
-        operationList,
+        selectedOperation,
         isResultOperationLoaded,
         isConnectedTcp,
         scaleWeighing,
-        weighingList,
-        selectedWeighing,
-        label,
+        containers,
+        selectedContainer,
+        expiredSet,
         equipments,
         selectedEquipment,
         operator,
         pengawas,
-        resultScaleList,
+        resultScales,
         containerCounter,
         productiSupervisor,
         line,
-        operationTypeList,
+        operationTypes,
         resultsOpr,
         totalContainer,
         onChangeStartWork

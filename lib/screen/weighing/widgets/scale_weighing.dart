@@ -69,13 +69,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
       });
       if (mounted) {
         _weighingCubit.resetScaleWeighing();
-        ResultScale selectedEquipment =
-            _weighingCubit.state.equipments.firstWhere(
-          (equpment) => equpment.equipmentNo == scannedBarcode,
-          orElse: () => const ResultScale(),
-        );
-        if (selectedEquipment.equipmentNo.isNotEmpty) {
-          _weighingCubit.setSelectedEquipment(selectedEquipment);
+        _weighingCubit.setSelectedEquipment(scannedBarcode);
+        if (_weighingCubit.state.selectedEquipment.equipmentNo.isNotEmpty) {
           tCPListen();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -243,8 +238,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
               bruto.text = state.scaleWeighing.bruto.toString();
               netto.text = state.scaleWeighing.netto.toStringAsFixed(1);
               // ignore: unused_local_variable
-              if (state.resultScaleList.isNotEmpty) {
-                for (var data in state.resultScaleList) {
+              if (state.resultScales.isNotEmpty) {
+                for (var data in state.resultScales) {
                   temperature.text = data.temperature!;
                   moistureContent.text = data.moistureContent!;
                   numberOfContainer.text =
@@ -256,49 +251,70 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
           ),
           BlocListener<SubmitWeighingBloc, SubmitWeighingState>(
               listener: (context, state) {
-            if (state is SubmitWeighingSuccess) {
-              var sumCont = _weighingCubit.state.containerCounter;
-              if (sumCont == int.parse(numberOfContainer.text)) {
-                print("All Done");
-              } else {
-                _weighingCubit.setContainerCounter(sumCont + 1);
-              }
-              resultScaleBloc.add(SendDataResultScale(
-                  orderNo: _weighingCubit.state.orderList.orderNo != null
-                      ? _weighingCubit.state.orderList.orderNo!
-                      : '',
-                  activityNo:
-                      _weighingCubit.state.operationList.activityNo != null
-                          ? _weighingCubit.state.operationList.activityNo!
-                          : '',
-                  activityWh:
-                      _weighingCubit.state.selectedWeighing.activityWh != null
-                          ? _weighingCubit.state.selectedWeighing.activityWh!
-                          : ''));
-              if (state.isPrinted) {
+            switch (state) {
+              case SubmitWeighingSuccess():
+                var sumCont = _weighingCubit.state.containerCounter;
+                if (sumCont == int.parse(numberOfContainer.text)) {
+                  print("All Done");
+                } else {
+                  _weighingCubit.setContainerCounter(sumCont + 1);
+                }
+                resultScaleBloc.add(SendDataResultScale(
+                    orderNo: _weighingCubit.state.selectedOrder.orderNo != null
+                        ? _weighingCubit.state.selectedOrder.orderNo!
+                        : '',
+                    activityNo:
+                        _weighingCubit.state.selectedOperation.activityNo !=
+                                null
+                            ? _weighingCubit.state.selectedOperation.activityNo!
+                            : '',
+                    activityWh:
+                        _weighingCubit.state.selectedContainer.activityWh !=
+                                null
+                            ? _weighingCubit.state.selectedContainer.activityWh!
+                            : ''));
+                if (state.isPrinted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: const Text("Label printed"),
+                    backgroundColor: Colors.black,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: const Text("failed to print"),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
+                }
+                _weighingCubit.setStartWork();
+                break;
+              case SubmitWeighingError():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: const Text("Label printed"),
-                  backgroundColor: Colors.black,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: const Text("failed to print"),
+                  content: Text(state.error),
                   backgroundColor: Colors.red,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
-              }
-              _weighingCubit.setStartWork();
+                break;
             }
           }),
           BlocListener<ResultScaleBloc, ResultScaleState>(
-              listener: (context, state) {})
+              listener: (context, state) {
+            if (state is ResultScaleLoaded) {
+              if (_weighingCubit.state.selectedEquipment.equipmentNo.isEmpty) {
+                _weighingCubit.setSelectedEquipment(
+                    state.resultScale.d!.results![0].equipmentNo!);
+              }
+            }
+          })
         ],
         child: BlocBuilder<WeighingCubit, WeighingState>(
           builder: (context, weighingState) {
@@ -309,6 +325,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 leading: BackButton(
                   onPressed: () {
                     _weighingCubit.setTab(WeighingStatus.scaleWeighing);
+
                     if (weighingState.isConnectedTcp) {
                       closeConnection();
                     }
@@ -383,8 +400,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    weighingState.orderList.material != null
-                                        ? '(${weighingState.orderList.material}) ${weighingState.orderList.materialDesc}'
+                                    weighingState.selectedOrder.material != null
+                                        ? '(${weighingState.selectedOrder.material}) ${weighingState.selectedOrder.materialDesc}'
                                         : '',
                                     style: Theme.of(context)
                                         .textTheme
@@ -395,8 +412,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         ),
                                   ),
                                   Text(
-                                    weighingState.orderList.orderNo != null
-                                        ? weighingState.orderList.orderNo!
+                                    weighingState.selectedOrder.orderNo != null
+                                        ? weighingState.selectedOrder.orderNo!
                                         : '',
                                     style: Theme.of(context)
                                         .textTheme
@@ -407,8 +424,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         ),
                                   ),
                                   Text(
-                                    weighingState.orderList.batchFG != null
-                                        ? weighingState.orderList.batchFG!
+                                    weighingState.selectedOrder.batchFG != null
+                                        ? weighingState.selectedOrder.batchFG!
                                         : '',
                                     style: Theme.of(context)
                                         .textTheme
@@ -419,10 +436,11 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         ),
                                   ),
                                   Text(
-                                    weighingState.operationList.activityNo !=
+                                    weighingState
+                                                .selectedOperation.activityNo !=
                                             null
                                         ? weighingState
-                                            .operationList.activityNo!
+                                            .selectedOperation.activityNo!
                                         : '',
                                     style: Theme.of(context)
                                         .textTheme
@@ -433,10 +451,11 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         ),
                                   ),
                                   Text(
-                                    weighingState.operationList.operationDesc !=
+                                    weighingState.selectedOperation
+                                                .operationDesc !=
                                             null
                                         ? weighingState
-                                            .operationList.operationDesc!
+                                            .selectedOperation.operationDesc!
                                         : '',
                                     style: Theme.of(context)
                                         .textTheme
@@ -544,6 +563,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         0
                                     ? null
                                     : context.go('/home');
+                                if (weighingState.isConnectedTcp) {
+                                  closeConnection();
+                                }
                               },
                               style: TextButton.styleFrom(
                                 backgroundColor: int.parse(
@@ -601,7 +623,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       child: TextFormField(
                         controller: temperature,
                         keyboardType: TextInputType.number,
-                        readOnly: weighingState.resultScaleList.isNotEmpty,
+                        readOnly: weighingState.resultScales.isNotEmpty,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -634,7 +656,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       child: TextFormField(
                         controller: moistureContent,
                         keyboardType: TextInputType.number,
-                        readOnly: weighingState.resultScaleList.isNotEmpty,
+                        readOnly: weighingState.resultScales.isNotEmpty,
                         decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -653,7 +675,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                         onChanged: (value) {
                           _weighingCubit.setTotalContainer(value);
                         },
-                        readOnly: weighingState.resultScaleList.isNotEmpty,
+                        readOnly: weighingState.resultScales.isNotEmpty,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -761,7 +783,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                         ),
                       ),
                     ],
-                    if (weighingState.resultScaleList.isNotEmpty)
+                    if (weighingState.resultScales.isNotEmpty)
                       DataTable(
                         columns: const [
                           DataColumn(label: Text('Container')),
@@ -771,7 +793,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                           DataColumn(label: Text('Act')),
                         ],
                         rows: [
-                          for (var dataLabel in weighingState.resultScaleList)
+                          for (var dataLabel in weighingState.resultScales)
                             DataRow(cells: [
                               DataCell(Text(
                                   '${int.parse(dataLabel.wadah!)}/${int.parse(dataLabel.totalWadah!)}')),
@@ -827,7 +849,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                     ^FO200,110^FD${weighingState.materialCode}^FS       ; Product code
                                     ^FO28,145 ^FB355,2,,L^A0N,30^FD${weighingState.resultsOpr.materialDesc}^FS     ; Product name
                                     ^FO28,215^A0N,30^FDBatch^FS
-                                    ^FO200,215^A0N,30^FD${weighingState.orderList.batchFG}^FS        ; Batch number
+                                    ^FO200,215^A0N,30^FD${weighingState.selectedOrder.batchFG}^FS        ; Batch number
                                     ^FO30,250 ^FDPrO^FS
                                     ^FO200,250^FD${dataLabel.orderNo}^FS      ; PrO number
                                     ^FO30,280^FDLine^FS
@@ -837,7 +859,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                     ^FO30,340^FDMesin^FS
                                     ^FO200,340^FD${dataLabel.resourceDesc}^FS      ; Machine info
                                     ^FO30,370^FDOperation/Lot^FS
-                                    ^FO200,370^FD${dataLabel.activityNoDesc} / ${dataLabel.lot}^FS       ; Operation/lot
+                                    ^FO200,370^FD${dataLabel.lot!.isNotEmpty ? '${dataLabel.activityNoDesc} / ${dataLabel.lot}' : dataLabel.activityNoDesc}^FS       ; Operation/lot
                                     ^FO30,400^FDOperator/PWS^FS
                                     ^FO200,400^FD${dataLabel.operator}/${dataLabel.pengawas}^FS             ; Operator/PWS info
                                     ^FO30,430^FDTgl. Timbang^FS
@@ -874,7 +896,18 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         print(status);
                                         if (printerResponse.errorCode ==
                                             ErrorCode.SUCCESS) {
-                                          print("Label Printed");
+                                          // ignore: use_build_context_synchronously
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(SnackBar(
+                                            content:
+                                                const Text("Label printed"),
+                                            backgroundColor: Colors.black,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                            ),
+                                          ));
                                         } else {
                                           Cause cause =
                                               printerResponse.statusInfo.cause;
@@ -884,7 +917,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                     } else {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(SnackBar(
-                                        content: const Text("Data is Scanned"),
+                                        content:
+                                            const Text("Please Scan Scale"),
                                         backgroundColor: Colors.red,
                                         behavior: SnackBarBehavior.floating,
                                         shape: RoundedRectangleBorder(
@@ -1106,5 +1140,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   void deactivate() {
     super.deactivate();
     closeConnection();
+    _weighingCubit.resetScaleWeighing();
   }
 }

@@ -1,5 +1,5 @@
 import 'package:bloc/bloc.dart';
-import 'package:dumping_system/models/response/label.dart';
+import 'package:dumping_system/models/response/expired_set.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/models/response/order.dart';
@@ -44,7 +44,7 @@ class WeighingCubit extends Cubit<WeighingState> {
   }
 
   void setOrderList(ResultsOrder orderList) {
-    emit(state.copyWith(orderList: orderList));
+    emit(state.copyWith(selectedOrder: orderList));
   }
 
   void setOrders(List<ResultsOrder> orders) {
@@ -53,7 +53,7 @@ class WeighingCubit extends Cubit<WeighingState> {
 
   void setOperationList(ResultOperation operationList) {
     emit(state.copyWith(
-      operationList: operationList,
+      selectedOperation: operationList,
       isResultOperationLoaded: true,
     ));
   }
@@ -74,15 +74,15 @@ class WeighingCubit extends Cubit<WeighingState> {
   }
 
   void setWeighing(List<ResultTong> weighing) {
-    emit(state.copyWith(weighingList: weighing));
+    emit(state.copyWith(containers: weighing));
   }
 
   void selectedWeighing(ResultTong selectedWeighing) {
-    emit(state.copyWith(selectedWeighing: selectedWeighing));
+    emit(state.copyWith(selectedContainer: selectedWeighing));
   }
 
-  void setLabel(ResultsLabel label) {
-    emit(state.copyWith(label: label));
+  void setExpired(ResultsExpiredSet expiredSet) {
+    emit(state.copyWith(expiredSet: expiredSet));
   }
 
   void resetScaleWeighing() {
@@ -93,8 +93,11 @@ class WeighingCubit extends Cubit<WeighingState> {
     emit(state.copyWith(equipments: equipments));
   }
 
-  void setSelectedEquipment(ResultScale selectedEqupment) {
-    emit(state.copyWith(selectedEquipment: selectedEqupment));
+  void setSelectedEquipment(String equipmentNo) {
+    ResultScale selectedEquipment = state.equipments.firstWhere(
+        (equpment) => equpment.equipmentNo == equipmentNo,
+        orElse: () => const ResultScale());
+    emit(state.copyWith(selectedEquipment: selectedEquipment));
   }
 
   void setOperator(String operator) {
@@ -106,7 +109,7 @@ class WeighingCubit extends Cubit<WeighingState> {
   }
 
   void setResultScaleList(List<ResultScaleList> resultScaleList) {
-    emit(state.copyWith(resultScaleList: resultScaleList));
+    emit(state.copyWith(resultScales: resultScaleList));
   }
 
   void setContainerCounter(int sumContainer) {
@@ -122,7 +125,7 @@ class WeighingCubit extends Cubit<WeighingState> {
   }
 
   void setOperationTypeList(List<ResultsOprType> operationTypeList) {
-    emit(state.copyWith(operationTypeList: operationTypeList));
+    emit(state.copyWith(operationTypes: operationTypeList));
   }
 
   void setMaterialsFull(ResultsOperationType resultsOpr) {

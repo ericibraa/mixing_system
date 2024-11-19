@@ -1,9 +1,11 @@
 import 'package:bloc/bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
 import 'package:dumping_system/models/request/submit_handover.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/repository/submit_handover_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
+// ignore: depend_on_referenced_packages
 import 'package:meta/meta.dart';
 
 part 'post_handover_event.dart';
@@ -51,13 +53,15 @@ class SubmitHandoverBloc
                   operator: event.orderData.operator,
                   pengawas: event.orderData.pengawas)
             ]);
-        print("=====================");
-        print(submitHandover.toJson());
         String handover =
             await _submitHandoverRepository.submitHandover(submitHandover);
         emit(SubmitHandoverLoaded(submitHandover: handover));
-      } catch (e) {
-        emit(SubmitHandoverError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(SubmitHandoverError(e.error!.message!.value!));
+        } else {
+          emit(const SubmitHandoverError('Server Error'));
+        }
       }
     });
   }

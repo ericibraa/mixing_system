@@ -19,4 +19,10 @@ final class SubmitHandoverMixingLoaded extends SubmitHandoverMixingState {
   List<Object> get props => [submitHandoverMixing];
 }
 
-final class SubmitHandoverMixingError extends SubmitHandoverMixingState {}
+final class SubmitHandoverMixingError extends SubmitHandoverMixingState {
+  final String error;
+  const SubmitHandoverMixingError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

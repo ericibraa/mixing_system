@@ -144,8 +144,8 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
           }),
           BlocListener<SubmitHandoverMixingBloc, SubmitHandoverMixingState>(
               listener: (context, state) {
-            if (state is SubmitHandoverMixingLoaded) {
-              if (state.submitHandoverMixing == 'success') {
+            switch (state) {
+              case SubmitHandoverMixingLoaded():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: const Text("Send data successfully"),
                   backgroundColor: Colors.black,
@@ -159,16 +159,17 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                   context.go("/home");
                   _handoverCubit.resetCompleteMaterial(false);
                 });
-              } else {
+                break;
+              case SubmitHandoverMixingError():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: const Text("Server Error"),
+                  content: Text(state.error),
                   backgroundColor: Colors.red,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
-              }
+                break;
             }
           })
         ],

@@ -4,6 +4,7 @@ import 'package:dumping_system/screen/confirmation/cubit/confirmation_cubit.dart
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -41,6 +42,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
       });
       line.text = scannedBarcode;
       _confirmationCubit.setLine(line.text);
+      _confirmationCubit.setStartDate();
     }
   }
 
@@ -56,22 +58,46 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
       child: MultiBlocListener(
         listeners: [
           BlocListener<ConfirmationCubit, ConfirmationState>(
-            listener: (context, state) {
-              String date = state.yieldSet.startDateOpr!;
-              DateTime parsedDate = DateTime.parse(date);
-              String hours = state.yieldSet.startTimeOpr!.substring(0, 2);
-              String minutes = state.yieldSet.startTimeOpr!.substring(2, 4);
-              String seconds = state.yieldSet.startTimeOpr!.substring(4, 6);
-              yield.text = state.yieldSet.yieldQty!;
-              startExecution.text =
-                  '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
-              postingDate.text =
-                  DateFormat('dd-MM-yyyy').format(DateTime.now());
-            },
-          ),
+              listener: (context, state) {
+            String date = state.yieldSet.startDateOpr != null
+                ? state.yieldSet.startDateOpr!
+                : '20240101';
+            DateTime? parsedDate = DateTime.parse(date);
+            String hours = state.yieldSet.startTimeOpr != null
+                ? state.yieldSet.startTimeOpr!.substring(0, 2)
+                : '120000';
+            String minutes = state.yieldSet.startTimeOpr != null
+                ? state.yieldSet.startTimeOpr!.substring(2, 4)
+                : '120000';
+            String seconds = state.yieldSet.startTimeOpr != null
+                ? state.yieldSet.startTimeOpr!.substring(4, 6)
+                : '120000';
+            yield.text =
+                state.yieldSet.yieldQty != null ? state.yieldSet.yieldQty! : '';
+            startExecution.text =
+                '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
+            postingDate.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
+          }),
           BlocListener<SubmitBloc, SubmitState>(listener: (context, state) {
-            if (state is SubmitSuccess) {
-              if (state.confirmationStatus == 'success') {
+            switch (state) {
+              case SubmitSuccess():
+                DateTime parsedDate = DateTime.parse(state
+                    .confirmationStatus.submitConfirmationRequest!.finishDate!);
+                String hours = state
+                    .confirmationStatus.submitConfirmationRequest!.finishTime!
+                    .substring(0, 2);
+                String minutes = state
+                    .confirmationStatus.submitConfirmationRequest!.finishTime!
+                    .substring(2, 4);
+                String seconds = state
+                    .confirmationStatus.submitConfirmationRequest!.finishTime!
+                    .substring(4, 6);
+                machineTime.text = state
+                    .confirmationStatus.submitConfirmationRequest!.machineHour!;
+                laborTime.text = state
+                    .confirmationStatus.submitConfirmationRequest!.laborHour!;
+                finishExecution.text =
+                    '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: const Text("Saved Successfully"),
                   backgroundColor: Colors.black,
@@ -80,25 +106,18 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
-              } else {
+                _confirmationCubit.setComplete(true);
+                break;
+              case SubmitError():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: const Text("Failed To Save"),
+                  content: Text(state.error),
                   backgroundColor: Colors.red,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
-              }
-            } else if (state is SubmitError) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: const Text("Server Error"),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ));
+                break;
             }
           })
         ],
@@ -297,33 +316,49 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     child: SizedBox(
                         width: double.infinity,
                         height: 50,
-                        child: TextButton(
-                          onPressed: line.text.isNotEmpty
-                              ? () {
-                                  submitBloc.add(
-                                      SubmitConfirmation(confirmationState));
-                                }
-                              : null,
-                          style: TextButton.styleFrom(
-                            backgroundColor: line.text.isNotEmpty
-                                ? Colors.black
-                                : Colors.grey,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            "Confirm",
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                        child: confirmationState.isComplete
+                            ? TextButton(
+                                onPressed: () {
+                                  context.go("/home");
+                                  _confirmationCubit.setComplete(false);
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
-                          ),
-                        )),
+                                child: const Text(
+                                  "Back To Home",
+                                  style: TextStyle(color: Colors.white),
+                                ))
+                            : TextButton(
+                                onPressed: line.text.isNotEmpty
+                                    ? () {
+                                        submitBloc.add(SubmitConfirmation(
+                                            confirmationState));
+                                      }
+                                    : null,
+                                style: TextButton.styleFrom(
+                                  backgroundColor: line.text.isNotEmpty
+                                      ? Colors.black
+                                      : Colors.grey,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  "Confirm",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                ),
+                              )),
                   ),
                 ));
           },

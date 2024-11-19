@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:dumping_system/models/request/submit_handover_mixing_request.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/provider/auth_provider.dart';
 import 'package:dumping_system/provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -27,6 +28,7 @@ class SubmitHandoverMixingProvider extends Provider {
                   'x-csrf-token': authReturn['csrfToken'],
                   'Cookie': authReturn['cookie'],
                   'Content-Type': 'application/json',
+                  'Accept': 'application/json'
                 },
               ));
       if (response.statusCode == 201) {
@@ -34,7 +36,8 @@ class SubmitHandoverMixingProvider extends Provider {
       } else {
         return 'error';
       }
-      // return Handover.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ErrorResponse.fromJson(e.response!.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

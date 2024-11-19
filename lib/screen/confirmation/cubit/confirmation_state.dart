@@ -22,27 +22,30 @@ class ConfirmationState extends Equatable {
   final ResultsYieldSet yieldSet;
   final String line;
   final DateTime? startTime;
+  final bool isComplete;
+  final bool isLoading;
 
-  const ConfirmationState({
-    this.tab = ConfirmationStatus.confirmation,
-    this.operator = '',
-    this.pengawas = '',
-    this.materials = const [],
-    this.productSupervisor = '',
-    this.operationTypes = const [],
-    this.orders = const [],
-    this.selectedOrder = const ResultsOrder(),
-    this.operations = const [],
-    this.selectedOperation = const ResultOperation(),
-    this.plant = '',
-    this.materialCode = '',
-    this.operationType = '',
-    this.operationApps = '',
-    this.date = '',
-    this.yieldSet = const ResultsYieldSet(),
-    this.line = '',
-    this.startTime,
-  });
+  const ConfirmationState(
+      {this.tab = ConfirmationStatus.confirmation,
+      this.operator = '',
+      this.pengawas = '',
+      this.materials = const [],
+      this.productSupervisor = '',
+      this.operationTypes = const [],
+      this.orders = const [],
+      this.selectedOrder = const ResultsOrder(),
+      this.operations = const [],
+      this.selectedOperation = const ResultOperation(),
+      this.plant = '',
+      this.materialCode = '',
+      this.operationType = '',
+      this.operationApps = '',
+      this.date = '',
+      this.yieldSet = const ResultsYieldSet(),
+      this.line = '',
+      this.startTime,
+      this.isComplete = false,
+      this.isLoading = false});
 
   ConfirmationState copyWith(
       {ConfirmationStatus? tab,
@@ -62,7 +65,9 @@ class ConfirmationState extends Equatable {
       String? date,
       ResultsYieldSet? yieldSet,
       String? line,
-      DateTime? startTime}) {
+      DateTime? startTime,
+      bool? isComplete,
+      bool? isLoading}) {
     return ConfirmationState(
         tab: tab ?? this.tab,
         operator: operator ?? this.operator,
@@ -81,11 +86,13 @@ class ConfirmationState extends Equatable {
         date: date ?? this.date,
         yieldSet: yieldSet ?? this.yieldSet,
         line: line ?? this.line,
-        startTime: startTime ?? this.startTime);
+        startTime: startTime ?? this.startTime,
+        isComplete: isComplete ?? this.isComplete,
+        isLoading: isLoading ?? this.isLoading);
   }
 
   @override
-  List<Object?> get props => [
+  List<Object> get props => [
         tab,
         operator,
         pengawas,
@@ -103,6 +110,7 @@ class ConfirmationState extends Equatable {
         date,
         yieldSet,
         line,
-        startTime
+        isComplete,
+        isLoading
       ];
 }

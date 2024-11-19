@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:dumping_system/models/request/submit_confirmation.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/provider/auth_provider.dart';
 import 'package:dumping_system/provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -13,7 +14,7 @@ FlutterSecureStorage storage = const FlutterSecureStorage(
 );
 
 class SubmitConfirmationProvider extends Provider {
-  Future<String> submitConfirmation(
+  Future<SubmitConfirmationResponse> submitConfirmation(
       SubmitConfirmationRequest submitConfirmation) async {
     try {
       String? token = await storage.read(key: 'token');
@@ -29,12 +30,9 @@ class SubmitConfirmationProvider extends Provider {
                   'Accept': 'application/json'
                 },
               ));
-      if (response.statusCode == 201) {
-        return 'success';
-      } else {
-        return 'error';
-      }
-      // return Handover.fromJson(response.data);
+      return SubmitConfirmationResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ErrorResponse.fromJson(e.response!.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

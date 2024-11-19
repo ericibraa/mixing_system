@@ -13,7 +13,7 @@ final class SubmitInitial extends SubmitState {}
 final class SubmitLoading extends SubmitState {}
 
 final class SubmitSuccess extends SubmitState {
-  final String confirmationStatus;
+  final SubmitConfirmationResponse confirmationStatus;
 
   const SubmitSuccess(this.confirmationStatus);
 
@@ -21,4 +21,11 @@ final class SubmitSuccess extends SubmitState {
   List<Object> get props => [confirmationStatus];
 }
 
-final class SubmitError extends SubmitState {}
+final class SubmitError extends SubmitState {
+  final String error;
+
+  const SubmitError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

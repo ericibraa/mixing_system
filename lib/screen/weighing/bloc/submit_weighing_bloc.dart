@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:dumping_system/models/request/submit_weighing.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/repository/submit_weighing._repository.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
 import 'package:equatable/equatable.dart';
@@ -21,19 +22,19 @@ class SubmitWeighingBloc
       try {
         DateTime finishTimeWeighing = DateTime.now();
         DateTime? expiredDateParse;
-        if (event.weighingState.label.unit == 'DAY') {
-          expiredDateParse = finishTimeWeighing.add(
-              Duration(days: int.parse(event.weighingState.label.expiredNo!)));
+        if (event.weighingState.expiredSet.unit == 'DAY') {
+          expiredDateParse = finishTimeWeighing.add(Duration(
+              days: int.parse(event.weighingState.expiredSet.expiredNo!)));
         } else {
-          expiredDateParse = finishTimeWeighing.add(
-              Duration(hours: int.parse(event.weighingState.label.expiredNo!)));
+          expiredDateParse = finishTimeWeighing.add(Duration(
+              hours: int.parse(event.weighingState.expiredSet.expiredNo!)));
         }
         SubmitWeighing submitWeighing = SubmitWeighing(
-            orderNo: event.weighingState.orderList.orderNo,
-            activityNo: event.weighingState.operationList.activityNo,
+            orderNo: event.weighingState.selectedOrder.orderNo,
+            activityNo: event.weighingState.selectedOperation.activityNo,
             equipmentNo: event.weighingState.selectedEquipment.equipmentNo,
-            resource: event.weighingState.label.workCenter,
-            activityWh: event.weighingState.selectedWeighing.activityWh,
+            resource: event.weighingState.expiredSet.workCenter,
+            activityWh: event.weighingState.selectedContainer.activityWh,
             bruto: event.weighingState.scaleWeighing.bruto.toString(),
             tara: event.weighingState.scaleWeighing.tara.toString(),
             netto: event.weighingState.scaleWeighing.netto.toStringAsFixed(1),
@@ -72,17 +73,17 @@ class SubmitWeighingBloc
           ^FO200,110^FD${event.weighingState.materialCode}^FS       ; Product code
           ^FO28,145 ^FB355,2,,L^A0N,30^FD${event.weighingState.resultsOpr.materialDesc}^FS     ; Product name
           ^FO28,215^A0N,30^FDBatch^FS
-          ^FO200,215^A0N,30^FD${event.weighingState.orderList.batchFG}^FS        ; Batch number
+          ^FO200,215^A0N,30^FD${event.weighingState.selectedOrder.batchFG}^FS        ; Batch number
           ^FO30,250 ^FDPrO^FS
-          ^FO200,250^FD${event.weighingState.orderList.orderNo}^FS      ; PrO number
+          ^FO200,250^FD${event.weighingState.selectedOrder.orderNo}^FS      ; PrO number
           ^FO30,280^FDLine^FS
           ^FO200,280^FD${event.weighingState.line}^FS         ; Line number
           ^FO30,310^FDScale^FS
           ^FO200,310^FD${event.weighingState.selectedEquipment.equipmentDesc}^FS       ; Scale information
           ^FO30,340^FDMesin^FS
-          ^FO200,340^FD${event.weighingState.label.workCenterDesc}^FS      ; Machine info
+          ^FO200,340^FD${event.weighingState.expiredSet.workCenterDesc}^FS      ; Machine info
           ^FO30,370^FDOperation/Lot^FS
-          ^FO200,370^FD${event.weighingState.operationType}^FS       ; Operation/lot
+          ^FO200,370^FD${event.weighingState.selectedContainer.lot!.isNotEmpty ? '${event.weighingState.selectedContainer.operationDesc} / ${event.weighingState.selectedContainer.lot}' : event.weighingState.selectedContainer.operationDesc}^FS       ; Operation/lot
           ^FO30,400^FDOperator/PWS^FS
           ^FO200,400^FD${event.weighingState.operator}/${event.weighingState.pengawas}^FS             ; Operator/PWS info
           ^FO30,430^FDTgl. Timbang^FS
@@ -90,7 +91,7 @@ class SubmitWeighingBloc
           ^FO30,460^FDHolding Time^FS
           ^FO200,460^FD${DateFormat('dd.MM.yyyy HH:mm:ss').format(expiredDateParse)}^FS       ; Holding time
           ^FO30,490^A0N,30^FD${event.weighingState.operationType}^FS          ; CB label
-          ^FO395,114 ^FB200,,,R^BQN,2,4^FDQA,${event.weighingState.orderList.orderNo};${event.weighingState.materialCode};${event.weighingState.operationList.activityNo};${event.weighingState.selectedWeighing.activityWh};${event.weighingState.operationType};${double.parse(event.weighingState.scaleWeighing.netto.toStringAsFixed(1))};${event.weighingState.containerCounter}/${event.weighingState.totalContainer}^FS          ; QR code at top right
+          ^FO395,114 ^FB200,,,R^BQN,2,4^FDQA,${event.weighingState.selectedOrder.orderNo};${event.weighingState.materialCode};${event.weighingState.selectedOperation.activityNo};${event.weighingState.selectedContainer.activityWh};${event.weighingState.operationType};${double.parse(event.weighingState.scaleWeighing.netto.toStringAsFixed(1))};${event.weighingState.containerCounter}/${event.weighingState.totalContainer}^FS          ; QR code at top right
           ^FO470,540^A0N,20,20^FDJumlah^FS       
           ^FO30,575^FDNetto^FS                   ; "Nett" label
           ^FO290,575 ^FB200,,,R^FD${double.parse(event.weighingState.scaleWeighing.netto.toStringAsFixed(1))}^FS          ; Aligned value
@@ -124,8 +125,12 @@ class SubmitWeighingBloc
             print(cause);
           }
         });
-      } catch (e) {
-        emit(SubmitWeighingError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(SubmitWeighingError(e.error!.message!.value!));
+        } else {
+          emit(const SubmitWeighingError('Server Error'));
+        }
       }
     });
   }

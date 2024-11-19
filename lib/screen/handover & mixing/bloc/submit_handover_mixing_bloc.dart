@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
 import 'package:dumping_system/models/request/submit_handover_mixing_request.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/repository/submit_handover_mixing_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
@@ -35,8 +36,12 @@ class SubmitHandoverMixingBloc
         String handoverMixing = await _submitHandoverMixingRepository
             .submitHandoverMixing(submitHandoverMixing);
         emit(SubmitHandoverMixingLoaded(submitHandoverMixing: handoverMixing));
-      } catch (e) {
-        emit(SubmitHandoverMixingError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(SubmitHandoverMixingError(e.error!.message!.value!));
+        } else {
+          emit(const SubmitHandoverMixingError('Server Error'));
+        }
       }
     });
   }
