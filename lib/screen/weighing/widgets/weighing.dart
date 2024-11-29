@@ -12,7 +12,6 @@ import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/weighing_bloc.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
-import 'package:dumping_system/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -34,7 +33,6 @@ class _WeighingScreenState extends State<WeighingScreen> {
   WeighingBloc weighingBloc = WeighingBloc();
   ScaleBloc scaleBloc = ScaleBloc();
   OperationTypeBloc operationTypeBloc = OperationTypeBloc();
-  List<ResultOperation> listOperation = List.empty();
   ExpiredSetBloc expiredSetBloc = ExpiredSetBloc();
   ResultOperation operation = const ResultOperation();
   String? materialValue;
@@ -42,6 +40,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
+  final batch = TextEditingController();
   static String _displayStringForOption(ResultsMaterial option) =>
       "${option.material!} - ${option.materialDesc}";
   String selectedOperation = '';
@@ -64,7 +63,8 @@ class _WeighingScreenState extends State<WeighingScreen> {
       operationTypeBloc.add(SendDataOperationType(
           startDate: _dateController.text,
           materialCode: productCode.text,
-          plant: plant.text));
+          plant: plant.text,
+          batchFG: batch.text));
     }
   }
 
@@ -80,7 +80,6 @@ class _WeighingScreenState extends State<WeighingScreen> {
       plant.text = data.weerks;
     }
     materialBloc.add(SendPlant(plant: plant.text));
-    _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
     super.initState();
   }
 
@@ -100,7 +99,9 @@ class _WeighingScreenState extends State<WeighingScreen> {
           BlocProvider<OperationTypeBloc>(
               create: (BuildContext context) => operationTypeBloc),
           BlocProvider<ExpiredSetBloc>(
-              create: (BuildContext context) => expiredSetBloc)
+              create: (BuildContext context) => expiredSetBloc),
+          BlocProvider<OperationBloc>(
+              create: (BuildContext context) => operationBloc)
         ],
         child: MultiBlocListener(
             listeners: [
@@ -116,7 +117,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                   listener: (context, state) {
                 if (state is WeighingLoaded) {
                   var weighing = state.weighing.d!.resultsTong!;
-                  if (weighing.length > 2) {
+                  if (weighing.length >= 2) {
                     _weighingCubit.setWeighing(state.weighing.d!.resultsTong!);
                     _weighingCubit.setTab(WeighingStatus.scaleWeighing);
                   } else {
@@ -146,6 +147,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                               : ''));
                     }
                     _weighingCubit.setTab(WeighingStatus.scale);
+                    _weighingCubit.setPrevTab(WeighingStatus.weighing);
                   }
                 }
               }),
@@ -190,6 +192,13 @@ class _WeighingScreenState extends State<WeighingScreen> {
                   for (var data in state.resultScale.d!.results!) {
                     _weighingCubit.setTotalContainer(data.totalWadah!);
                   }
+                }
+              }),
+              BlocListener<OperationBloc, OperationState>(
+                  listener: (context, state) {
+                if (state is OperationLoaded) {
+                  _weighingCubit
+                      .setOperations(state.operation.d!.resultsOperationNo!);
                 }
               })
             ],
@@ -237,18 +246,22 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                     return TextFormField(
                                       controller: textEditingController,
                                       focusNode: focusNode,
+                                      keyboardType: TextInputType.number,
                                       onFieldSubmitted: (String value) {
                                         onFieldSubmitted();
                                       },
                                       decoration: InputDecoration(
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        labelText: 'Material Code',
-                                        filled: true,
-                                        fillColor: Colors.grey.shade100,
-                                      ),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          labelText: 'Material Code',
+                                          filled: true,
+                                          fillColor: Colors.grey.shade100,
+                                          suffixIcon: IconButton(
+                                              onPressed:
+                                                  textEditingController.clear,
+                                              icon: const Icon(Icons.close))),
                                     );
                                   },
                                   optionsBuilder: (TextEditingValue
@@ -309,7 +322,8 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                                                   .text,
                                                           materialCode:
                                                               productCode.text,
-                                                          plant: plant.text));
+                                                          plant: plant.text,
+                                                          batchFG: batch.text));
                                                 },
                                                 title: Text(
                                                   _displayStringForOption(
@@ -322,6 +336,34 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                       ),
                                     );
                                   },
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: TextFormField(
+                                  controller: batch,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      batch.text = value;
+                                    });
+                                    if (value.length > 5) {
+                                      operationTypeBloc.add(
+                                          SendDataOperationType(
+                                              startDate: _dateController.text,
+                                              materialCode: productCode.text,
+                                              plant: plant.text,
+                                              batchFG: batch.text));
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    labelText: 'Batch',
+                                    filled: true,
+                                    fillColor: Colors.grey.shade100,
+                                  ),
                                 ),
                               ),
                               Padding(
@@ -447,7 +489,8 @@ class _WeighingScreenState extends State<WeighingScreen> {
                               plant: plant.text,
                               materialCode: productCode.text,
                               operationType: materialValue!,
-                              startDate: _dateController.text));
+                              startDate: _dateController.text,
+                              batchFG: batch.text));
                           _weighingCubit.setDataOrder(
                               plant.text,
                               productCode.text,
@@ -577,196 +620,179 @@ class _WeighingScreenState extends State<WeighingScreen> {
 
   Widget _showOperationNo(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: _weighingCubit),
-        BlocProvider.value(value: operationBloc),
-        BlocProvider.value(value: weighingBloc)
-      ],
-      child: Dialog(
-        insetPadding: EdgeInsets.zero,
-        child: BlocBuilder<WeighingCubit, WeighingState>(
-          builder: (context, weighingState) {
-            return BlocBuilder<OperationBloc, OperationState>(
-              builder: (context, state) {
-                if (state is OperationLoading) {
-                  return const Loading();
-                }
-                if (state is OperationLoaded) {
-                  for (var operations
-                      in state.operation.d!.resultsOperationNo!) {
-                    operation = operations;
-                  }
-                  listOperation = state.operation.d!.resultsOperationNo!;
-                  return Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Choose Operation No'),
-                      automaticallyImplyLeading: false,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
+        providers: [
+          BlocProvider.value(value: _weighingCubit),
+          BlocProvider.value(value: operationBloc),
+          BlocProvider.value(value: weighingBloc)
+        ],
+        child: Dialog(
+            insetPadding: EdgeInsets.zero,
+            child: BlocBuilder<WeighingCubit, WeighingState>(
+              builder: (context, weighingState) {
+                return Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Choose Operation No'),
+                    automaticallyImplyLeading: false,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                  body: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Please choose an operation number:',
+                          style:
+                              Theme.of(context).textTheme.titleLarge!.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: weighingState.operations.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              final selectedOperation =
+                                  weighingState.operations[index];
+
+                              final isSelected =
+                                  weighingState.selectedOperation.activityNo ==
+                                      selectedOperation.activityNo;
+
+                              return Card(
+                                elevation: 5,
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                color: isSelected
+                                    ? Colors.black
+                                    : Colors.grey[200],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: ListTile(
+                                  title: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        selectedOperation.operationDesc ?? '',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                color: isSelected
+                                                    ? Colors.white
+                                                    : Colors.black),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Operation number",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: isSelected
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                selectedOperation.activityNo ??
+                                                    '',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge
+                                                    ?.copyWith(
+                                                      color: isSelected
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                "Operation Apps",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: isSelected
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                selectedOperation
+                                                        .operationApps ??
+                                                    '',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge
+                                                    ?.copyWith(
+                                                      color: isSelected
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    _weighingCubit.setSelectedOperation(
+                                        selectedOperation);
+                                    weighingBloc.add(SendDataWeighing(
+                                        routingNo: selectedOperation.routingNo!,
+                                        internalCntr:
+                                            selectedOperation.internalCntr!,
+                                        activityNo:
+                                            selectedOperation.activityNo!,
+                                        operationType:
+                                            weighingState.operationType,
+                                        operationApps:
+                                            weighingState.operationApps));
+                                    if (mounted) {
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
-                    body: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Please choose an operation number:',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge!
-                                .copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: listOperation.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final operationNo = listOperation[index];
-
-                                final isSelected = weighingState
-                                        .selectedOperation.activityNo ==
-                                    operationNo.activityNo;
-
-                                return Card(
-                                  elevation: 5,
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 8),
-                                  color: isSelected
-                                      ? Colors.black
-                                      : Colors.grey[200],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: ListTile(
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          operationNo.operationDesc ?? '',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                  color: isSelected
-                                                      ? Colors.white
-                                                      : Colors.black),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  "Operation number",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                      ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  operationNo.activityNo ?? '',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyLarge
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "Operation Apps",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                      ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  operationNo.operationApps ??
-                                                      '',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyLarge
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    onTap: () {
-                                      _weighingCubit
-                                          .setOperationList(operation);
-                                      weighingBloc.add(SendDataWeighing(
-                                          routingNo: operationNo.routingNo!,
-                                          internalCntr:
-                                              operationNo.internalCntr!,
-                                          activityNo: operationNo.activityNo!,
-                                          operationType:
-                                              weighingState.operationType,
-                                          operationApps:
-                                              weighingState.operationApps));
-                                      if (mounted) {
-                                        Navigator.of(context).pop();
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                } else {
-                  return const Center();
-                }
+                  ),
+                );
               },
-            );
-          },
-        ),
-      ),
-    );
+            )));
   }
 }

@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/locationset.dart';
 import 'package:dumping_system/models/response/materialset.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
@@ -92,41 +93,71 @@ class HandoverCubit extends Cubit<HandoverState> {
         ? unscannedPriorities.reduce((a, b) => a.compareTo(b) < 0 ? a : b)
         : null;
 
-    for (var i = 0; i < tongs.length; i++) {
-      if (activityNo.length == 4) {
-        if (tongs[i].activityNo == activityNo[3]) {
-          matchFound = true;
+    switch (activityNo.length) {
+      case 4:
+        for (var i = 0; i < tongs.length; i++) {
+          if (tongs[i].activityNo == activityNo[3]) {
+            matchFound = true;
+            if (tongs[i].isScanned!) {
+              isChecked = true;
+            } else {
+              var tong = tongs[i].copyWith(isScanned: true);
+              tongs[i] = tong;
+            }
+            isNullData = !matchFound;
+          }
           if (tongs[i].isScanned!) {
-            isChecked = true;
-          } else {
-            var tong = tongs[i].copyWith(isScanned: true);
-            tongs[i] = tong;
+            completed++;
+          }
+        }
+        break;
+      case 5:
+        for (var i = 0; i < tongs.length; i++) {
+          if (tongs[i].activityNo == activityNo[3]) {
+            matchFound = true;
+            if (tongs[i].isScanned!) {
+              isChecked = true;
+            } else {
+              var tong = tongs[i].copyWith(isScanned: true);
+              tongs[i] = tong;
+            }
           }
           isNullData = !matchFound;
-        }
-      }
-      if (tongs[i].isScanned!) {
-        completed++;
-      }
-    }
-
-    for (var j = 0; j < fullpack.length; j++) {
-      if (activityNo.length > 6) {
-        if (fullpack[j].bOMItem == activityNo[3] &&
-            fullpack[j].counter == activityNo[6]) {
-          matchFound = true;
-          if (fullpack[j].isScannedFullpack) {
-            isChecked = true;
-          } else {
-            var fullpacks = fullpack[j].copyWith(isScannedFullpack: true);
-            fullpack[j] = fullpacks;
+          if (tongs[i].isScanned!) {
+            completed++;
           }
         }
-        isNullData = !matchFound;
-      }
-      if (fullpack[j].isScannedFullpack) {
-        completedFullpack++;
-      }
+        break;
+      case 7:
+        for (var j = 0; j < fullpack.length; j++) {
+          if (fullpack[j].bOMItem.isNotEmpty) {
+            if (fullpack[j].bOMItem == activityNo[3] &&
+                fullpack[j].counter == activityNo[6]) {
+              matchFound = true;
+              if (fullpack[j].isScannedFullpack) {
+                isChecked = true;
+              } else {
+                var fullpacks = fullpack[j].copyWith(isScannedFullpack: true);
+                fullpack[j] = fullpacks;
+              }
+            }
+          } else {
+            if (fullpack[j].counter == activityNo[6]) {
+              matchFound = true;
+              if (fullpack[j].isScannedFullpack) {
+                isChecked = true;
+              } else {
+                var fullpacks = fullpack[j].copyWith(isScannedFullpack: true);
+                fullpack[j] = fullpacks;
+              }
+            }
+          }
+          isNullData = !matchFound;
+          if (fullpack[j].isScannedFullpack) {
+            completedFullpack++;
+          }
+        }
+        break;
     }
 
     for (var k = 0; k < materialSets.length; k++) {
@@ -220,5 +251,17 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   void isNext(bool isNext) {
     emit(state.copyWith(isNext: isNext));
+  }
+
+  void setLocationSet(List<ResultsLocationSet> locationSet) {
+    emit(state.copyWith(locationSets: locationSet));
+  }
+
+  void setSelectedLocationSet(ResultsLocationSet selectedLocationSet) {
+    emit(state.copyWith(selectedLocationSet: selectedLocationSet));
+  }
+
+  void setWadahSet(List<ResultTong> wadah) {
+    emit(state.copyWith(wadah: wadah));
   }
 }

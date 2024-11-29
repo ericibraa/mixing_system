@@ -1,5 +1,4 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
-import 'package:dumping_system/bloc/tong_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/bloc/material_set_bloc.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/bloc/submit_handover_mixing_bloc.dart';
@@ -21,7 +20,6 @@ class ScanTongMaterialSetScreen extends StatefulWidget {
 class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
   AuthBloc authBloc = AuthBloc();
   HandoverCubit _handoverCubit = HandoverCubit();
-  TongBloc tongBloc = TongBloc();
   MaterialSetBloc materialSetBloc = MaterialSetBloc();
   SubmitHandoverMixingBloc submitHandoverMixingBloc =
       SubmitHandoverMixingBloc();
@@ -45,6 +43,15 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
       });
       if (mounted) {
         if (hasScanned.length == 4) {
+          _handoverCubit.resetCompleteMaterial(false);
+          materialSetBloc.add(SendDataMaterialset(
+              routingNo:
+                  _handoverCubit.state.selectedOperationNumber.routingNo!,
+              activityNo: hasScanned[3],
+              operationType:
+                  _handoverCubit.state.selectedOperation.operationType!));
+        }
+        if (hasScanned.length == 5) {
           _handoverCubit.resetCompleteMaterial(false);
           materialSetBloc.add(SendDataMaterialset(
               routingNo:
@@ -89,47 +96,11 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _handoverCubit),
-        BlocProvider.value(value: tongBloc),
         BlocProvider.value(value: materialSetBloc),
         BlocProvider.value(value: submitHandoverMixingBloc),
       ],
       child: MultiBlocListener(
         listeners: [
-          BlocListener<TongBloc, TongState>(
-            listener: (context, state) {
-              if (state is TongLoaded) {
-                _handoverCubit.setResultTong(state.tong.d!.resultsTong!);
-                for (var fullpack in state.tong.d!.resultsTong!) {
-                  _handoverCubit
-                      .setFullpack(fullpack.wadToMatNav!.resultsFullPack!);
-                }
-              }
-            },
-          ),
-          BlocListener<HandoverCubit, HandoverState>(
-            listener: (context, state) {
-              if (state.isResultOperationLoaded == true &&
-                  state.tongs.isEmpty) {
-                tongBloc.add(SendDataTong(
-                    routingNo: state.selectedOperationNumber.routingNo != null
-                        ? _handoverCubit
-                            .state.selectedOperationNumber.routingNo!
-                        : "",
-                    activityNo: state.selectedOperationNumber.activityNo != null
-                        ? _handoverCubit
-                            .state.selectedOperationNumber.activityNo!
-                        : "",
-                    controlRecipe:
-                        state.selectedOperationNumber.controlRecipe != null
-                            ? _handoverCubit
-                                .state.selectedOperationNumber.controlRecipe!
-                            : "",
-                    operationType: state.selectedOperation.operationType != null
-                        ? _handoverCubit.state.selectedOperation.operationType!
-                        : ""));
-              }
-            },
-          ),
           BlocListener<MaterialSetBloc, MaterialSetState>(
               listener: (context, state) {
             if (state is MaterialSetLoaded) {

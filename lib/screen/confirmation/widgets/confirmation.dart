@@ -31,6 +31,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
+  final batch = TextEditingController();
   static String _displayStringForOption(ResultsMaterial option) =>
       "${option.material!} - ${option.materialDesc}";
   String selectedOperation = '';
@@ -47,7 +48,6 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
       plant.text = data.weerks;
     }
     materialBloc.add(SendPlant(plant: plant.text));
-    _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
     super.initState();
   }
 
@@ -65,7 +65,8 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
       operationTypeBloc.add(SendDataOperationType(
           startDate: _dateController.text,
           materialCode: productCode.text,
-          plant: plant.text));
+          plant: plant.text,
+          batchFG: batch.text));
     }
   }
 
@@ -169,18 +170,22 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                     return TextFormField(
                                       controller: textEditingController,
                                       focusNode: focusNode,
+                                      keyboardType: TextInputType.number,
                                       onFieldSubmitted: (String value) {
                                         onFieldSubmitted();
                                       },
                                       decoration: InputDecoration(
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        labelText: 'Material Code',
-                                        filled: true,
-                                        fillColor: Colors.grey.shade100,
-                                      ),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          labelText: 'Material Code',
+                                          filled: true,
+                                          fillColor: Colors.grey.shade100,
+                                          suffixIcon: IconButton(
+                                              onPressed:
+                                                  textEditingController.clear,
+                                              icon: const Icon(Icons.close))),
                                     );
                                   },
                                   optionsBuilder: (TextEditingValue
@@ -241,7 +246,8 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                                                   .text,
                                                           materialCode:
                                                               productCode.text,
-                                                          plant: plant.text));
+                                                          plant: plant.text,
+                                                          batchFG: batch.text));
                                                 },
                                                 title: Text(
                                                   _displayStringForOption(
@@ -254,6 +260,34 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                       ),
                                     );
                                   },
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: TextFormField(
+                                  controller: batch,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      batch.text = value;
+                                    });
+                                    if (value.length > 5) {
+                                      operationTypeBloc.add(
+                                          SendDataOperationType(
+                                              startDate: _dateController.text,
+                                              materialCode: productCode.text,
+                                              plant: plant.text,
+                                              batchFG: batch.text));
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    labelText: 'Batch',
+                                    filled: true,
+                                    fillColor: Colors.grey.shade100,
+                                  ),
                                 ),
                               ),
                               Padding(
@@ -381,7 +415,8 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                               plant: plant.text,
                               materialCode: productCode.text,
                               operationType: materialValue!,
-                              startDate: _dateController.text));
+                              startDate: _dateController.text,
+                              batchFG: batch.text));
                           _confirmationCubit.setDataOrder(
                               plant.text,
                               productCode.text,

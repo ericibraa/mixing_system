@@ -51,11 +51,14 @@ class WeighingCubit extends Cubit<WeighingState> {
     emit(state.copyWith(orders: orders));
   }
 
-  void setOperationList(ResultOperation operationList) {
+  void setSelectedOperation(ResultOperation selectedOperation) {
     emit(state.copyWith(
-      selectedOperation: operationList,
-      isResultOperationLoaded: true,
+      selectedOperation: selectedOperation,
     ));
+  }
+
+  void setOperations(List<ResultOperation> operations) {
+    emit(state.copyWith(operations: operations));
   }
 
   void setTab(WeighingStatus tab) {
@@ -79,6 +82,10 @@ class WeighingCubit extends Cubit<WeighingState> {
 
   void selectedWeighing(ResultTong selectedWeighing) {
     emit(state.copyWith(selectedContainer: selectedWeighing));
+  }
+
+  void chooseWeighing(ResultTong chooseTong) {
+    emit(state.copyWith(chooseTong: chooseTong));
   }
 
   void setExpired(ResultsExpiredSet expiredSet) {
@@ -139,5 +146,9 @@ class WeighingCubit extends Cubit<WeighingState> {
   void setStartWork() {
     emit(state.copyWith(onChangeStartWork: true));
     emit(state.copyWith(startWork: DateTime.now(), onChangeStartWork: false));
+  }
+
+  void setPrevTab(WeighingStatus prevTab) {
+    emit(state.copyWith(prevTab: prevTab));
   }
 }

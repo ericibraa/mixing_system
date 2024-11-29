@@ -64,6 +64,7 @@ class OrdToOprNav {
   String? finishTime;
   String? operator;
   String? pengawas;
+  String? activityWh;
 
   OrdToOprNav(
       {this.routingNo,
@@ -78,7 +79,8 @@ class OrdToOprNav {
       this.finishDate,
       this.finishTime,
       this.operator,
-      this.pengawas});
+      this.pengawas,
+      this.activityWh});
 
   OrdToOprNav.fromJson(Map<String, dynamic> json) {
     routingNo = json['RoutingNo'];
@@ -94,6 +96,7 @@ class OrdToOprNav {
     finishTime = json['FinishTime'];
     operator = json['Operator'];
     pengawas = json['Pengawas'];
+    activityWh = json['ActivityWh'];
   }
 
   Map<String, dynamic> toJson() {
@@ -111,6 +114,7 @@ class OrdToOprNav {
     data['FinishTime'] = finishTime;
     data['Operator'] = operator;
     data['Pengawas'] = pengawas;
+    data['ActivityWh'] = activityWh;
     return data;
   }
 }

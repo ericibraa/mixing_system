@@ -1,6 +1,11 @@
 part of 'handover_cubit.dart';
 
-enum HandoverStatus { handover, scantong, scantongmaterial }
+enum HandoverStatus {
+  handover,
+  scantong,
+  scantongmaterial,
+  scanTongResultsWeighing
+}
 
 @immutable
 class HandoverState extends Equatable {
@@ -31,6 +36,9 @@ class HandoverState extends Equatable {
   final bool isNullData;
   final List<ResultsOprType> operationTypeList;
   final bool isNext;
+  final List<ResultsLocationSet> locationSets;
+  final ResultsLocationSet selectedLocationSet;
+  final List<ResultTong> wadah;
 
   const HandoverState(
       {this.operator = '',
@@ -59,7 +67,10 @@ class HandoverState extends Equatable {
       this.isChecked = false,
       this.isNullData = false,
       this.operationTypeList = const [],
-      this.isNext = false});
+      this.isNext = false,
+      this.locationSets = const [],
+      this.selectedLocationSet = const ResultsLocationSet(),
+      this.wadah = const []});
 
   HandoverState copyWith(
       {String? operator,
@@ -88,7 +99,10 @@ class HandoverState extends Equatable {
       bool? isChecked,
       bool? isNullData,
       List<ResultsOprType>? operationTypeList,
-      bool? isNext}) {
+      bool? isNext,
+      List<ResultsLocationSet>? locationSets,
+      ResultsLocationSet? selectedLocationSet,
+      List<ResultTong>? wadah}) {
     return HandoverState(
         operator: operator ?? this.operator,
         pengawas: pengawas ?? this.pengawas,
@@ -118,7 +132,10 @@ class HandoverState extends Equatable {
         isChecked: isChecked ?? this.isChecked,
         isNullData: isNullData ?? this.isNullData,
         operationTypeList: operationTypeList ?? this.operationTypeList,
-        isNext: isNext ?? this.isNext);
+        isNext: isNext ?? this.isNext,
+        locationSets: locationSets ?? this.locationSets,
+        selectedLocationSet: selectedLocationSet ?? this.selectedLocationSet,
+        wadah: wadah ?? this.wadah);
   }
 
   @override
@@ -149,6 +166,9 @@ class HandoverState extends Equatable {
         isChecked,
         isNullData,
         operationTypeList,
-        isNext
+        isNext,
+        locationSets,
+        selectedLocationSet,
+        wadah
       ];
 }

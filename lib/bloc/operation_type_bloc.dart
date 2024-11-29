@@ -15,7 +15,7 @@ class OperationTypeBloc extends Bloc<OperationTypeEvent, OperationTypeState> {
       emit(OperationTypeLoading());
       try {
         final operationType = await _operationTypeRepository.fetchoperationtype(
-            event.startDate, event.materialCode, event.plant);
+            event.startDate, event.materialCode, event.plant, event.batchFG);
         emit(OperationTypeLoaded(operationType: operationType));
       } catch (e) {
         emit(OperationTypeError());

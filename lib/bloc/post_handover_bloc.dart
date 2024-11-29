@@ -25,6 +25,10 @@ class SubmitHandoverBloc
         var finishdate = formattedDate.split("-");
         var operationApps = event.orderData.operationApps;
         operationApps = event.orderData.operationApps;
+        String activityWh = '';
+        if (event.orderData.fullpack[0].bOMItem.isEmpty) {
+          activityWh = event.orderData.fullpack[0].activityNo;
+        }
         SubmitHandoverRequest submitHandover = SubmitHandoverRequest(
             orderNo: event.orderData.selectedOperation.orderNo,
             plant: event.orderData.plant,
@@ -51,7 +55,8 @@ class SubmitHandoverBloc
                   finishDate: finishdate[0],
                   finishTime: finishdate[1],
                   operator: event.orderData.operator,
-                  pengawas: event.orderData.pengawas)
+                  pengawas: event.orderData.pengawas,
+                  activityWh: activityWh)
             ]);
         String handover =
             await _submitHandoverRepository.submitHandover(submitHandover);

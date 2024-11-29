@@ -55,6 +55,8 @@ dependencies:
   htmltopdfwidgets: ^1.0.4
   zsdk: ^3.2.0+3
   flutter_launcher_icons: ^0.14.1
+  audioplayers: ^6.1.0
+  flutter_ringtone_player: ^4.0.0+3
 
 
 flutter_launcher_icons:

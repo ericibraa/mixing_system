@@ -12,20 +12,21 @@ class Scale extends Equatable {
   final String scaleId;
   final String urlAddress;
   final String regex;
+  final String lot;
 
-  const Scale({
-    this.temperature = '',
-    this.moistureContent = '',
-    this.numberOfContainer = '',
-    this.scaleName = '',
-    this.bruto = 0.0,
-    this.tara = 0.0,
-    this.netto = 0.0,
-    this.unit = 'g',
-    this.scaleId = '',
-    this.urlAddress = '',
-    this.regex = '',
-  });
+  const Scale(
+      {this.temperature = '',
+      this.moistureContent = '',
+      this.numberOfContainer = '',
+      this.scaleName = '',
+      this.bruto = 0.0,
+      this.tara = 0.0,
+      this.netto = 0.0,
+      this.unit = 'g',
+      this.scaleId = '',
+      this.urlAddress = '',
+      this.regex = '',
+      this.lot = ''});
 
   Scale copyWith(
       {String? temperature,
@@ -38,7 +39,8 @@ class Scale extends Equatable {
       String? unit,
       String? scaleId,
       String? urlAddress,
-      String? regex}) {
+      String? regex,
+      String? lot}) {
     return Scale(
         temperature: temperature ?? this.temperature,
         moistureContent: moistureContent ?? this.moistureContent,
@@ -50,7 +52,8 @@ class Scale extends Equatable {
         unit: unit ?? this.unit,
         scaleId: scaleId ?? this.scaleId,
         urlAddress: urlAddress ?? this.urlAddress,
-        regex: regex ?? this.regex);
+        regex: regex ?? this.regex,
+        lot: lot ?? this.lot);
   }
 
   @override
@@ -65,7 +68,8 @@ class Scale extends Equatable {
         unit,
         scaleId,
         urlAddress,
-        regex
+        regex,
+        lot
       ];
 }
 

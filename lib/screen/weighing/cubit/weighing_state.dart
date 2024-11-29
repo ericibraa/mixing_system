@@ -10,14 +10,17 @@ class WeighingState extends Equatable {
   final String operationApps;
   final String operationType;
   final WeighingStatus tab;
+  final WeighingStatus prevTab;
   final ResultsOrder selectedOrder;
   final List<ResultsOrder> orders;
+  final List<ResultOperation> operations;
   final ResultOperation selectedOperation;
   final bool isResultOperationLoaded;
   final bool isConnectedTcp;
   final Scale scaleWeighing;
   final List<ResultTong> containers;
   final ResultTong selectedContainer;
+  final ResultTong chooseTong;
   final ResultsExpiredSet expiredSet;
   final List<ResultScale> equipments;
   final ResultScale selectedEquipment;
@@ -40,14 +43,17 @@ class WeighingState extends Equatable {
       this.operationApps = "",
       this.operationType = "",
       this.tab = WeighingStatus.weighing,
+      this.prevTab = WeighingStatus.weighing,
       this.selectedOrder = const ResultsOrder(),
       this.orders = const [],
+      this.operations = const [],
       this.selectedOperation = const ResultOperation(),
       this.isResultOperationLoaded = false,
       this.isConnectedTcp = false,
       this.scaleWeighing = const Scale(),
       this.containers = const [],
       this.selectedContainer = const ResultTong(),
+      this.chooseTong = const ResultTong(),
       this.expiredSet = const ResultsExpiredSet(),
       this.equipments = const [],
       this.selectedEquipment = const ResultScale(),
@@ -70,14 +76,17 @@ class WeighingState extends Equatable {
       String? operationApps,
       String? operationType,
       WeighingStatus? tab,
+      WeighingStatus? prevTab,
       ResultsOrder? selectedOrder,
       List<ResultsOrder>? orders,
+      List<ResultOperation>? operations,
       ResultOperation? selectedOperation,
       bool? isResultOperationLoaded,
       bool? isConnectedTcp,
       Scale? scaleWeighing,
       List<ResultTong>? containers,
       ResultTong? selectedContainer,
+      ResultTong? chooseTong,
       ResultsExpiredSet? expiredSet,
       List<ResultScale>? equipments,
       ResultScale? selectedEquipment,
@@ -99,8 +108,10 @@ class WeighingState extends Equatable {
         operationApps: operationApps ?? this.operationApps,
         operationType: operationType ?? this.operationType,
         tab: tab ?? this.tab,
+        prevTab: prevTab ?? this.prevTab,
         selectedOrder: selectedOrder ?? this.selectedOrder,
         orders: orders ?? this.orders,
+        operations: operations ?? this.operations,
         selectedOperation: selectedOperation ?? this.selectedOperation,
         isResultOperationLoaded:
             isResultOperationLoaded ?? this.isResultOperationLoaded,
@@ -108,6 +119,7 @@ class WeighingState extends Equatable {
         scaleWeighing: scaleWeighing ?? this.scaleWeighing,
         containers: containers ?? this.containers,
         selectedContainer: selectedContainer ?? this.selectedContainer,
+        chooseTong: chooseTong ?? this.chooseTong,
         expiredSet: expiredSet ?? this.expiredSet,
         equipments: equipments ?? this.equipments,
         selectedEquipment: selectedEquipment ?? this.selectedEquipment,
@@ -132,14 +144,17 @@ class WeighingState extends Equatable {
         operationApps,
         operationType,
         tab,
+        prevTab,
         selectedOrder,
         orders,
+        operations,
         selectedOperation,
         isResultOperationLoaded,
         isConnectedTcp,
         scaleWeighing,
         containers,
         selectedContainer,
+        chooseTong,
         expiredSet,
         equipments,
         selectedEquipment,

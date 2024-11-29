@@ -169,6 +169,9 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                             ),
                             onTap: () {
                               _weighingCubit.selectedWeighing(dataWeighing);
+                              _weighingCubit
+                                  .setTab(WeighingStatus.scaleWeighing);
+
                               scaleBloc.add(
                                   SendDataScale(plant: weighingState.plant));
                               expiredSetBloc.add(GetExpiredSet(

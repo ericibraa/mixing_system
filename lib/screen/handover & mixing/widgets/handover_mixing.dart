@@ -1,5 +1,6 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/bloc/operation_type_bloc.dart';
+import 'package:dumping_system/bloc/tong_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
@@ -8,6 +9,8 @@ import 'package:dumping_system/bloc/material_bloc.dart';
 import 'package:dumping_system/bloc/operation_bloc.dart';
 import 'package:dumping_system/bloc/order_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/bloc/location_set_bloc.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/bloc/wadah_set_bloc.dart';
 import 'package:dumping_system/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,10 +33,14 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
   List<ResultsOrder> listOrder = List.empty();
   List<ResultOperation> listOperation = List.empty();
   OperationTypeBloc operationTypeBloc = OperationTypeBloc();
+  LocationSetBloc locationSetBloc = LocationSetBloc();
+  WadahSetBloc wadahSetBloc = WadahSetBloc();
+  TongBloc tongBloc = TongBloc();
   String? materialValue;
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
+  final batch = TextEditingController();
   static String _displayStringForOption(ResultsMaterial option) =>
       "${option.material!} - ${option.materialDesc}";
   String selectedOperation = '';
@@ -54,7 +61,8 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
       operationTypeBloc.add(SendDataOperationType(
           startDate: _dateController.text,
           materialCode: productCode.text,
-          plant: plant.text));
+          plant: plant.text,
+          batchFG: batch.text));
     }
   }
 
@@ -69,7 +77,6 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
       _handoverCubit.setPengawas(data.namePengawas);
     }
     materialBloc.add(SendPlant(plant: plant.text));
-    _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
     super.initState();
   }
 
@@ -86,10 +93,16 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
         BlocProvider<OrderBloc>(
           create: (BuildContext context) => orderBloc,
         ),
-        BlocProvider<HandoverCubit>(
-            create: (BuildContext context) => _handoverCubit),
+        BlocProvider.value(value: _handoverCubit),
+        BlocProvider<TongBloc>(
+          create: (BuildContext context) => tongBloc,
+        ),
+        BlocProvider<WadahSetBloc>(
+            create: (BuildContext context) => wadahSetBloc),
         BlocProvider<OperationTypeBloc>(
-            create: (BuildContext context) => operationTypeBloc)
+            create: (BuildContext context) => operationTypeBloc),
+        BlocProvider<LocationSetBloc>(
+            create: (BuildContext context) => locationSetBloc)
       ],
       child: MultiBlocListener(
         listeners: [
@@ -123,6 +136,68 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                 _handoverCubit
                     .setOperationType(data.oprTypToDescNav!.resultsOprType!);
               }
+            }
+          }),
+          BlocListener<LocationSetBloc, LocationSetState>(
+              listener: (context, state) {
+            if (state is LocationSetLoaded) {
+              if (state.locationSet.d!.locationSet!.isEmpty) {
+                tongBloc.add(SendDataTong(
+                    routingNo: _handoverCubit
+                                .state.selectedOperationNumber.routingNo !=
+                            null
+                        ? _handoverCubit
+                            .state.selectedOperationNumber.routingNo!
+                        : "",
+                    activityNo: _handoverCubit
+                                .state.selectedOperationNumber.activityNo !=
+                            null
+                        ? _handoverCubit
+                            .state.selectedOperationNumber.activityNo!
+                        : "",
+                    controlRecipe: _handoverCubit
+                                .state.selectedOperationNumber.controlRecipe !=
+                            null
+                        ? _handoverCubit
+                            .state.selectedOperationNumber.controlRecipe!
+                        : "",
+                    operationType: _handoverCubit
+                                .state.selectedOperation.operationType !=
+                            null
+                        ? _handoverCubit.state.selectedOperation.operationType!
+                        : ""));
+                if (int.parse(_handoverCubit
+                        .state.selectedOperationNumber.operationApps!) >
+                    20) {
+                  _handoverCubit.setTab(HandoverStatus.scantongmaterial);
+                } else {
+                  _handoverCubit.setTab(HandoverStatus.scantong);
+                }
+                Navigator.of(context).pop();
+              } else {
+                _handoverCubit
+                    .setLocationSet(state.locationSet.d!.locationSet!);
+              }
+            }
+          }),
+          BlocListener<TongBloc, TongState>(listener: (context, state) {
+            if (state is TongLoaded) {
+              _handoverCubit.setResultTong(state.tong.d!.resultsTong!);
+              for (var fullpack in state.tong.d!.resultsTong!) {
+                _handoverCubit
+                    .setFullpack(fullpack.wadToMatNav!.resultsFullPack!);
+              }
+            }
+          }),
+          BlocListener<WadahSetBloc, WadahSetState>(listener: (context, state) {
+            if (state is WadahSetLoaded) {
+              _handoverCubit.setResultTong(state.wadahSet.d!.resultsTong!);
+              for (var fullpack in state.wadahSet.d!.resultsTong!) {
+                _handoverCubit
+                    .setFullpack(fullpack.wadToMatNav!.resultsFullPack!);
+              }
+              _handoverCubit.setTab(HandoverStatus.scanTongResultsWeighing);
+              Navigator.of(context).pop();
             }
           })
         ],
@@ -170,17 +245,22 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                   return TextFormField(
                                     controller: textEditingController,
                                     focusNode: focusNode,
+                                    keyboardType: TextInputType.number,
                                     onFieldSubmitted: (String value) {
                                       onFieldSubmitted();
                                     },
                                     decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      labelText: 'Material Code',
-                                      filled: true,
-                                      fillColor: Colors.grey.shade100,
-                                    ),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        labelText: 'Material Code',
+                                        filled: true,
+                                        fillColor: Colors.grey.shade100,
+                                        suffixIcon: IconButton(
+                                            onPressed:
+                                                textEditingController.clear,
+                                            icon: const Icon(Icons.close))),
                                   );
                                 },
                                 optionsBuilder:
@@ -237,7 +317,8 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                                                 .text,
                                                         materialCode:
                                                             productCode.text,
-                                                        plant: plant.text));
+                                                        plant: plant.text,
+                                                        batchFG: batch.text));
                                               },
                                               title: Text(
                                                 _displayStringForOption(option),
@@ -249,6 +330,33 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                     ),
                                   );
                                 },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: TextFormField(
+                                controller: batch,
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  setState(() {
+                                    batch.text = value;
+                                  });
+                                  if (value.length > 5) {
+                                    operationTypeBloc.add(SendDataOperationType(
+                                        startDate: _dateController.text,
+                                        materialCode: productCode.text,
+                                        plant: plant.text,
+                                        batchFG: value));
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  labelText: 'Batch',
+                                  filled: true,
+                                  fillColor: Colors.grey.shade100,
+                                ),
                               ),
                             ),
                             Padding(
@@ -398,13 +506,14 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                       onPressed: plant.text.isNotEmpty &&
                               materialValue != null &&
                               productCode.text.isNotEmpty &&
-                              _dateController.text.isNotEmpty
+                              batch.text.isNotEmpty
                           ? () {
                               orderBloc.add(SendDataOrder(
                                   plant: plant.text,
                                   materialCode: productCode.text,
                                   operationType: materialValue!,
-                                  startDate: _dateController.text));
+                                  startDate: _dateController.text,
+                                  batchFG: batch.text));
                               _handoverCubit.setDataOrder(
                                   plant.text,
                                   productCode.text,
@@ -416,7 +525,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                         backgroundColor: plant.text.isNotEmpty &&
                                 materialValue != null &&
                                 productCode.text.isNotEmpty &&
-                                _dateController.text.isNotEmpty
+                                batch.text.isNotEmpty
                             ? Colors.black
                             : Colors.grey[500],
                         shape: RoundedRectangleBorder(
@@ -424,7 +533,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                         ),
                       ),
                       child: Text(
-                        "Show Operation List",
+                        "Show Orders",
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -538,7 +647,8 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _handoverCubit),
-        BlocProvider.value(value: operationBloc)
+        BlocProvider.value(value: operationBloc),
+        BlocProvider.value(value: locationSetBloc)
       ],
       child: Dialog(
         insetPadding: EdgeInsets.zero,
@@ -690,22 +800,112 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                     ),
                                     onTap: () {
                                       _handoverCubit.setOperation(operationNo);
-                                      var number =
-                                          int.parse(operationNo.operationApps!);
-                                      if (number > 20) {
-                                        _handoverCubit.setTab(
-                                            HandoverStatus.scantongmaterial);
-                                      } else {
-                                        _handoverCubit
-                                            .setTab(HandoverStatus.scantong);
-                                      }
-                                      Navigator.of(context).pop();
+                                      locationSetBloc.add(GetLocationSet(
+                                          operationNo.routingNo!,
+                                          operationNo.internalCntr!,
+                                          operationNo.activityNo!));
                                     },
                                   ),
                                 );
                               },
                             ),
                           ),
+                          Text(
+                            'Choose location:',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge!
+                                .copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                              child: ListView.builder(
+                                  itemCount: handoverState.locationSets.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    final selectedLocation =
+                                        handoverState.locationSets[index];
+
+                                    final isSelected = handoverState
+                                            .selectedLocationSet.activityNo ==
+                                        selectedLocation.activityNo;
+
+                                    return Card(
+                                        elevation: 5,
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 8, horizontal: 20),
+                                        color: isSelected
+                                            ? Colors.black
+                                            : Colors.grey[200],
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: ListTile(
+                                          title: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                selectedLocation.operationDesc!,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16,
+                                                        color: isSelected
+                                                            ? Colors.white
+                                                            : Colors.black),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "Line",
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: isSelected
+                                                              ? Colors.white
+                                                              : Colors.black,
+                                                        ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    selectedLocation.line!,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyLarge
+                                                        ?.copyWith(
+                                                          color: isSelected
+                                                              ? Colors.white
+                                                              : Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          onTap: () {
+                                            _handoverCubit
+                                                .setSelectedLocationSet(
+                                                    selectedLocation);
+                                            wadahSetBloc.add(GetWadahSet(
+                                                selectedLocation.routingNo!,
+                                                selectedLocation.activityNo!,
+                                                handoverState.operationType));
+                                          },
+                                        ));
+                                  }))
                         ],
                       ),
                     ),

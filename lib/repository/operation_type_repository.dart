@@ -5,7 +5,8 @@ class OperationTypeRepository {
   final _provider = OperationTypeProvider();
 
   Future<OperationTypeResponse> fetchoperationtype(
-      String startDate, String materialCode, String plant) {
-    return _provider.fetchoperationtype(startDate, materialCode, plant);
+      String startDate, String materialCode, String plant, String batchFG) {
+    return _provider.fetchoperationtype(
+        startDate, materialCode, plant, batchFG);
   }
 }

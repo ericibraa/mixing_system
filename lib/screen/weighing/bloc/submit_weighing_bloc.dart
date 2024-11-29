@@ -22,12 +22,22 @@ class SubmitWeighingBloc
       try {
         DateTime finishTimeWeighing = DateTime.now();
         DateTime? expiredDateParse;
-        if (event.weighingState.expiredSet.unit == 'DAY') {
-          expiredDateParse = finishTimeWeighing.add(Duration(
-              days: int.parse(event.weighingState.expiredSet.expiredNo!)));
-        } else {
-          expiredDateParse = finishTimeWeighing.add(Duration(
-              hours: int.parse(event.weighingState.expiredSet.expiredNo!)));
+        String finalExpDate = '';
+        String finalExpTime = '';
+        String lotNo = '';
+        if (event.weighingState.operationType == 'DECOCT') {
+          lotNo = event.weighingState.scaleWeighing.lot;
+        }
+        if (event.weighingState.expiredSet.expiredNo != '0,000') {
+          if (event.weighingState.expiredSet.unit == 'DAY') {
+            expiredDateParse = finishTimeWeighing.add(Duration(
+                days: int.parse(event.weighingState.expiredSet.expiredNo!)));
+            finalExpDate = DateFormat('yyyyMMdd').format(expiredDateParse);
+          } else {
+            expiredDateParse = finishTimeWeighing.add(Duration(
+                hours: int.parse(event.weighingState.expiredSet.expiredNo!)));
+            finalExpTime = DateFormat('HHmmss').format(expiredDateParse);
+          }
         }
         SubmitWeighing submitWeighing = SubmitWeighing(
             orderNo: event.weighingState.selectedOrder.orderNo,
@@ -43,8 +53,8 @@ class SubmitWeighingBloc
             unitTemperature: "GC",
             moistureContent: event.weighingState.scaleWeighing.moistureContent,
             unitMoisture: "%",
-            expiredDate: DateFormat('yyyyMMdd').format(expiredDateParse),
-            expiredTime: DateFormat('HHmmss').format(expiredDateParse),
+            expiredDate: finalExpDate,
+            expiredTime: finalExpTime,
             operator: event.weighingState.operator,
             pengawas: event.weighingState.pengawas,
             startDate:
@@ -55,7 +65,8 @@ class SubmitWeighingBloc
             totalWadah: event.weighingState.scaleWeighing.numberOfContainer,
             line: event.weighingState.line,
             finishDate: DateFormat('yyyyMMdd').format(finishTimeWeighing),
-            finishTime: DateFormat('HHmmss').format(finishTimeWeighing));
+            finishTime: DateFormat('HHmmss').format(finishTimeWeighing),
+            lotNo: lotNo);
 
         String weighing =
             await _submitWeighingRepository.submitweighing(submitWeighing);
@@ -83,26 +94,26 @@ class SubmitWeighingBloc
           ^FO30,340^FDMesin^FS
           ^FO200,340^FD${event.weighingState.expiredSet.workCenterDesc}^FS      ; Machine info
           ^FO30,370^FDOperation/Lot^FS
-          ^FO200,370^FD${event.weighingState.selectedContainer.lot!.isNotEmpty ? '${event.weighingState.selectedContainer.operationDesc} / ${event.weighingState.selectedContainer.lot}' : event.weighingState.selectedContainer.operationDesc}^FS       ; Operation/lot
+          ^FO200,370^FD${event.weighingState.operationType == 'DECOCT' ? '${event.weighingState.selectedOperation.operationDesc} / $lotNo' : event.weighingState.selectedContainer.lot!.isNotEmpty ? '${event.weighingState.selectedOperation.operationDesc} / ${event.weighingState.selectedContainer.lot}' : '${event.weighingState.selectedOperation.operationDesc}'}^FS       ; Operation/lot
           ^FO30,400^FDOperator/PWS^FS
           ^FO200,400^FD${event.weighingState.operator}/${event.weighingState.pengawas}^FS             ; Operator/PWS info
           ^FO30,430^FDTgl. Timbang^FS
           ^FO200,430^FD${DateFormat('dd.MM.yyyy HH:mm:ss').format(event.weighingState.startWork!)}^FS        ; Date and time
-          ^FO30,460^FDHolding Time^FS
-          ^FO200,460^FD${DateFormat('dd.MM.yyyy HH:mm:ss').format(expiredDateParse)}^FS       ; Holding time
+          ^FO30,460^FD${event.weighingState.expiredSet.expiredNo != '0,000' ? 'Staging Time' : ''}^FS
+          ^FO200,460^FD${event.weighingState.expiredSet.expiredNo != '0,000' ? DateFormat('dd.MM.yyyy HH:mm:ss').format(expiredDateParse!) : ''}^FS       ; Holding time
           ^FO30,490^A0N,30^FD${event.weighingState.operationType}^FS          ; CB label
-          ^FO395,114 ^FB200,,,R^BQN,2,4^FDQA,${event.weighingState.selectedOrder.orderNo};${event.weighingState.materialCode};${event.weighingState.selectedOperation.activityNo};${event.weighingState.selectedContainer.activityWh};${event.weighingState.operationType};${double.parse(event.weighingState.scaleWeighing.netto.toStringAsFixed(1))};${event.weighingState.containerCounter}/${event.weighingState.totalContainer}^FS          ; QR code at top right
+          ^FO395,114 ^FB200,,,R^BQN,2,4^FDQA,${event.weighingState.selectedOrder.orderNo};${event.weighingState.materialCode};${event.weighingState.selectedOperation.activityNo};${event.weighingState.operationType};${double.parse(event.weighingState.scaleWeighing.netto.toStringAsFixed(2))};${int.parse(int.parse(event.weighingState.containerCounter.toString()).toString())}/${int.parse(event.weighingState.totalContainer).toString()};${event.weighingState.selectedContainer.activityWh}^FS          ; QR code at top right
           ^FO470,540^A0N,20,20^FDJumlah^FS       
-          ^FO30,575^FDNetto^FS                   ; "Nett" label
-          ^FO290,575 ^FB200,,,R^FD${double.parse(event.weighingState.scaleWeighing.netto.toStringAsFixed(1))}^FS          ; Aligned value
+          ^FO30,575^FDBruto^FS                   ; "Nett" label
+          ^FO290,575 ^FB200,,,R^FD${double.parse(event.weighingState.scaleWeighing.bruto.toStringAsFixed(2))}^FS          ; Aligned value
           ^FO330,575 ^FB200,,,R^FD${event.weighingState.scaleWeighing.unit}^FS                    ; Aligned unit
           ^FO30,610^FDTara^FS                   ; "Nett" label
-          ^FO290,610 ^FB200,,,R^FD${double.parse(event.weighingState.scaleWeighing.tara.toStringAsFixed(1))}^FS           ; Aligned value
+          ^FO290,610 ^FB200,,,R^FD${double.parse(event.weighingState.scaleWeighing.tara.toStringAsFixed(2))}^FS           ; Aligned value
           ^FO330,610 ^FB200,,,R^FD${event.weighingState.scaleWeighing.unit}^FS                    ; Aligned unit
-          ^FO30,645^FDBruto^FS                   ; "Nett" label
-          ^FO290,645 ^FB200,,,R^FD${double.parse(event.weighingState.scaleWeighing.bruto.toStringAsFixed(1))}^FS         ; Aligned value
+          ^FO30,645^FDNetto^FS                   ; "Nett" label
+          ^FO290,645 ^FB200,,,R^FD${double.parse(event.weighingState.scaleWeighing.netto.toStringAsFixed(2))}^FS         ; Aligned value
           ^FO330,645 ^FB200,,,R^FD${event.weighingState.scaleWeighing.unit}^FS                    ; Aligned unit
-          ^FO485,755^FD${event.weighingState.containerCounter}/${int.parse(int.parse(event.weighingState.totalContainer).toString())}^FS        ; Page number
+          ^FO485,755^FD${int.parse(int.parse(event.weighingState.containerCounter.toString()).toString())}/${int.parse(event.weighingState.totalContainer).toString()}^FS        ; Page number^FS        ; Page number
           ^XZ
         ''';
         await zsdk

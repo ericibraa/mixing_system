@@ -11,12 +11,14 @@ class SendDataOperationType extends OperationTypeEvent {
   final String startDate;
   final String materialCode;
   final String plant;
+  final String batchFG;
 
   const SendDataOperationType(
       {required this.startDate,
       required this.materialCode,
-      required this.plant});
+      required this.plant,
+      required this.batchFG});
 
   @override
-  List<Object> get props => [startDate, materialCode, plant];
+  List<Object> get props => [startDate, materialCode, plant, batchFG];
 }

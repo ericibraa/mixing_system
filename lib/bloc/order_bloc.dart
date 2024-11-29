@@ -13,8 +13,12 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     on<SendDataOrder>((event, emit) async {
       emit(OrderLoading());
       try {
-        final order = await _orderRepository.fetchorder(event.startDate,
-            event.materialCode, event.plant, event.operationType);
+        final order = await _orderRepository.fetchorder(
+            event.startDate,
+            event.materialCode,
+            event.plant,
+            event.operationType,
+            event.batchFG);
         emit(OrderLoaded(order));
       } catch (e) {
         emit(OrderError());

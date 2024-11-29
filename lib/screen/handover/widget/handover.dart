@@ -34,6 +34,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
+  final batch = TextEditingController();
   static String _displayStringForOption(ResultsMaterial option) =>
       "${option.material!} - ${option.materialDesc}";
   String selectedOperation = '';
@@ -53,7 +54,8 @@ class _HandoverScreenState extends State<HandoverScreen> {
       operationTypeBloc.add(SendDataOperationType(
           startDate: _dateController.text,
           materialCode: productCode.text,
-          plant: plant.text));
+          plant: plant.text,
+          batchFG: batch.text));
     }
   }
 
@@ -68,7 +70,6 @@ class _HandoverScreenState extends State<HandoverScreen> {
       _handoverCubit.setPengawas(data.namePengawas);
     }
     materialBloc.add(SendPlant(plant: plant.text));
-    _dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
     super.initState();
   }
 
@@ -169,17 +170,22 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                   return TextFormField(
                                     controller: textEditingController,
                                     focusNode: focusNode,
+                                    keyboardType: TextInputType.number,
                                     onFieldSubmitted: (String value) {
                                       onFieldSubmitted();
                                     },
                                     decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      labelText: 'Material Code',
-                                      filled: true,
-                                      fillColor: Colors.grey.shade100,
-                                    ),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        labelText: 'Material Code',
+                                        filled: true,
+                                        fillColor: Colors.grey.shade100,
+                                        suffixIcon: IconButton(
+                                            onPressed:
+                                                textEditingController.clear,
+                                            icon: const Icon(Icons.close))),
                                   );
                                 },
                                 optionsBuilder:
@@ -236,7 +242,8 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                                                 .text,
                                                         materialCode:
                                                             productCode.text,
-                                                        plant: plant.text));
+                                                        plant: plant.text,
+                                                        batchFG: batch.text));
                                               },
                                               title: Text(
                                                 _displayStringForOption(option),
@@ -248,6 +255,31 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                     ),
                                   );
                                 },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: TextFormField(
+                                controller: batch,
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  batch.text = value;
+                                  if (value.length > 5) {
+                                    operationTypeBloc.add(SendDataOperationType(
+                                        startDate: _dateController.text,
+                                        materialCode: productCode.text,
+                                        plant: plant.text,
+                                        batchFG: value));
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  labelText: 'Batch',
+                                  filled: true,
+                                  fillColor: Colors.grey.shade100,
+                                ),
                               ),
                             ),
                             Padding(
@@ -379,13 +411,14 @@ class _HandoverScreenState extends State<HandoverScreen> {
                       onPressed: plant.text.isNotEmpty &&
                               materialValue != null &&
                               productCode.text.isNotEmpty &&
-                              _dateController.text.isNotEmpty
+                              batch.text.isNotEmpty
                           ? () {
                               orderBloc.add(SendDataOrder(
                                   plant: plant.text,
                                   materialCode: productCode.text,
                                   operationType: materialValue!,
-                                  startDate: _dateController.text));
+                                  startDate: _dateController.text,
+                                  batchFG: batch.text));
                               _handoverCubit.setDataOrder(
                                   plant.text,
                                   productCode.text,
@@ -397,7 +430,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
                         backgroundColor: plant.text.isNotEmpty &&
                                 materialValue != null &&
                                 productCode.text.isNotEmpty &&
-                                _dateController.text.isNotEmpty
+                                batch.text.isNotEmpty
                             ? Colors.black
                             : Colors.grey[500],
                         shape: RoundedRectangleBorder(
@@ -405,7 +438,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
                         ),
                       ),
                       child: Text(
-                        "Show Operation List",
+                        "Show Orders",
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
