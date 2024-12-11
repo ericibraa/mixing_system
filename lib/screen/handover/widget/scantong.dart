@@ -39,8 +39,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
         scannedBarcode = barcode.displayValue!;
         _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
       });
-      if (mounted) {
-        if (_handoverCubit.state.isChecked) {
+      switch (_handoverCubit.state.errorScanType) {
+        case ErrorScanType.dataScanned:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: const Text("Data is Scanned"),
             backgroundColor: Colors.red,
@@ -49,17 +49,29 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
-        }
-        if (_handoverCubit.state.isNullData) {
+          break;
+        case ErrorScanType.incorrectPriority:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text("Data not found"),
+            content: const Text("Invalid Priority"),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
-        }
+          break;
+        case ErrorScanType.noError:
+          break;
+        case ErrorScanType.dataNull:
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data Not Found"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+          break;
       }
     }
   }
@@ -327,7 +339,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 50,
-                    child: handoverState.isComplete == true
+                    child: handoverState.isCompletedcontainer
                         ? TextButton(
                             onPressed: () {
                               submitHandoverBloc.add(

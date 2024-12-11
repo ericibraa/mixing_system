@@ -620,8 +620,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         ),
                                   ),
                                   Text(
-                                    weighingState
-                                        .selectedOperation.operationDesc,
+                                    '${weighingState
+                                        .selectedOperation.operationDesc} / ${weighingState.selectedContainer.operationDesc}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium

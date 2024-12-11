@@ -8,6 +8,8 @@ enum HandoverStatus {
   chooseLocation
 }
 
+enum ErrorScanType { noError, dataScanned, dataNull, incorrectPriority }
+
 @immutable
 class HandoverState extends Equatable {
   final String operator;
@@ -47,6 +49,8 @@ class HandoverState extends Equatable {
   final List<ResultsMaterial> materials;
   final String startTime;
   final bool isStartDateStatus;
+  final ErrorScanType errorScanType;
+  final bool isCompletedcontainer;
 
   const HandoverState(
       {this.operator = '',
@@ -85,7 +89,9 @@ class HandoverState extends Equatable {
       this.wadah = const [],
       this.materials = const [],
       this.startTime = "",
-      this.isStartDateStatus = false});
+      this.isStartDateStatus = false,
+      this.errorScanType = ErrorScanType.noError,
+      this.isCompletedcontainer = false});
 
   HandoverState copyWith(
       {String? operator,
@@ -124,7 +130,9 @@ class HandoverState extends Equatable {
       List<ResultTong>? wadah,
       List<ResultsMaterial>? materials,
       String? startTime,
-      bool? isStartDateStatus}) {
+      bool? isStartDateStatus,
+      ErrorScanType? errorScanType,
+      bool? isCompletedcontainer}) {
     return HandoverState(
         operator: operator ?? this.operator,
         pengawas: pengawas ?? this.pengawas,
@@ -164,7 +172,9 @@ class HandoverState extends Equatable {
         wadah: wadah ?? this.wadah,
         materials: materials ?? this.materials,
         startTime: startTime ?? this.startTime,
-        isStartDateStatus: isStartDateStatus ?? this.isStartDateStatus);
+        isStartDateStatus: isStartDateStatus ?? this.isStartDateStatus,
+        errorScanType: errorScanType ?? this.errorScanType,
+        isCompletedcontainer: isCompletedcontainer ?? this.isCompletedcontainer);
   }
 
   @override
@@ -205,6 +215,8 @@ class HandoverState extends Equatable {
         materials,
         startTime,
         isStartDateStatus,
-        isCompleteWeighingResults
+        isCompleteWeighingResults,
+        errorScanType,
+        isCompletedcontainer
       ];
 }

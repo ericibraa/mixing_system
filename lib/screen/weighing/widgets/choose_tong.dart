@@ -85,119 +85,122 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                   child: Column(
                     children: [
                       for (var dataWeighing in weighingState.containers) ...[
-                        Card(
-                          elevation: 5,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          color: Colors.grey[200],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: ListTile(
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${dataWeighing.activityWh} - ${dataWeighing.operationDesc}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.black),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Operation number",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Colors.black,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          dataWeighing.activityNo ?? '',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge
-                                              ?.copyWith(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "Operation Apps",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Colors.black,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          dataWeighing.operationApps ?? '',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge
-                                              ?.copyWith(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
+                        if (dataWeighing.operationDesc!.isNotEmpty) ...[
+                          Card(
+                            elevation: 5,
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            color: Colors.grey[200],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            onTap: () {
-                              _weighingCubit.selectedWeighing(dataWeighing);
-                              _weighingCubit
-                                  .setTab(WeighingStatus.scaleWeighing);
+                            child: ListTile(
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${dataWeighing.activityWh} - ${dataWeighing.operationDesc}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: Colors.black),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Operation number",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: Colors.black,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            dataWeighing.activityNo ?? '',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Operation Apps",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: Colors.black,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            dataWeighing.operationApps ?? '',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                _weighingCubit.selectedWeighing(dataWeighing);
+                                _weighingCubit
+                                    .setTab(WeighingStatus.scaleWeighing);
 
-                              scaleBloc.add(
-                                  SendDataScale(plant: weighingState.plant));
-                              expiredSetBloc.add(GetExpiredSet(
-                                  orderNo: weighingState.selectedOrder.orderNo!,
-                                  activityNo: weighingState
-                                      .selectedOperation.activityNo));
-                              resultScaleBloc.add(SendDataResultScale(
-                                  orderNo:
-                                      weighingState.selectedOrder.orderNo !=
-                                              null
-                                          ? weighingState.selectedOrder.orderNo!
-                                          : '',
-                                  activityNo: dataWeighing.activityNo != null
-                                      ? dataWeighing.activityNo!
-                                      : '',
-                                  activityWh:
-                                      _weighingCubit.state.operationType ==
-                                              'DECOCT'
-                                          ? ''
-                                          : dataWeighing.activityWh != null
-                                              ? dataWeighing.activityWh!
-                                              : ''));
-                              _weighingCubit.setTab(WeighingStatus.scale);
-                            },
-                          ),
-                        )
+                                scaleBloc.add(
+                                    SendDataScale(plant: weighingState.plant));
+                                expiredSetBloc.add(GetExpiredSet(
+                                    orderNo:
+                                        weighingState.selectedOrder.orderNo!,
+                                    activityNo: weighingState
+                                        .selectedOperation.activityNo));
+                                resultScaleBloc.add(SendDataResultScale(
+                                    orderNo: weighingState
+                                                .selectedOrder.orderNo !=
+                                            null
+                                        ? weighingState.selectedOrder.orderNo!
+                                        : '',
+                                    activityNo: dataWeighing.activityNo != null
+                                        ? dataWeighing.activityNo!
+                                        : '',
+                                    activityWh:
+                                        _weighingCubit.state.operationType ==
+                                                'DECOCT'
+                                            ? ''
+                                            : dataWeighing.activityWh != null
+                                                ? dataWeighing.activityWh!
+                                                : ''));
+                                _weighingCubit.setTab(WeighingStatus.scale);
+                              },
+                            ),
+                          )
+                        ]
                       ]
                     ],
                   ),

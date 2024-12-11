@@ -95,244 +95,123 @@ class HandoverCubit extends Cubit<HandoverState> {
         fullpack.where((pack) => pack.isScannedFullpack == true).length;
     var completedMaterialset =
         materialSets.where((material) => material.scanFlag == 'X').length;
-    var isChecked = false;
-    var isNullData = false;
-    var matchFound = false;
-    var unscannedPriorities = materialSets
-        .where((material) => !material.isScanned)
-        .map((material) => material.priority)
-        .toSet();
-    var lowestUnscannedPriority = unscannedPriorities.isNotEmpty
-        ? unscannedPriorities.reduce((a, b) => a.compareTo(b) < 0 ? a : b)
-        : null;
-    print("_---------------------");
-    print(unscannedPriorities);
-    print(lowestUnscannedPriority);
-    switch (activityNo.length) {
-      case 4:
-        for (var i = 0; i < tongs.length; i++) {
-          if (tongs[i].activityNo == activityNo[3]) {
-            matchFound = true;
-            if (tongs[i].isScanned!) {
-              isChecked = true;
-            } else {
-              var tong = tongs[i].copyWith(isScanned: true);
-              completed++;
-              tongs[i] = tong;
-            }
-            isNullData = !matchFound;
-          }
+    var errorType = ErrorScanType.noError;
+    String lastPrioEmpty = "";
+    bool isMatch = false;
+    
+    if (state.tab == HandoverStatus.scantong) {
+      var isFound = false;
+      for (var i = 0; i < tongs.length; i++) {
+        switch (activityNo.length) {
+          case 4:
+          case 5:
+            isMatch = tongs[i].activityNo == activityNo[3];
+            break;
+          case 1:
+            line = activityNo[0];
+            break;
         }
-        break;
-      case 5:
-        for (var i = 0; i < tongs.length; i++) {
-          if (tongs[i].activityNo == activityNo[3]) {
-            matchFound = true;
-            if (tongs[i].isScanned!) {
-              isChecked = true;
-            } else {
-              var tong = tongs[i].copyWith(isScanned: true);
-              tongs[i] = tong;
-              completed++;
+        if (isMatch) {
+          if (tongs[i].isScanned!) {
+            if (isMatch) {
+              errorType = ErrorScanType.dataScanned;
+              isFound = true;
+              break;
             }
+            continue;
           }
-          isNullData = !matchFound;
-        }
-        break;
-      case 7:
-        for (var j = 0; j < fullpack.length; j++) {
-          if (fullpack[j].recipient != 'F') {
-            print("------");
-            if (fullpack[j].bOMItem == activityNo[3] &&
-                fullpack[j].counter == activityNo[6]) {
-              matchFound = true;
-              if (fullpack[j].isScannedFullpack) {
-                isChecked = true;
-              } else {
-                var fullpacks = fullpack[j]
-                    .copyWith(isScannedFullpack: true, scanFlag: 'X');
-                completedFullpack++;
-                fullpack[j] = fullpacks;
-              }
-              isNullData = !matchFound;
-            }
-          } else {
-            print("Test7 ++");
-            print(materialSets.toList());
-            for (var k = 0; k < materialSets.length; k++) {
-              // if (materialSets[k].counter == activityNo[5] &&
-              //     materialSets[k].priority == lowestUnscannedPriority) {
-              //   matchFound = true;
-              //   print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-              //   print(materialSets[k]);
-              //   if (materialSets[k].isScanned) {
-              //     isChecked = true;
-              //   } else {
-              //     print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
-              //     var materialSet =
-              //         materialSets[k].copyWith(isScanned: true, scanFlag: "X");
-              //     completedMaterialset++;
-              //     materialSets[k] = materialSet;
-              //   }
-              // }
-              // isNullData = !matchFound;
-              if (materialSets[k].scanFlag == "") {
-                if (materialSets[k].activityNo == activityNo[2]) {
-                  print("trueeeeeeeeeeeeeeeeeeee6666666666666666666666");
-                  var materialSet =
-                      materialSets[k].copyWith(isScanned: true, scanFlag: "X");
-                  completedMaterialset++;
-                  materialSets[k] = materialSet;
-                } else {
-                  isNullData = true;
-                }
-
-                break;
-              } else if ((materialSets[k].activityNo == activityNo[2])) {
-                isChecked = true;
-              } else {
-                isNullData = true;
-              }
-            }
-          }
-        }
-        break;
-      case 9:
-        if (activityNo[7] == 'F' && state.tab == HandoverStatus.scantong) {
-          print(activityNo[7]);
-          for (var j = 0; j < fullpack.length; j++) {
-            print("Lewat sini");
-            if (fullpack[j].bOMItem.isNotEmpty) {
-              if (fullpack[j].bOMItem == activityNo[3] &&
-                  fullpack[j].counter == activityNo[6]) {
-                matchFound = true;
-                if (fullpack[j].isScannedFullpack) {
-                  isChecked = true;
-                } else {
-                  var fullpacks = fullpack[j]
-                      .copyWith(isScannedFullpack: true, scanFlag: 'X');
-                  fullpack[j] = fullpacks;
-                  completedFullpack++;
-                }
-              }
-            } else {
-              print("test9");
-              if (fullpack[j].counter == activityNo[5]) {
-                matchFound = true;
-                if (fullpack[j].isScannedFullpack) {
-                  isChecked = true;
-                } else {
-                  var fullpacks = fullpack[j]
-                      .copyWith(isScannedFullpack: true, scanFlag: 'X');
-                  fullpack[j] = fullpacks;
-                  completedFullpack++;
-                }
-              }
-            }
-            isNullData = !matchFound;
-          }
-        } else {
-          for (var k = 0; k < materialSets.length; k++) {
-            print("ashdakjshdahdasdhasdj");
-            var lastScan = 0;
-            if (materialSets[k].scanFlag == "") {
-              lastScan = int.parse(materialSets[k].priority);
-              if (materialSets[k].bOMItem == activityNo[3] &&
-                  materialSets[k].counter == activityNo[6]) {
-                print("trueeeeeeeeeeeeeeeeeeee99999999999999999999999999");
-                var materialSet =
-                    materialSets[k].copyWith(isScanned: true, scanFlag: "X");
-                completedMaterialset++;
-                materialSets[k] = materialSet;
-                isChecked = false;
-                isNullData = false;
-                break;
-              } else if (int.parse(materialSets[k + 1].priority) > lastScan) {
-                isNullData = true;
-                break;
-              }
-            } else if ((materialSets[k].bOMItem == activityNo[3])) {
-              isChecked = true;
-            } else {
-              lastScan = int.parse(materialSets[k].priority);
-              isNullData = true;
-            }
-          }
+          var tong = tongs[i].copyWith(isScanned: true);
+          completed++;
+          tongs[i] = tong;
+          isFound = true;
           break;
         }
-        break;
-      case 6:
-        String lastPrioEmpty = "";
-        for (var k = 0; k < materialSets.length; k++) {
-          // print("MAterial Set =================");
-          // print(materialSets[k].priority);
-          // print(lowestUnscannedPriority);
-          // print(unscannedPriorities);
-          // if (materialSets[k].bOMItem == activityNo[3] &&
-          //     materialSets[k].counter.isEmpty &&
-          //     materialSets[k].priority == lowestUnscannedPriority) {
-          //   print("Lewat===================");
-          //   matchFound = true;
-          //   if (materialSets[k].isScanned) {
-          //     isChecked = true;
-          //   } else {
-          //     var materialSet =
-          //         materialSets[k].copyWith(isScanned: true, scanFlag: 'X');
-          //     materialSets[k] = materialSet;
-          //     completedMaterialset++;
-          //     // emit(state.copyWith(tong: activityNo[2]));
-          //   }
-          // }
-          // isNullData = !matchFound;
-
-          if (materialSets[k].scanFlag == "" &&
-              lastPrioEmpty == "" &&
-              materialSets[k].bOMItem == activityNo[3]) {
+        errorType = ErrorScanType.dataNull;
+      }
+      if (!isFound) {
+        for (var k = 0; k < fullpack.length; k++) {
+          switch (activityNo.length) {
+            case 7:
+              isMatch = fullpack[k].activityDmp == activityNo[2] &&
+                  fullpack[k].counter == activityNo[5];
+              break;
+            case 9:
+              isMatch = fullpack[k].bOMItem == activityNo[3] &&
+                  fullpack[k].counter == activityNo[6];
+              break;
+            case 1:
+              line = activityNo[0];
+              break;
+          }
+          if (fullpack[k].isScannedFullpack) {
+            if (isMatch) {
+              errorType = ErrorScanType.dataScanned;
+              break;
+            }
+            continue;
+          }
+          if (fullpack[k].scanFlag == "") {
+            if (lastPrioEmpty != "" && lastPrioEmpty != fullpack[k].priority) {
+              errorType = ErrorScanType.incorrectPriority;
+              break;
+            }
+            lastPrioEmpty = fullpack[k].priority;
+            if (isMatch) {
+              var fullpacks = fullpack[k].copyWith(isScannedFullpack: true);
+              completedMaterialset++;
+              fullpack[k] = fullpacks;
+              errorType = ErrorScanType.noError;
+              break;
+            }
+            errorType = ErrorScanType.dataNull;
+          }
+        }
+      }
+    } else {
+      for (var k = 0; k < materialSets.length; k++) {
+        switch (activityNo.length) {
+          case 6:
+            isMatch = materialSets[k].bOMItem == activityNo[3];
+            break;
+          case 7:
+            isMatch = materialSets[k].activityDmp == activityNo[2] &&
+                materialSets[k].counter == activityNo[5];
+            break;
+          case 9:
+            isMatch = materialSets[k].bOMItem == activityNo[3] &&
+                materialSets[k].counter == activityNo[6];
+            break;
+          case 1:
+            line = activityNo[0];
+            break;
+        }
+        if (materialSets[k].scanFlag == "X") {
+          if (isMatch) {
+            errorType = ErrorScanType.dataScanned;
+            break;
+          }
+          continue;
+        }
+        if (materialSets[k].scanFlag == "") {
+          if (lastPrioEmpty != "" &&
+              lastPrioEmpty != materialSets[k].priority) {
+            errorType = ErrorScanType.incorrectPriority;
+            break;
+          }
+          lastPrioEmpty = materialSets[k].priority;
+          if (isMatch) {
             var materialSet =
                 materialSets[k].copyWith(isScanned: true, scanFlag: "X");
             completedMaterialset++;
             materialSets[k] = materialSet;
+            errorType = ErrorScanType.noError;
             break;
           }
-
-          if (materialSets[k].scanFlag == "") {
-            if (lastPrioEmpty != "" &&
-                lastPrioEmpty != materialSets[k].priority) {
-              isNullData = true;
-              break;
-            }
-            lastPrioEmpty = materialSets[k].priority;
-            if (materialSets[k].bOMItem == activityNo[3]) {
-              print("trueeeeeeeeeeeeeeeeeeee6666666666666666666666");
-              var materialSet =
-                  materialSets[k].copyWith(isScanned: true, scanFlag: "X");
-              completedMaterialset++;
-              materialSets[k] = materialSet;
-              break;
-            } else if (k != materialSets.length &&
-                int.parse(materialSets[k + 1].priority) >
-                    int.parse(materialSets[k].priority)) {
-              print("mat--------------------------------+1");
-              isNullData = true;
-              lastPrioEmpty = "";
-              break;
-            }
-          } else if ((materialSets[k].bOMItem == activityNo[3])) {
-            isChecked = true;
-            if (k != materialSets.length - 1 &&
-                int.parse(materialSets[k + 1].priority) >
-                    int.parse(materialSets[k].priority)) {
-              lastPrioEmpty = "";
-              break;
-            }
-          } else {
-            isNullData = true;
-          }
+          errorType = ErrorScanType.dataNull;
         }
-        break;
-      case 1:
-        line = activityNo[0];
+      }
     }
+
     var formattedDate = state.startDate;
     if (formattedDate == "") {
       var now = DateTime.now();
@@ -343,8 +222,6 @@ class HandoverCubit extends Cubit<HandoverState> {
         fullpack.isNotEmpty && completedFullpack == fullpack.length;
     var isCompletedMaterial =
         materialSets.isNotEmpty && completedMaterialset == materialSets.length;
-    print("00000000000000000000000000000000000000000000000000000");
-    print(materialSets);
     emit(state.copyWith(
         tongs: tongs,
         fullpack: fullpack,
@@ -353,14 +230,14 @@ class HandoverCubit extends Cubit<HandoverState> {
         isLoadingTong: false,
         isLoadingFullpack: false,
         isLoadingMaterialset: false,
+        isCompletedcontainer: isCompleted,
         isComplete: isCompleted && isCompletedFullpack,
         isCompleteTong:
             isCompleted && isCompletedFullpack && isCompletedMaterial,
         isCompleteMaterials: isCompletedMaterial && completedMaterialset != 0,
         isCompleteWeighingResults: isCompletedFullpack,
         startDate: formattedDate,
-        isChecked: isChecked,
-        isNullData: isNullData));
+        errorScanType: errorType));
   }
 
   void resetFullpackWadah() {
@@ -423,5 +300,9 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   void setStartDateByString(String startDate) {
     emit(state.copyWith(startTime: startDate));
+  }
+
+  void setTongActivity(String activityWh) {
+    emit(state.copyWith(tong: activityWh));
   }
 }

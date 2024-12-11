@@ -45,41 +45,51 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
       _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
       if (hasScanned.length == 4 || hasScanned.length == 5) {
         _handoverCubit.resetCompleteMaterial(false);
+        _handoverCubit.setTongActivity(hasScanned[3]);
         materialSetBloc.add(SendDataMaterialset(
             routingNo: _handoverCubit.state.selectedOperation.routingNo,
             activityNo: hasScanned[3],
             operationType: _handoverCubit.state.selectedOrder.operationType!));
       }
-      if (!_handoverCubit.state.isChecked && !_handoverCubit.state.isNullData) {
-        if (hasScanned.length >= 6) {
-          if (_handoverCubit.state.startTime == '') {
-            _handoverCubit.setStartDate();
+      switch (_handoverCubit.state.errorScanType) {
+        case ErrorScanType.dataScanned:
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data is Scanned"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+          break;
+        case ErrorScanType.incorrectPriority:
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Invalid Priority"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+          break;
+        case ErrorScanType.noError:
+          if (hasScanned.length >= 6) {
+            if (_handoverCubit.state.startTime == '') {
+              _handoverCubit.setStartDate();
+            }
+            flagMaterialsBloc.add(GetFlagMaterials(hasScanned));
           }
-          flagMaterialsBloc.add(GetFlagMaterials(hasScanned));
-          print(
-              "1111111111111111111111111111111111111111111111111111111111111");
-          print(_handoverCubit.state.materialSet.toList());
-        }
-      }
-      if (_handoverCubit.state.isChecked) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text("Data is Scanned"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-        ));
-      }
-      if (_handoverCubit.state.isNullData) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text("Urutan tidak sesuai"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-        ));
+          break;
+        case ErrorScanType.dataNull:
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data Not Found"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+          break;
       }
     }
   }
@@ -140,10 +150,10 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
+                Navigator.of(context).pop();
                 Future.delayed(const Duration(seconds: 1), () {
                   // ignore: use_build_context_synchronously
                   context.go("/home");
-                  _handoverCubit.resetCompleteMaterial(false);
                 });
                 break;
               case SubmitHandoverMixingError():
@@ -550,9 +560,6 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                           onPressed: () {
                             submitHandoverMixingBloc.add(SubmitHandoverMixing(
                                 handoverMixingData: handoverState));
-                            if (mounted) {
-                              Navigator.of(context).pop();
-                            }
                           },
                           style: TextButton.styleFrom(
                             backgroundColor: Colors.green,

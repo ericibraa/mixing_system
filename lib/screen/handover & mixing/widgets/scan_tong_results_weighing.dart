@@ -42,38 +42,41 @@ class _ScanTongResultsWeighingScreenState
         scannedBarcode = barcode.displayValue!;
         hasScanned = parseStringAndWrapInMap(scannedBarcode);
       });
-      // if (hasScanned.length >= 6) {
-      //   flagMaterialsBloc.add(GetFlagMaterials(hasScanned));
-      // } else {
       _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
-      if (hasScanned.length == 4 || hasScanned.length == 5) {
-        _handoverCubit.resetCompleteMaterial(false);
-        materialSetBloc.add(SendDataMaterialset(
-            routingNo: _handoverCubit.state.selectedOperation.routingNo,
-            activityNo: hasScanned[3],
-            operationType: _handoverCubit.state.selectedOrder.operationType!));
+      switch (_handoverCubit.state.errorScanType) {
+        case ErrorScanType.dataScanned:
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data is Scanned"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+          break;
+        case ErrorScanType.incorrectPriority:
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Invalid Priority"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+          break;
+        case ErrorScanType.noError:
+          break;
+        case ErrorScanType.dataNull:
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text("Data Not Found"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ));
+          break;
       }
-      if (_handoverCubit.state.isChecked) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text("Data is Scanned"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-        ));
-      }
-      if (_handoverCubit.state.isNullData) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text("Data not found"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-        ));
-      }
-      // }
     }
   }
 
