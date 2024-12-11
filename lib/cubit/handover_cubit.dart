@@ -98,8 +98,9 @@ class HandoverCubit extends Cubit<HandoverState> {
     var errorType = ErrorScanType.noError;
     String lastPrioEmpty = "";
     bool isMatch = false;
-    
-    if (state.tab == HandoverStatus.scantong) {
+
+    if (state.tab == HandoverStatus.scantong ||
+        state.tab == HandoverStatus.scanTongResultsWeighing) {
       var isFound = false;
       for (var i = 0; i < tongs.length; i++) {
         switch (activityNo.length) {
@@ -110,6 +111,9 @@ class HandoverCubit extends Cubit<HandoverState> {
           case 1:
             line = activityNo[0];
             break;
+        }
+        if (line.isNotEmpty) {
+          break;
         }
         if (isMatch) {
           if (tongs[i].isScanned!) {
@@ -132,16 +136,26 @@ class HandoverCubit extends Cubit<HandoverState> {
         for (var k = 0; k < fullpack.length; k++) {
           switch (activityNo.length) {
             case 7:
-              isMatch = fullpack[k].activityDmp == activityNo[2] &&
-                  fullpack[k].counter == activityNo[5];
+              if (state.tab == HandoverStatus.scanTongResultsWeighing) {
+                isMatch = fullpack[k].activityWh == activityNo[6] &&
+                    fullpack[k].counter == activityNo[5];
+              } else {
+                isMatch = fullpack[k].activityDmp == activityNo[2] &&
+                    fullpack[k].counter == activityNo[5];
+              }
+
               break;
             case 9:
               isMatch = fullpack[k].bOMItem == activityNo[3] &&
                   fullpack[k].counter == activityNo[6];
+
               break;
             case 1:
               line = activityNo[0];
               break;
+          }
+          if (line.isNotEmpty) {
+            break;
           }
           if (fullpack[k].isScannedFullpack) {
             if (isMatch) {
@@ -157,8 +171,9 @@ class HandoverCubit extends Cubit<HandoverState> {
             }
             lastPrioEmpty = fullpack[k].priority;
             if (isMatch) {
-              var fullpacks = fullpack[k].copyWith(isScannedFullpack: true);
-              completedMaterialset++;
+              var fullpacks =
+                  fullpack[k].copyWith(isScannedFullpack: true, scanFlag: 'X');
+              completedFullpack++;
               fullpack[k] = fullpacks;
               errorType = ErrorScanType.noError;
               break;
@@ -175,7 +190,8 @@ class HandoverCubit extends Cubit<HandoverState> {
             break;
           case 7:
             isMatch = materialSets[k].activityDmp == activityNo[2] &&
-                materialSets[k].counter == activityNo[5];
+                materialSets[k].counter == activityNo[5] &&
+                materialSets[k].activityWh == activityNo[6];
             break;
           case 9:
             isMatch = materialSets[k].bOMItem == activityNo[3] &&
@@ -184,6 +200,9 @@ class HandoverCubit extends Cubit<HandoverState> {
           case 1:
             line = activityNo[0];
             break;
+        }
+        if (line.isNotEmpty) {
+          break;
         }
         if (materialSets[k].scanFlag == "X") {
           if (isMatch) {

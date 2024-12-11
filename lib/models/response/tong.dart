@@ -143,6 +143,7 @@ class ResultsFullPack extends Equatable {
   final String recipient;
   final String counter;
   final String priority;
+  final String activityWh;
   final String? activityDmp;
   final String scanFlag;
   final bool isScannedFullpack;
@@ -159,6 +160,7 @@ class ResultsFullPack extends Equatable {
       required this.recipient,
       required this.counter,
       required this.priority,
+      required this.activityWh,
       this.activityDmp,
       this.scanFlag = '',
       this.isScannedFullpack = false});
@@ -176,6 +178,7 @@ class ResultsFullPack extends Equatable {
         recipient: recipient,
         counter: counter,
         priority: priority,
+        activityWh: activityWh,
         activityDmp: activityDmp,
         scanFlag: scanFlag ?? this.scanFlag,
         isScannedFullpack: isScannedFullpack);
@@ -194,6 +197,7 @@ class ResultsFullPack extends Equatable {
           recipient: json['Recipient'],
           counter: json['Counter'],
           priority: json['Priority'],
+          activityWh: json['ActivityWh'],
           activityDmp: json['ActivityDmp'] ?? '',
           scanFlag: json['ScanFlag'] ?? '');
 
@@ -210,6 +214,7 @@ class ResultsFullPack extends Equatable {
         recipient,
         counter,
         priority,
+        activityWh,
         isScannedFullpack
       ];
 }
