@@ -143,6 +143,8 @@ class ResultsFullPack extends Equatable {
   final String recipient;
   final String counter;
   final String priority;
+  final String? activityDmp;
+  final String scanFlag;
   final bool isScannedFullpack;
 
   const ResultsFullPack(
@@ -157,8 +159,11 @@ class ResultsFullPack extends Equatable {
       required this.recipient,
       required this.counter,
       required this.priority,
+      this.activityDmp,
+      this.scanFlag = '',
       this.isScannedFullpack = false});
-  ResultsFullPack copyWith({required bool isScannedFullpack}) {
+  ResultsFullPack copyWith(
+      {required bool isScannedFullpack, String? scanFlag}) {
     return ResultsFullPack(
         routingNo: routingNo,
         activityNo: activityNo,
@@ -171,6 +176,8 @@ class ResultsFullPack extends Equatable {
         recipient: recipient,
         counter: counter,
         priority: priority,
+        activityDmp: activityDmp,
+        scanFlag: scanFlag ?? this.scanFlag,
         isScannedFullpack: isScannedFullpack);
   }
 
@@ -186,10 +193,12 @@ class ResultsFullPack extends Equatable {
           uom: json['Uom'],
           recipient: json['Recipient'],
           counter: json['Counter'],
-          priority: json['Priority']);
+          priority: json['Priority'],
+          activityDmp: json['ActivityDmp'] ?? '',
+          scanFlag: json['ScanFlag'] ?? '');
 
   @override
-  List<Object?> get props => [
+  List<Object> get props => [
         routingNo,
         activityNo,
         operationType,

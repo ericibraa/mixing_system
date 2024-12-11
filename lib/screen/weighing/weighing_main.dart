@@ -1,6 +1,7 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
+import 'package:dumping_system/screen/weighing/widgets/choose_operations.dart';
 import 'package:dumping_system/screen/weighing/widgets/choose_tong.dart';
 import 'package:dumping_system/screen/weighing/widgets/scale_weighing.dart';
 import 'package:dumping_system/screen/weighing/widgets/weighing.dart';
@@ -58,7 +59,8 @@ class _MainViewState extends State<MainView> {
                 children: const [
                   WeighingScreen(),
                   ChooseTongScreen(),
-                  ScaleWeighingScreen()
+                  ScaleWeighingScreen(),
+                  ChooseOperations(),
                 ],
               );
             },

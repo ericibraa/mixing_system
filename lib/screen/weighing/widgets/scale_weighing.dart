@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dumping_system/models/response/result_scale.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/submit_weighing_bloc.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:zsdk/zsdk.dart';
+import 'package:dumping_system/screen/weighing/helpers/zpl.dart';
 
 class ScaleWeighingScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -104,6 +106,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
       plant = data.weerks;
     }
     tara.text = "";
+    numberOfContainer.text = '';
+    _weighingCubit.resetResultScale();
+    _weighingCubit.resetScaleWeighing();
   }
 
   bool checkOperationType() {
@@ -113,7 +118,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
             numberOfContainer.text.isNotEmpty &&
             bruto.text.isNotEmpty &&
             tara.text.isNotEmpty &&
-            netto.text.isNotEmpty) {
+            netto.text.isNotEmpty &&
+            lot.text.isNotEmpty &&
+            line.text.isNotEmpty) {
           return true;
         }
         break;
@@ -124,7 +131,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
             numberOfContainer.text.isNotEmpty &&
             bruto.text.isNotEmpty &&
             tara.text.isNotEmpty &&
-            netto.text.isNotEmpty) {
+            netto.text.isNotEmpty &&
+            line.text.isNotEmpty) {
           return true;
         }
         break;
@@ -132,7 +140,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
         if (numberOfContainer.text.isNotEmpty &&
             bruto.text.isNotEmpty &&
             tara.text.isNotEmpty &&
-            netto.text.isNotEmpty) {
+            netto.text.isNotEmpty &&
+            line.text.isNotEmpty) {
           return true;
         }
         break;
@@ -157,6 +166,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
       RegExp regExp = RegExp(
         // ignore: unnecessary_string_escapes
         r"" +
+            // ignore: unnecessary_string_escapes
             _weighingCubit.state.selectedEquipment.regex.replaceAll("\s", " "),
         caseSensitive: false,
         multiLine: true,
@@ -178,10 +188,12 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
       ));
       socket!.listen(
         (data) {
-          if (counter == 20) {
+          if (counter == 5) {
             var dataReg = regExp.firstMatch(dataString);
             if (dataReg != null) {
-              var brutoFloat = double.parse(dataReg[1]!);
+              var brutoFloat = double.parse(
+                dataReg[1]!,
+              );
               var nettoFloat = brutoFloat;
               var taraFloat = 0.0;
               if (tara.text.isNotEmpty) {
@@ -205,6 +217,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   numberOfContainer: numberOfContainer.text,
                   temperature: temperature.text,
                   lot: lot.text);
+              _weighingCubit.setLine(line.text);
               _weighingCubit.setScaleWeighing(scaleD);
             }
             counter = 0;
@@ -267,25 +280,49 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
         listeners: [
           BlocListener<WeighingCubit, WeighingState>(
             listener: (context, state) {
-              scale.text = state.selectedEquipment.equipmentDesc;
-              bruto.text = state.scaleWeighing.bruto.toString();
-              netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
-              // ignore: unused_local_variable
-              if (state.resultScales.isNotEmpty) {
-                for (var data in state.resultScales) {
-                  var moisture = data.moistureContent!.split(";");
-                  temperature.text = data.temperature!;
-                  topMoistureContent.text = moisture[0];
-                  middleMoistureContent.text = moisture[1];
-                  bottomMoistureContent.text = moisture[2];
-                  numberOfContainer.text =
-                      int.parse(data.totalWadah!).toString();
+              if (state.tab == WeighingStatus.scale) {
+                scale.text = state.selectedEquipment.equipmentDesc;
+                bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
+                netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
+                ResultScaleList wadah = ResultScaleList();
+                if (state.resultScales.isNotEmpty) {
+                  wadah = state.resultScales.reduce((current, next) =>
+                      int.parse(current.wadah!) > int.parse(next.wadah!)
+                          ? current
+                          : next);
+                }
+                // ignore: unused_local_variable
+                if (state.resultScales.isNotEmpty) {
+                  if (state.operationType == 'CB') {
+                    var moisture =
+                        state.resultScales[0].moistureContent!.split(";");
+                    temperature.text = state.resultScales[0].temperature!;
+                    if (moisture.length > 1) {
+                      topMoistureContent.text = moisture[0];
+                      middleMoistureContent.text = moisture[1];
+                      bottomMoistureContent.text = moisture[2];
+                    } else {
+                      topMoistureContent.text = moisture[0];
+                    }
+                  }
+                  if (state.selectedOperation.operationDesc !=
+                      state.selectedOperation.operationDesc2) {
+                    line.text = state.resultScales[0].line!;
+                    numberOfContainer.text =
+                        int.parse(state.resultScales[0].totalWadah!).toString();
+                    line.text = state.resultScales[0].line!;
+                    scale.text = state.resultScales[0].equipmentDesc!;
+                    _weighingCubit
+                        .setTotalContainer(state.resultScales[0].totalWadah!);
+                    _weighingCubit
+                        .setContainerCounter(int.parse(wadah.wadah!) + 1);
+                  }
                 }
               }
             },
           ),
           BlocListener<SubmitWeighingBloc, SubmitWeighingState>(
-              listener: (context, state) {
+              listener: (context, state) async {
             switch (state) {
               case SubmitWeighingSuccess():
                 var sumCont = _weighingCubit.state.containerCounter;
@@ -294,40 +331,132 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 } else {
                   _weighingCubit.setContainerCounter(sumCont + 1);
                 }
+                temperature.clear();
+                lot.clear();
                 resultScaleBloc.add(SendDataResultScale(
                     orderNo: _weighingCubit.state.selectedOrder.orderNo != null
                         ? _weighingCubit.state.selectedOrder.orderNo!
                         : '',
                     activityNo:
-                        _weighingCubit.state.selectedOperation.activityNo !=
-                                null
-                            ? _weighingCubit.state.selectedOperation.activityNo!
-                            : '',
-                    activityWh:
-                        _weighingCubit.state.selectedContainer.activityWh !=
+                        _weighingCubit.state.selectedOperation.activityNo,
+                    activityWh: _weighingCubit.state.operationType == 'DECOCT'
+                        ? ''
+                        : _weighingCubit.state.selectedContainer.activityWh !=
                                 null
                             ? _weighingCubit.state.selectedContainer.activityWh!
                             : ''));
-                if (state.isPrinted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: const Text("Label printed"),
-                    backgroundColor: Colors.black,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ));
-                  temperature.clear;
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: const Text("failed to print"),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ));
+                var stagingTime = '';
+                String weighingTime =
+                    "${state.submitWeighing.submitWeighing!.startDate!.substring(6, 8)}.${state.submitWeighing.submitWeighing!.startDate!.substring(4, 6)}.${state.submitWeighing.submitWeighing!.startDate!.substring(0, 4)} "
+                    "${state.submitWeighing.submitWeighing!.startTime!.substring(0, 2)}:${state.submitWeighing.submitWeighing!.startTime!.substring(2, 4)}:${state.submitWeighing.submitWeighing!.startTime!.substring(4, 6)}";
+                if (state.submitWeighing.submitWeighing!.expiredDate!
+                        .isNotEmpty &&
+                    state.submitWeighing.submitWeighing!.expiredTime!
+                        .isNotEmpty) {
+                  stagingTime =
+                      "${state.submitWeighing.submitWeighing!.expiredDate!.substring(6, 8)}.${state.submitWeighing.submitWeighing!.expiredDate!.substring(4, 6)}.${state.submitWeighing.submitWeighing!.expiredDate!.substring(0, 4)} "
+                      "${state.submitWeighing.submitWeighing!.expiredTime!.substring(0, 2)}:${state.submitWeighing.submitWeighing!.expiredTime!.substring(2, 4)}:${state.submitWeighing.submitWeighing!.expiredTime!.substring(4, 6)}";
                 }
+
+                var zplData = ZplData(
+                        materialCode: _weighingCubit.state.materialCode,
+                        materialDesc:
+                            _weighingCubit.state.selectedOrder.materialDesc!,
+                        batchFG: _weighingCubit.state.selectedOrder.batchFG!,
+                        orderNo: state.submitWeighing.submitWeighing!.orderNo!,
+                        line: state.submitWeighing.submitWeighing!.line!,
+                        equipmentDesc: _weighingCubit
+                            .state.selectedEquipment.equipmentDesc,
+                        workCenterDesc:
+                            _weighingCubit.state.expiredSet.workCenterDesc!,
+                        operationType: _weighingCubit.state.operationType,
+                        operationDesc: _weighingCubit
+                            .state.selectedOperation.operationDesc,
+                        lot: _weighingCubit.state.operationType == 'DECOCT'
+                            ? _weighingCubit.state.scaleWeighing.lot
+                            : _weighingCubit.state.selectedContainer.lot!,
+                        operator:
+                            state.submitWeighing.submitWeighing!.operator!,
+                        pengawas:
+                            state.submitWeighing.submitWeighing!.pengawas!,
+                        stagingTime:
+                            state.submitWeighing.submitWeighing!.expiredDate !=
+                                    ''
+                                ? stagingTime
+                                : '',
+                        totalContainer:
+                            state.submitWeighing.submitWeighing!.totalWadah!,
+                        containerConter:
+                            state.submitWeighing.submitWeighing!.wadah!,
+                        bruto: double.parse(
+                            state.submitWeighing.submitWeighing!.bruto!),
+                        tara: double.parse(
+                            state.submitWeighing.submitWeighing!.tara!),
+                        netto: double.parse(
+                            state.submitWeighing.submitWeighing!.netto!),
+                        unit:
+                            state.submitWeighing.submitWeighing!.unitWeighing!,
+                        expiredNo:
+                            _weighingCubit.state.expiredSet.expiredNo ?? '',
+                        expiredUnit: _weighingCubit.state.expiredSet.unit ?? '',
+                        startWork: weighingTime,
+                        activityWh:
+                            state.submitWeighing.submitWeighing!.activityWh!,
+                        activityNo:
+                            state.submitWeighing.submitWeighing!.activityNo!)
+                    .getZpl();
+                await zsdk
+                    .printZplDataOverTCPIP(
+                        address:
+                            _weighingCubit.state.selectedEquipment.ipPrinter,
+                        port: 9100,
+                        data: zplData)
+                    .then((value) {
+                  final printerResponse = PrinterResponse.fromMap(value);
+                  Status status = printerResponse.statusInfo.status;
+                  print(status);
+                  if (printerResponse.errorCode == ErrorCode.SUCCESS) {
+                    print("printer connect");
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: const Text("Label printed"),
+                      backgroundColor: Colors.black,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: const Text("failed to print"),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ));
+                    Cause cause = printerResponse.statusInfo.cause;
+                    print(cause);
+                  }
+                });
+                // if (state.isPrinted) {
+                //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                //     content: const Text("Label printed"),
+                //     backgroundColor: Colors.black,
+                //     behavior: SnackBarBehavior.floating,
+                //     shape: RoundedRectangleBorder(
+                //       borderRadius: BorderRadius.circular(10.0),
+                //     ),
+                //   ));
+                // } else {
+                //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                //     content: const Text("failed to print"),
+                //     backgroundColor: Colors.red,
+                //     behavior: SnackBarBehavior.floating,
+                //     shape: RoundedRectangleBorder(
+                //       borderRadius: BorderRadius.circular(10.0),
+                //     ),
+                //   ));
+                // }
                 _weighingCubit.setStartWork();
                 break;
               case SubmitWeighingError():
@@ -364,7 +493,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 leading: BackButton(
                   onPressed: () {
                     _weighingCubit.setTab(_weighingCubit.state.prevTab);
-                    tara.text = '';
+                    _weighingCubit.resetScaleWeighing();
+                    _weighingCubit.resetResultScale();
+                    tara.clear();
+                    line.clear();
+                    numberOfContainer.clear();
+                    lot.clear();
+                    temperature.clear();
                     if (weighingState.isConnectedTcp) {
                       closeConnection();
                     }
@@ -475,12 +610,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         ),
                                   ),
                                   Text(
-                                    weighingState
-                                                .selectedOperation.activityNo !=
-                                            null
-                                        ? weighingState
-                                            .selectedOperation.activityNo!
-                                        : '',
+                                    weighingState.selectedOperation.activityNo,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -490,12 +620,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         ),
                                   ),
                                   Text(
-                                    weighingState.selectedOperation
-                                                .operationDesc !=
-                                            null
-                                        ? weighingState
-                                            .selectedOperation.operationDesc!
-                                        : '',
+                                    weighingState
+                                        .selectedOperation.operationDesc,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -557,10 +683,131 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                   : '0')
                           ? TextButton(
                               onPressed: checkOperationType()
-                                  ? () {
-                                      submitWeighingBloc.add(SendDataWeighing(
-                                          weighingState: weighingState));
-                                    }
+                                  ? weighingState.selectedOperation
+                                              .operationDesc !=
+                                          weighingState
+                                              .selectedOperation.operationDesc2
+                                      ? () {
+                                          submitWeighingBloc.add(
+                                              SendDataWeighing(
+                                                  weighingState:
+                                                      weighingState));
+                                        }
+                                      : () {
+                                          DateTime finishTimeWeighing =
+                                              DateTime.now();
+                                          String expiredDateFormatted = '';
+                                          if (weighingState
+                                                  .expiredSet.expiredNo !=
+                                              '0,000') {
+                                            if (weighingState.expiredSet.unit ==
+                                                'DAY') {
+                                              DateTime expiredDate =
+                                                  finishTimeWeighing.add(
+                                                      Duration(
+                                                          days: int.parse(
+                                                              weighingState
+                                                                  .expiredSet
+                                                                  .expiredNo!)));
+                                              expiredDateFormatted =
+                                                  DateFormat('yyyyMMdd-HHmmss')
+                                                      .format(expiredDate);
+                                            } else {
+                                              DateTime expiredDate =
+                                                  finishTimeWeighing.add(
+                                                      Duration(
+                                                          hours: int.parse(
+                                                              weighingState
+                                                                  .expiredSet
+                                                                  .expiredNo!)));
+                                              expiredDateFormatted =
+                                                  DateFormat('yyyyMMdd-HHmmss')
+                                                      .format(expiredDate);
+                                            }
+                                          }
+                                          var zplData = ZplData(
+                                                  materialCode: weighingState
+                                                      .materialCode,
+                                                  materialDesc: weighingState
+                                                      .resultsOpr.materialDesc!,
+                                                  batchFG: weighingState
+                                                      .selectedOrder.batchFG!,
+                                                  orderNo: weighingState
+                                                      .selectedOrder.orderNo!,
+                                                  line: weighingState.line,
+                                                  equipmentDesc: weighingState
+                                                      .selectedEquipment
+                                                      .equipmentDesc,
+                                                  workCenterDesc: weighingState
+                                                      .expiredSet
+                                                      .workCenterDesc!,
+                                                  operationType: weighingState
+                                                      .operationType,
+                                                  operationDesc: weighingState
+                                                      .selectedOperation
+                                                      .operationDesc,
+                                                  lot: weighingState.operationType ==
+                                                          'DECOCT'
+                                                      ? weighingState
+                                                          .scaleWeighing.lot
+                                                      : weighingState
+                                                          .selectedContainer
+                                                          .lot!,
+                                                  operator: weighingState.operator,
+                                                  pengawas: weighingState.pengawas,
+                                                  stagingTime: expiredDateFormatted,
+                                                  totalContainer: weighingState.totalContainer,
+                                                  containerConter: weighingState.containerCounter.toString(),
+                                                  bruto: weighingState.scaleWeighing.bruto,
+                                                  tara: weighingState.scaleWeighing.tara,
+                                                  netto: weighingState.scaleWeighing.netto,
+                                                  unit: weighingState.scaleWeighing.unit,
+                                                  expiredNo: weighingState.expiredSet.expiredNo ?? '',
+                                                  expiredUnit: weighingState.expiredSet.unit ?? '',
+                                                  startWork: DateFormat('dd.MM.yyyy HH:mm:ss').format(weighingState.startWork!),
+                                                  activityWh: weighingState.selectedContainer.activityWh ?? '',
+                                                  activityNo: weighingState.selectedOperation.activityNo)
+                                              .getZpl();
+                                          zsdk
+                                              .printZplDataOverTCPIP(
+                                                  address: weighingState
+                                                      .selectedEquipment
+                                                      .ipPrinter,
+                                                  port: 9100,
+                                                  data: zplData)
+                                              .then((value) {
+                                            final printerResponse =
+                                                PrinterResponse.fromMap(value);
+                                            Status status = printerResponse
+                                                .statusInfo.status;
+                                            print(status);
+                                            if (printerResponse.errorCode ==
+                                                ErrorCode.SUCCESS) {
+                                              _weighingCubit.setContainerCounter(
+                                                  weighingState
+                                                          .containerCounter +
+                                                      1);
+                                              // ignore: use_build_context_synchronously
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(SnackBar(
+                                                content:
+                                                    const Text("Label printed"),
+                                                backgroundColor: Colors.black,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10.0),
+                                                ),
+                                              ));
+                                            } else {
+                                              Cause cause = printerResponse
+                                                  .statusInfo.cause;
+                                              print(cause);
+                                            }
+                                          });
+                                        }
                                   : null,
                               style: TextButton.styleFrom(
                                 backgroundColor: checkOperationType()
@@ -687,7 +934,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               child: TextFormField(
                                 controller: topMoistureContent,
                                 keyboardType: TextInputType.number,
-                                readOnly: weighingState.resultScales.isNotEmpty,
+                                // readOnly: weighingState.resultScales.isNotEmpty,
                                 decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -703,7 +950,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               child: TextFormField(
                                 controller: middleMoistureContent,
                                 keyboardType: TextInputType.number,
-                                readOnly: weighingState.resultScales.isNotEmpty,
+                                // readOnly: weighingState.resultScales.isNotEmpty,
                                 decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -719,7 +966,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               child: TextFormField(
                                 controller: bottomMoistureContent,
                                 keyboardType: TextInputType.number,
-                                readOnly: weighingState.resultScales.isNotEmpty,
+                                // readOnly: weighingState.resultScales.isNotEmpty,
                                 decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -741,7 +988,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                         onChanged: (value) {
                           _weighingCubit.setTotalContainer(value);
                         },
-                        readOnly: weighingState.resultScales.isNotEmpty,
+                        readOnly: weighingState.resultScales.isNotEmpty &&
+                            weighingState.selectedOperation.operationDesc !=
+                                weighingState.selectedOperation.operationDesc2,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -758,10 +1007,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                         child: TextFormField(
                           controller: lot,
                           keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            _weighingCubit.setTotalContainer(value);
-                          },
-                          readOnly: weighingState.resultScales.isNotEmpty,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -869,167 +1114,218 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                         ),
                       ),
                     ],
-                    if (weighingState.resultScales.isNotEmpty)
-                      DataTable(
-                        columns: const [
-                          DataColumn(label: Text('Container')),
-                          DataColumn(label: Text('Bruto')),
-                          DataColumn(label: Text('Tara')),
-                          DataColumn(label: Text('Netto')),
-                          DataColumn(label: Text('Act')),
-                        ],
-                        rows: [
-                          for (var dataLabel in weighingState.resultScales)
-                            DataRow(cells: [
-                              DataCell(Text(
-                                  '${int.parse(dataLabel.wadah!)}/${int.parse(dataLabel.totalWadah!)}')),
-                              DataCell(Text(double.parse(dataLabel.bruto != null
-                                      ? dataLabel.bruto!
-                                      : '')
-                                  .toStringAsFixed(1))),
-                              DataCell(Text(double.parse(dataLabel.tara != null
-                                      ? dataLabel.tara!
-                                      : '')
-                                  .toStringAsFixed(1))),
-                              DataCell(Text(double.parse(dataLabel.netto != null
-                                      ? dataLabel.netto!
-                                      : '')
-                                  .toStringAsFixed(1))),
-                              DataCell(IconButton(
-                                  onPressed: () {
-                                    if (weighingState.selectedEquipment
-                                        .ipPrinter.isNotEmpty) {
-                                      print(weighingState
-                                          .selectedEquipment.ipPrinter);
-                                      DateTime parsedDate = DateTime.parse(
-                                          dataLabel.createdDate!);
-                                      String hours = dataLabel.createdTime!
-                                          .substring(0, 2);
-                                      String minutes = dataLabel.createdTime!
-                                          .substring(2, 4);
-                                      String seconds = dataLabel.createdTime!
-                                          .substring(4, 6);
-                                      DateTime parsedExpDate;
-                                      String hoursExp = '';
-                                      String minutesExp = '';
-                                      String secondsExp = '';
-                                      String formattedExpDate = '';
-                                      String finalExpDate = '';
-                                      String finalExpTime = '';
-                                      if (dataLabel.expiredDate != '') {
-                                        parsedExpDate = DateTime.parse(
-                                            dataLabel.expiredDate!);
-                                        hoursExp = dataLabel.expiredTime!
+                    if (weighingState.selectedOperation.operationDesc !=
+                        weighingState.selectedOperation.operationDesc2)
+                      if (weighingState.resultScales.isNotEmpty)
+                        DataTable(
+                          columns: [
+                            DataColumn(
+                                label: Text(
+                              'Counter',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            )),
+                            DataColumn(
+                                label: Text('Bruto',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall)),
+                            DataColumn(
+                                label: Text('Tara',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall)),
+                            DataColumn(
+                                label: Text('Netto',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall)),
+                            DataColumn(
+                                label: Text('Act',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall)),
+                          ],
+                          rows: [
+                            for (var dataLabel in weighingState.resultScales)
+                              DataRow(cells: [
+                                DataCell(Text(
+                                    '${int.parse(dataLabel.wadah!)}/${int.parse(dataLabel.totalWadah!)}')),
+                                DataCell(RichText(
+                                  text: TextSpan(
+                                    text: double.parse(dataLabel.bruto != null
+                                            ? dataLabel.bruto!
+                                            : '')
+                                        .toStringAsFixed(2),
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                    children: <TextSpan>[
+                                      TextSpan(
+                                          text: ' ${dataLabel.unitWeighing}'),
+                                    ],
+                                  ),
+                                )),
+                                DataCell(RichText(
+                                  text: TextSpan(
+                                    text: double.parse(dataLabel.tara != null
+                                            ? dataLabel.tara!
+                                            : '')
+                                        .toStringAsFixed(2),
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                    children: <TextSpan>[
+                                      TextSpan(
+                                          text: ' ${dataLabel.unitWeighing}'),
+                                    ],
+                                  ),
+                                )),
+                                DataCell(RichText(
+                                  text: TextSpan(
+                                    text: double.parse(dataLabel.netto != null
+                                            ? dataLabel.netto!
+                                            : '')
+                                        .toStringAsFixed(2),
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                    children: <TextSpan>[
+                                      TextSpan(
+                                          text: ' ${dataLabel.unitWeighing}'),
+                                    ],
+                                  ),
+                                )),
+                                DataCell(IconButton(
+                                    onPressed: () {
+                                      if (weighingState.selectedEquipment
+                                          .ipPrinter.isNotEmpty) {
+                                        print(weighingState
+                                            .selectedEquipment.ipPrinter);
+                                        DateTime parsedDate = DateTime.parse(
+                                            dataLabel.createdDate!);
+                                        String hours = dataLabel.createdTime!
                                             .substring(0, 2);
-                                        minutesExp = dataLabel.expiredTime!
+                                        String minutes = dataLabel.createdTime!
                                             .substring(2, 4);
-                                        secondsExp = dataLabel.expiredTime!
+                                        String seconds = dataLabel.createdTime!
                                             .substring(4, 6);
-                                        formattedExpDate =
-                                            DateFormat('dd.MM.yyyy')
-                                                .format(parsedExpDate);
-                                        finalExpDate = formattedExpDate;
-                                        finalExpTime =
-                                            '$hoursExp:$minutesExp:$secondsExp';
-                                      }
-                                      String formattedDate =
-                                          DateFormat('dd.MM.yyyy')
-                                              .format(parsedDate);
-                                      String zplData = '''
-                                    ^XA
-                                    ^PW560                           ; Set print width for portrait A7 (560 dots, approximately 74mm)
-                                    ^LL800 
-                                    ^FO10,25^GB550,765,2^FS      ; Full border around the label
-                                    ^CF0, 22    ; General font
-                                    ^FO30,40^GFA,357,357,7,,::00JF3IFC,007IF3IF8,003IF3IF,001IF3FFE,K033,::0JFI3IFC,07IFI3IFC,07IFI3IF8,03IFI3IF,01IFI3FFE,J0J3,::7IFJ31IFC,7IFK3IFC,7IFK3IF8,3IFK3IF,1IFK3IF,1IFK3FFE,I0L3,::::::::::::::::::::::,:::^FS      ; Logo
-                                    ^FO0,55 ^FB570,,,C ^A0N,30^FDPRODUK DALAM PROSES^FS     ; Title 
-                                    ^FO30,110^FDProduct^FS
-                                    ^FO200,110^FD${weighingState.materialCode}^FS       ; Product code
-                                    ^FO28,145 ^FB355,2,,L^A0N,30^FD${weighingState.resultsOpr.materialDesc}^FS     ; Product name
-                                    ^FO28,215^A0N,30^FDBatch^FS
-                                    ^FO200,215^A0N,30^FD${weighingState.selectedOrder.batchFG}^FS        ; Batch number
-                                    ^FO30,250 ^FDPrO^FS
-                                    ^FO200,250^FD${dataLabel.orderNo}^FS      ; PrO number
-                                    ^FO30,280^FDLine^FS
-                                    ^FO200,280^FD${line.text}^FS         ; Line number
-                                    ^FO30,310^FDScale^FS
-                                    ^FO200,310^FD${dataLabel.equipmentDesc}^FS       ; Scale information
-                                    ^FO30,340^FDMesin^FS
-                                    ^FO200,340^FD${dataLabel.resourceDesc}^FS      ; Machine info
-                                    ^FO30,370^FDOperation/Lot^FS
-                                    ^FO200,370^FD${dataLabel.lot!.isNotEmpty ? '${dataLabel.activityNoDesc} / ${dataLabel.lot}' : dataLabel.activityNoDesc}^FS       ; Operation/lot
-                                    ^FO30,400^FDOperator/PWS^FS
-                                    ^FO200,400^FD${dataLabel.operator}/${dataLabel.pengawas}^FS             ; Operator/PWS info
-                                    ^FO30,430^FDTgl. Timbang^FS
-                                    ^FO200,430^FD$formattedDate $hours:$minutes:$seconds^FS        ; Date and time
-                                    ^FO30,460^FDHolding Time^FS
-                                    ^FO200,460^FD$finalExpDate $finalExpTime^FS       ; Holding time
-                                    ^FO30,490^A0N,30^FD${weighingState.operationType}^FS          ; CB label
-                                    ^FO395,114 ^FB200,,,R^BQN,2,4^FDQA,${dataLabel.orderNo};${weighingState.materialCode};${dataLabel.activityNo};${weighingState.operationType};${dataLabel.netto};${int.parse(dataLabel.wadah!)}/${int.parse(dataLabel.totalWadah!)};${dataLabel.activityWh}^FS          ; QR code at top right
-                                    ^FO470,540^A0N,20,20^FDJumlah^FS       
-                                    ^FO30,575^FDNetto^FS                   ; "Nett" label
-                                    ^FO290,575 ^FB200,,,R^FD${double.parse(dataLabel.bruto != null ? dataLabel.bruto! : '').toStringAsFixed(2)}^FS          ; Aligned value
-                                    ^FO330,575 ^FB200,,,R^FD${dataLabel.unitWeighing}^FS                    ; Aligned unit
-                                    ^FO30,610^FDTara^FS                   ; "Nett" label
-                                    ^FO290,610 ^FB200,,,R^FD${double.parse(dataLabel.tara != null ? dataLabel.tara! : '').toStringAsFixed(2)}^FS           ; Aligned value
-                                    ^FO330,610 ^FB200,,,R^FD${dataLabel.unitWeighing}^FS                    ; Aligned unit
-                                    ^FO30,645^FDBruto^FS                   ; "Nett" label
-                                    ^FO290,645 ^FB200,,,R^FD${double.parse(dataLabel.netto != null ? dataLabel.netto! : '').toStringAsFixed(2)}^FS         ; Aligned value
-                                    ^FO330,645 ^FB200,,,R^FD${dataLabel.unitWeighing}^FS                    ; Aligned unit
-                                    ^FO485,755^FD${int.parse(dataLabel.wadah!)}/${int.parse(dataLabel.totalWadah!)}^FS        ; Page number
-                                    ^XZ
-                                    ''';
-
-                                      zsdk
-                                          .printZplDataOverTCPIP(
-                                              address: weighingState
-                                                  .selectedEquipment.ipPrinter,
-                                              port: 9100,
-                                              data: zplData)
-                                          .then((value) {
-                                        final printerResponse =
-                                            PrinterResponse.fromMap(value);
-                                        Status status =
-                                            printerResponse.statusInfo.status;
-                                        print(status);
-                                        if (printerResponse.errorCode ==
-                                            ErrorCode.SUCCESS) {
-                                          // ignore: use_build_context_synchronously
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                            content:
-                                                const Text("Label printed"),
-                                            backgroundColor: Colors.black,
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10.0),
-                                            ),
-                                          ));
-                                        } else {
-                                          Cause cause =
-                                              printerResponse.statusInfo.cause;
-                                          print(cause);
+                                        DateTime parsedExpDate;
+                                        String hoursExp = '';
+                                        String minutesExp = '';
+                                        String secondsExp = '';
+                                        String formattedExpDate = '';
+                                        String finalExpDate = '';
+                                        String finalExpTime = '';
+                                        if (dataLabel.expiredDate != '') {
+                                          parsedExpDate = DateTime.parse(
+                                              dataLabel.expiredDate!);
+                                          hoursExp = dataLabel.expiredTime!
+                                              .substring(0, 2);
+                                          minutesExp = dataLabel.expiredTime!
+                                              .substring(2, 4);
+                                          secondsExp = dataLabel.expiredTime!
+                                              .substring(4, 6);
+                                          formattedExpDate =
+                                              DateFormat('dd.MM.yyyy')
+                                                  .format(parsedExpDate);
+                                          finalExpDate = formattedExpDate;
+                                          finalExpTime =
+                                              '$hoursExp:$minutesExp:$secondsExp';
                                         }
-                                      });
-                                    } else {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(SnackBar(
-                                        content:
-                                            const Text("Please Scan Scale"),
-                                        backgroundColor: Colors.red,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                        ),
-                                      ));
-                                    }
-                                  },
-                                  icon: const Icon(Icons.print))),
-                            ])
-                        ],
-                      ),
+                                        String formattedDate =
+                                            DateFormat('dd.MM.yyyy')
+                                                .format(parsedDate);
+                                        var zplData = ZplData(
+                                                materialCode:
+                                                    weighingState.materialCode,
+                                                materialDesc: weighingState
+                                                    .resultsOpr.materialDesc!,
+                                                batchFG: weighingState
+                                                    .selectedOrder.batchFG!,
+                                                orderNo: dataLabel.orderNo!,
+                                                line: dataLabel.line!,
+                                                equipmentDesc:
+                                                    dataLabel.equipmentDesc!,
+                                                workCenterDesc:
+                                                    dataLabel.resourceDesc!,
+                                                operationType:
+                                                    weighingState.operationType,
+                                                operationDesc:
+                                                    dataLabel.activityNoDesc!,
+                                                lot: dataLabel.lot!,
+                                                operator: dataLabel.operator!,
+                                                pengawas: dataLabel.pengawas!,
+                                                stagingTime:
+                                                    '$finalExpDate $finalExpTime',
+                                                totalContainer:
+                                                    dataLabel.totalWadah!,
+                                                containerConter:
+                                                    dataLabel.wadah!,
+                                                bruto: double.parse(
+                                                    dataLabel.bruto != null
+                                                        ? dataLabel.bruto!
+                                                        : ''),
+                                                tara: double.parse(
+                                                    dataLabel.tara != null
+                                                        ? dataLabel.tara!
+                                                        : ''),
+                                                netto: double.parse(
+                                                    dataLabel.netto != null
+                                                        ? dataLabel.netto!
+                                                        : ''),
+                                                unit: dataLabel.unitWeighing!,
+                                                expiredNo: '',
+                                                expiredUnit: '',
+                                                startWork: '$formattedDate $hours:$minutes:$seconds',
+                                                activityWh: dataLabel.activityWh!,
+                                                activityNo: dataLabel.activityNo!)
+                                            .getZpl();
+
+                                        zsdk
+                                            .printZplDataOverTCPIP(
+                                                address: weighingState
+                                                    .selectedEquipment
+                                                    .ipPrinter,
+                                                port: 9100,
+                                                data: zplData)
+                                            .then((value) {
+                                          final printerResponse =
+                                              PrinterResponse.fromMap(value);
+                                          Status status =
+                                              printerResponse.statusInfo.status;
+                                          print(status);
+                                          if (printerResponse.errorCode ==
+                                              ErrorCode.SUCCESS) {
+                                            // ignore: use_build_context_synchronously
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(SnackBar(
+                                              content:
+                                                  const Text("Label printed"),
+                                              backgroundColor: Colors.black,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10.0),
+                                              ),
+                                            ));
+                                          } else {
+                                            Cause cause = printerResponse
+                                                .statusInfo.cause;
+                                            print(cause);
+                                          }
+                                        });
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                          content:
+                                              const Text("Please Scan Scale"),
+                                          backgroundColor: Colors.red,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10.0),
+                                          ),
+                                        ));
+                                      }
+                                    },
+                                    icon: const Icon(Icons.print))),
+                              ])
+                          ],
+                        ),
                   ],
                 ),
               ));

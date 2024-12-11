@@ -26,28 +26,27 @@ class SubmitHandoverBloc
         var operationApps = event.orderData.operationApps;
         operationApps = event.orderData.operationApps;
         String activityWh = '';
-        if (event.orderData.fullpack[0].bOMItem.isEmpty) {
+        if (event.orderData.fullpack.isNotEmpty &&
+            event.orderData.fullpack[0].bOMItem.isEmpty) {
           activityWh = event.orderData.fullpack[0].activityNo;
         }
         SubmitHandoverRequest submitHandover = SubmitHandoverRequest(
-            orderNo: event.orderData.selectedOperation.orderNo,
+            orderNo: event.orderData.selectedOrder.orderNo,
             plant: event.orderData.plant,
             material: event.orderData.materialCode,
-            batchFG: event.orderData.selectedOperation.batchFG,
-            routingNo: event.orderData.selectedOperation.routingNo,
-            internalCntr: event.orderData.selectedOperation.internalCntr,
+            batchFG: event.orderData.selectedOrder.batchFG,
+            routingNo: event.orderData.selectedOrder.routingNo,
+            internalCntr: event.orderData.selectedOrder.internalCntr,
             operationType: event.orderData.operationType,
             ordToOprNav: [
               OrdToOprNav(
-                  routingNo: event.orderData.selectedOperationNumber.routingNo,
-                  internalCntr:
-                      event.orderData.selectedOperationNumber.internalCntr,
-                  activityNo:
-                      event.orderData.selectedOperationNumber.activityNo,
+                  routingNo: event.orderData.selectedOperation.routingNo,
+                  internalCntr: event.orderData.selectedOperation.internalCntr,
+                  activityNo: event.orderData.selectedOperation.activityNo,
                   operationDesc:
-                      event.orderData.selectedOperationNumber.operationDesc,
+                      event.orderData.selectedOperation.operationDesc,
                   controlRecipe:
-                      event.orderData.selectedOperationNumber.controlRecipe,
+                      event.orderData.selectedOperation.controlRecipe,
                   operationApps: operationApps,
                   line: event.orderData.line,
                   startDate: startDate[0],

@@ -59,45 +59,26 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
         listeners: [
           BlocListener<ConfirmationCubit, ConfirmationState>(
               listener: (context, state) {
-            String date = state.yieldSet.startDateOpr != null
-                ? state.yieldSet.startDateOpr!
-                : '20240101';
-            DateTime? parsedDate = DateTime.parse(date);
-            String hours = state.yieldSet.startTimeOpr != null
-                ? state.yieldSet.startTimeOpr!.substring(0, 2)
-                : '120000';
-            String minutes = state.yieldSet.startTimeOpr != null
-                ? state.yieldSet.startTimeOpr!.substring(2, 4)
-                : '120000';
-            String seconds = state.yieldSet.startTimeOpr != null
-                ? state.yieldSet.startTimeOpr!.substring(4, 6)
-                : '120000';
-            yield.text =
-                state.yieldSet.yieldQty != null ? state.yieldSet.yieldQty! : '';
-            startExecution.text =
-                '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
-            postingDate.text = DateFormat('dd-MM-yyyy').format(DateTime.now());
+            if (state.tab == ConfirmationStatus.formConfirmation) {
+              print("=================");
+              print(state.yieldSet.toString());
+              String date = state.yieldSet.startDateOpr;
+              DateTime? parsedDate = DateTime.parse(date);
+              String hours = state.yieldSet.startTimeOpr.substring(0, 2);
+              String minutes = state.yieldSet.startTimeOpr.substring(2, 4);
+              String seconds = state.yieldSet.startTimeOpr.substring(4, 6);
+              yield.text = state.yieldSet.yieldQty;
+              machineTime.text = state.yieldSet.machineHour;
+              laborTime.text = state.yieldSet.laborHour;
+              startExecution.text =
+                  '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
+              postingDate.text =
+                  DateFormat('dd-MM-yyyy').format(DateTime.now());
+            }
           }),
           BlocListener<SubmitBloc, SubmitState>(listener: (context, state) {
             switch (state) {
               case SubmitSuccess():
-                DateTime parsedDate = DateTime.parse(state
-                    .confirmationStatus.submitConfirmationRequest!.finishDate!);
-                String hours = state
-                    .confirmationStatus.submitConfirmationRequest!.finishTime!
-                    .substring(0, 2);
-                String minutes = state
-                    .confirmationStatus.submitConfirmationRequest!.finishTime!
-                    .substring(2, 4);
-                String seconds = state
-                    .confirmationStatus.submitConfirmationRequest!.finishTime!
-                    .substring(4, 6);
-                machineTime.text = state
-                    .confirmationStatus.submitConfirmationRequest!.machineHour!;
-                laborTime.text = state
-                    .confirmationStatus.submitConfirmationRequest!.laborHour!;
-                finishExecution.text =
-                    '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: const Text("Saved Successfully"),
                   backgroundColor: Colors.black,
@@ -106,7 +87,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
-                _confirmationCubit.setComplete(true);
+                context.go('/home');
                 break;
               case SubmitError():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -242,11 +223,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                                   ),
                                   Text(
                                     confirmationState
-                                                .selectedOperation.activityNo !=
-                                            null
-                                        ? confirmationState
-                                            .selectedOperation.activityNo!
-                                        : '',
+                                        .selectedOperation.activityNo,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -256,12 +233,8 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                                         ),
                                   ),
                                   Text(
-                                    confirmationState.selectedOperation
-                                                .operationDesc !=
-                                            null
-                                        ? confirmationState
-                                            .selectedOperation.operationDesc!
-                                        : '',
+                                    confirmationState
+                                        .selectedOperation.operationDesc,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -388,42 +361,50 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                       ),
                       labelText: 'Yield',
                       filled: true,
-                      fillColor: Colors.grey.shade100,
-                      suffix: Text(confirmationState.yieldSet.unitYield != null
-                          ? confirmationState.yieldSet.unitYield!
-                          : '')),
+                      fillColor: Colors.grey[350],
+                      suffix: Text(confirmationState.yieldSet.unitYield)),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
                 child: TextFormField(
                   controller: machineTime,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    var data = _confirmationCubit.state.yieldSet;
+                    _confirmationCubit
+                        .setYieldSet(data.copyWith(machineHour: value));
+                  },
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    suffixIcon: const Icon(Icons.calendar_today),
+                    suffixIcon: const Icon(Icons.access_time_rounded),
                     labelText: 'Machine Time',
                     filled: true,
                     fillColor: Colors.grey.shade100,
                   ),
-                  readOnly: true,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
                 child: TextFormField(
                   controller: laborTime,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    var data = _confirmationCubit.state.yieldSet;
+                    _confirmationCubit
+                        .setYieldSet(data.copyWith(laborHour: value));
+                  },
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    suffixIcon: const Icon(Icons.calendar_today),
+                    suffixIcon: const Icon(Icons.access_time_rounded),
                     labelText: 'Labor Time',
                     filled: true,
                     fillColor: Colors.grey.shade100,
                   ),
-                  readOnly: true,
                 ),
               ),
               Padding(
@@ -437,23 +418,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     suffixIcon: const Icon(Icons.calendar_today),
                     labelText: 'Start Execution',
                     filled: true,
-                    fillColor: Colors.grey.shade100,
-                  ),
-                  readOnly: true,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: TextFormField(
-                  controller: finishExecution,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    suffixIcon: const Icon(Icons.calendar_today),
-                    labelText: 'Finish Execution',
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
+                    fillColor: Colors.grey[400],
                   ),
                   readOnly: true,
                 ),
@@ -469,7 +434,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     suffixIcon: const Icon(Icons.calendar_today),
                     labelText: 'Posting Date',
                     filled: true,
-                    fillColor: Colors.grey.shade100,
+                    fillColor: Colors.grey[400],
                   ),
                   readOnly: true,
                 ),

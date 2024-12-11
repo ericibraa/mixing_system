@@ -4,7 +4,8 @@ enum HandoverStatus {
   handover,
   scantong,
   scantongmaterial,
-  scanTongResultsWeighing
+  scanTongResultsWeighing,
+  chooseLocation
 }
 
 @immutable
@@ -15,9 +16,12 @@ class HandoverState extends Equatable {
   final String materialCode;
   final String date;
   final String operationType;
-  final ResultsOrder selectedOperation;
-  final ResultOperation selectedOperationNumber;
+  final ResultsOrder selectedOrder;
+  final List<ResultsOrder> orders;
+  final ResultOperation selectedOperation;
+  final List<ResultOperation> operations;
   final HandoverStatus tab;
+  final HandoverStatus prevTab;
   final List<ResultTong> tongs;
   final String tong;
   final bool isLoadingTong;
@@ -25,6 +29,7 @@ class HandoverState extends Equatable {
   final bool isComplete;
   final bool isCompleteTong;
   final bool isCompleteMaterials;
+  final bool isCompleteWeighingResults;
   final String startDate;
   final List<ResultsFullPack> fullpack;
   final bool isLoadingFullpack;
@@ -39,6 +44,9 @@ class HandoverState extends Equatable {
   final List<ResultsLocationSet> locationSets;
   final ResultsLocationSet selectedLocationSet;
   final List<ResultTong> wadah;
+  final List<ResultsMaterial> materials;
+  final String startTime;
+  final bool isStartDateStatus;
 
   const HandoverState(
       {this.operator = '',
@@ -47,9 +55,12 @@ class HandoverState extends Equatable {
       this.materialCode = "",
       this.date = "",
       this.operationType = "",
-      this.selectedOperation = const ResultsOrder(),
-      this.selectedOperationNumber = const ResultOperation(),
+      this.selectedOrder = const ResultsOrder(),
+      this.orders = const [],
+      this.selectedOperation = const ResultOperation(),
+      this.operations = const [],
       this.tab = HandoverStatus.handover,
+      this.prevTab = HandoverStatus.handover,
       this.tongs = const [],
       this.tong = "",
       this.isLoadingTong = false,
@@ -57,6 +68,7 @@ class HandoverState extends Equatable {
       this.isComplete = false,
       this.isCompleteTong = false,
       this.isCompleteMaterials = false,
+      this.isCompleteWeighingResults = false,
       this.startDate = "",
       this.fullpack = const [],
       this.isLoadingFullpack = false,
@@ -70,7 +82,10 @@ class HandoverState extends Equatable {
       this.isNext = false,
       this.locationSets = const [],
       this.selectedLocationSet = const ResultsLocationSet(),
-      this.wadah = const []});
+      this.wadah = const [],
+      this.materials = const [],
+      this.startTime = "",
+      this.isStartDateStatus = false});
 
   HandoverState copyWith(
       {String? operator,
@@ -79,9 +94,12 @@ class HandoverState extends Equatable {
       String? materialCode,
       String? date,
       String? operationType,
-      ResultsOrder? selectedOperation,
-      ResultOperation? selectedOperationNumber,
+      ResultsOrder? selectedOrder,
+      List<ResultsOrder>? orders,
+      ResultOperation? selectedOperation,
+      List<ResultOperation>? operations,
       HandoverStatus? tab,
+      HandoverStatus? prevTab,
       List<ResultTong>? tongs,
       String? tong,
       bool? isLoadingTong,
@@ -89,6 +107,7 @@ class HandoverState extends Equatable {
       bool? isComplete,
       bool? isCompleteTong,
       bool? isCompleteMaterials,
+      bool? isCompleteWeighingResults,
       String? startDate,
       List<ResultsFullPack>? fullpack,
       bool? isLoadingFullpack,
@@ -102,7 +121,10 @@ class HandoverState extends Equatable {
       bool? isNext,
       List<ResultsLocationSet>? locationSets,
       ResultsLocationSet? selectedLocationSet,
-      List<ResultTong>? wadah}) {
+      List<ResultTong>? wadah,
+      List<ResultsMaterial>? materials,
+      String? startTime,
+      bool? isStartDateStatus}) {
     return HandoverState(
         operator: operator ?? this.operator,
         pengawas: pengawas ?? this.pengawas,
@@ -110,10 +132,12 @@ class HandoverState extends Equatable {
         materialCode: materialCode ?? this.materialCode,
         date: date ?? this.date,
         operationType: operationType ?? this.operationType,
+        selectedOrder: selectedOrder ?? this.selectedOrder,
+        orders: orders ?? this.orders,
         selectedOperation: selectedOperation ?? this.selectedOperation,
-        selectedOperationNumber:
-            selectedOperationNumber ?? this.selectedOperationNumber,
+        operations: operations ?? this.operations,
         tab: tab ?? this.tab,
+        prevTab: prevTab ?? this.prevTab,
         tongs: tongs ?? this.tongs,
         tong: tong ?? this.tong,
         isLoadingTong: isLoadingTong ?? this.isLoadingTong,
@@ -122,6 +146,8 @@ class HandoverState extends Equatable {
         isComplete: isComplete ?? this.isComplete,
         isCompleteTong: isCompleteTong ?? this.isCompleteTong,
         isCompleteMaterials: isCompleteMaterials ?? this.isCompleteMaterials,
+        isCompleteWeighingResults:
+            isCompleteWeighingResults ?? this.isCompleteWeighingResults,
         startDate: startDate ?? this.startDate,
         fullpack: fullpack ?? this.fullpack,
         isLoadingFullpack: isLoadingFullpack ?? this.isLoadingFullpack,
@@ -135,7 +161,10 @@ class HandoverState extends Equatable {
         isNext: isNext ?? this.isNext,
         locationSets: locationSets ?? this.locationSets,
         selectedLocationSet: selectedLocationSet ?? this.selectedLocationSet,
-        wadah: wadah ?? this.wadah);
+        wadah: wadah ?? this.wadah,
+        materials: materials ?? this.materials,
+        startTime: startTime ?? this.startTime,
+        isStartDateStatus: isStartDateStatus ?? this.isStartDateStatus);
   }
 
   @override
@@ -146,9 +175,12 @@ class HandoverState extends Equatable {
         materialCode,
         date,
         operationType,
+        selectedOrder,
+        orders,
         selectedOperation,
-        selectedOperationNumber,
+        operations,
         tab,
+        prevTab,
         tongs,
         tong,
         isLoadingTong,
@@ -169,6 +201,10 @@ class HandoverState extends Equatable {
         isNext,
         locationSets,
         selectedLocationSet,
-        wadah
+        wadah,
+        materials,
+        startTime,
+        isStartDateStatus,
+        isCompleteWeighingResults
       ];
 }

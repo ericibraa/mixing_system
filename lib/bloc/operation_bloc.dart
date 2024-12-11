@@ -15,6 +15,12 @@ class OperationBloc extends Bloc<OperationEvent, OperationState> {
       try {
         final operation = await _operationalRepository.fetchoperation(
             event.routingNo, event.operationType, event.operationApps);
+        operation.d!.resultsOperationNo!.sort((a, b) {
+          if (a.lastOperation != null) {
+            return a.lastOperation!.length.compareTo(b.lastOperation!.length);
+          }
+          return 0;
+        });
         emit(OperationLoaded(operation));
       } catch (e) {
         emit(OperationError());

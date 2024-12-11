@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:dumping_system/models/response/locationset.dart';
+import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/materialset.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
@@ -30,24 +31,31 @@ class HandoverCubit extends Cubit<HandoverState> {
         operationType: operationType));
   }
 
-  void setOrderList(ResultsOrder selectedOperation) {
-    emit(state.copyWith(selectedOperation: selectedOperation));
+  void setSelectedOrder(ResultsOrder selectedOrder) {
+    emit(state.copyWith(selectedOrder: selectedOrder));
   }
 
-  void setOperation(ResultOperation selectedOperationNumber) {
-    if (state.selectedOperationNumber.activityNo ==
-        selectedOperationNumber.activityNo) {
+  void setOrders(List<ResultsOrder> orders) {
+    emit(state.copyWith(orders: orders));
+  }
+
+  void setOperation(ResultOperation selectedOperation) {
+    if (state.selectedOperation.activityNo == selectedOperation.activityNo) {
       emit(state.copyWith(
-        selectedOperationNumber: selectedOperationNumber,
+        selectedOperation: selectedOperation,
         isResultOperationLoaded: true,
       ));
     } else {
       emit(state.copyWith(
-          selectedOperationNumber: selectedOperationNumber,
+          selectedOperation: selectedOperation,
           isResultOperationLoaded: true,
           tongs: [],
           isComplete: false));
     }
+  }
+
+  void setOperations(List<ResultOperation> operations) {
+    emit(state.copyWith(operations: operations));
   }
 
   void setFullpack(List<ResultsFullPack> fullpack) {
@@ -57,6 +65,10 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   void setTab(HandoverStatus tab) {
     emit(state.copyWith(tab: tab));
+  }
+
+  void setPrevTab(HandoverStatus prevTab) {
+    emit(state.copyWith(prevTab: prevTab));
   }
 
   void setResultTong(List<ResultTong> tongs) {
@@ -74,14 +86,15 @@ class HandoverCubit extends Cubit<HandoverState> {
         isLoadingTong: true,
         isLoadingFullpack: true,
         isLoadingMaterialset: true));
-    print(activityNo.length);
     var tongs = state.tongs;
     var fullpack = state.fullpack;
     var materialSets = state.materialSet;
     var line = state.line;
-    var completed = 0;
-    var completedFullpack = 0;
-    var completedMaterialset = 0;
+    var completed = tongs.where((tong) => tong.isScanned == true).length;
+    var completedFullpack =
+        fullpack.where((pack) => pack.isScannedFullpack == true).length;
+    var completedMaterialset =
+        materialSets.where((material) => material.scanFlag == 'X').length;
     var isChecked = false;
     var isNullData = false;
     var matchFound = false;
@@ -92,7 +105,9 @@ class HandoverCubit extends Cubit<HandoverState> {
     var lowestUnscannedPriority = unscannedPriorities.isNotEmpty
         ? unscannedPriorities.reduce((a, b) => a.compareTo(b) < 0 ? a : b)
         : null;
-
+    print("_---------------------");
+    print(unscannedPriorities);
+    print(lowestUnscannedPriority);
     switch (activityNo.length) {
       case 4:
         for (var i = 0; i < tongs.length; i++) {
@@ -102,12 +117,10 @@ class HandoverCubit extends Cubit<HandoverState> {
               isChecked = true;
             } else {
               var tong = tongs[i].copyWith(isScanned: true);
+              completed++;
               tongs[i] = tong;
             }
             isNullData = !matchFound;
-          }
-          if (tongs[i].isScanned!) {
-            completed++;
           }
         }
         break;
@@ -120,89 +133,218 @@ class HandoverCubit extends Cubit<HandoverState> {
             } else {
               var tong = tongs[i].copyWith(isScanned: true);
               tongs[i] = tong;
+              completed++;
             }
           }
           isNullData = !matchFound;
-          if (tongs[i].isScanned!) {
-            completed++;
-          }
         }
         break;
       case 7:
         for (var j = 0; j < fullpack.length; j++) {
-          if (fullpack[j].bOMItem.isNotEmpty) {
+          if (fullpack[j].recipient != 'F') {
+            print("------");
             if (fullpack[j].bOMItem == activityNo[3] &&
                 fullpack[j].counter == activityNo[6]) {
               matchFound = true;
               if (fullpack[j].isScannedFullpack) {
                 isChecked = true;
               } else {
-                var fullpacks = fullpack[j].copyWith(isScannedFullpack: true);
+                var fullpacks = fullpack[j]
+                    .copyWith(isScannedFullpack: true, scanFlag: 'X');
+                completedFullpack++;
                 fullpack[j] = fullpacks;
               }
+              isNullData = !matchFound;
             }
           } else {
-            if (fullpack[j].counter == activityNo[6]) {
-              matchFound = true;
-              if (fullpack[j].isScannedFullpack) {
+            print("Test7 ++");
+            print(materialSets.toList());
+            for (var k = 0; k < materialSets.length; k++) {
+              // if (materialSets[k].counter == activityNo[5] &&
+              //     materialSets[k].priority == lowestUnscannedPriority) {
+              //   matchFound = true;
+              //   print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+              //   print(materialSets[k]);
+              //   if (materialSets[k].isScanned) {
+              //     isChecked = true;
+              //   } else {
+              //     print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+              //     var materialSet =
+              //         materialSets[k].copyWith(isScanned: true, scanFlag: "X");
+              //     completedMaterialset++;
+              //     materialSets[k] = materialSet;
+              //   }
+              // }
+              // isNullData = !matchFound;
+              if (materialSets[k].scanFlag == "") {
+                if (materialSets[k].activityNo == activityNo[2]) {
+                  print("trueeeeeeeeeeeeeeeeeeee6666666666666666666666");
+                  var materialSet =
+                      materialSets[k].copyWith(isScanned: true, scanFlag: "X");
+                  completedMaterialset++;
+                  materialSets[k] = materialSet;
+                } else {
+                  isNullData = true;
+                }
+
+                break;
+              } else if ((materialSets[k].activityNo == activityNo[2])) {
                 isChecked = true;
               } else {
-                var fullpacks = fullpack[j].copyWith(isScannedFullpack: true);
-                fullpack[j] = fullpacks;
+                isNullData = true;
               }
             }
-          }
-          isNullData = !matchFound;
-          if (fullpack[j].isScannedFullpack) {
-            completedFullpack++;
           }
         }
         break;
-    }
+      case 9:
+        if (activityNo[7] == 'F' && state.tab == HandoverStatus.scantong) {
+          print(activityNo[7]);
+          for (var j = 0; j < fullpack.length; j++) {
+            print("Lewat sini");
+            if (fullpack[j].bOMItem.isNotEmpty) {
+              if (fullpack[j].bOMItem == activityNo[3] &&
+                  fullpack[j].counter == activityNo[6]) {
+                matchFound = true;
+                if (fullpack[j].isScannedFullpack) {
+                  isChecked = true;
+                } else {
+                  var fullpacks = fullpack[j]
+                      .copyWith(isScannedFullpack: true, scanFlag: 'X');
+                  fullpack[j] = fullpacks;
+                  completedFullpack++;
+                }
+              }
+            } else {
+              print("test9");
+              if (fullpack[j].counter == activityNo[5]) {
+                matchFound = true;
+                if (fullpack[j].isScannedFullpack) {
+                  isChecked = true;
+                } else {
+                  var fullpacks = fullpack[j]
+                      .copyWith(isScannedFullpack: true, scanFlag: 'X');
+                  fullpack[j] = fullpacks;
+                  completedFullpack++;
+                }
+              }
+            }
+            isNullData = !matchFound;
+          }
+        } else {
+          for (var k = 0; k < materialSets.length; k++) {
+            print("ashdakjshdahdasdhasdj");
+            var lastScan = 0;
+            if (materialSets[k].scanFlag == "") {
+              lastScan = int.parse(materialSets[k].priority);
+              if (materialSets[k].bOMItem == activityNo[3] &&
+                  materialSets[k].counter == activityNo[6]) {
+                print("trueeeeeeeeeeeeeeeeeeee99999999999999999999999999");
+                var materialSet =
+                    materialSets[k].copyWith(isScanned: true, scanFlag: "X");
+                completedMaterialset++;
+                materialSets[k] = materialSet;
+                isChecked = false;
+                isNullData = false;
+                break;
+              } else if (int.parse(materialSets[k + 1].priority) > lastScan) {
+                isNullData = true;
+                break;
+              }
+            } else if ((materialSets[k].bOMItem == activityNo[3])) {
+              isChecked = true;
+            } else {
+              lastScan = int.parse(materialSets[k].priority);
+              isNullData = true;
+            }
+          }
+          break;
+        }
+        break;
+      case 6:
+        String lastPrioEmpty = "";
+        for (var k = 0; k < materialSets.length; k++) {
+          // print("MAterial Set =================");
+          // print(materialSets[k].priority);
+          // print(lowestUnscannedPriority);
+          // print(unscannedPriorities);
+          // if (materialSets[k].bOMItem == activityNo[3] &&
+          //     materialSets[k].counter.isEmpty &&
+          //     materialSets[k].priority == lowestUnscannedPriority) {
+          //   print("Lewat===================");
+          //   matchFound = true;
+          //   if (materialSets[k].isScanned) {
+          //     isChecked = true;
+          //   } else {
+          //     var materialSet =
+          //         materialSets[k].copyWith(isScanned: true, scanFlag: 'X');
+          //     materialSets[k] = materialSet;
+          //     completedMaterialset++;
+          //     // emit(state.copyWith(tong: activityNo[2]));
+          //   }
+          // }
+          // isNullData = !matchFound;
 
-    for (var k = 0; k < materialSets.length; k++) {
-      if (activityNo.length == 9) {
-        if (materialSets[k].bOMItem == activityNo[3] &&
-            materialSets[k].counter == activityNo[6] &&
-            materialSets[k].priority == lowestUnscannedPriority) {
-          matchFound = true;
-          if (materialSets[k].isScanned) {
-            isChecked = true;
-          } else {
-            var materialSet = materialSets[k].copyWith(isScanned: true);
+          if (materialSets[k].scanFlag == "" &&
+              lastPrioEmpty == "" &&
+              materialSets[k].bOMItem == activityNo[3]) {
+            var materialSet =
+                materialSets[k].copyWith(isScanned: true, scanFlag: "X");
+            completedMaterialset++;
             materialSets[k] = materialSet;
+            break;
+          }
+
+          if (materialSets[k].scanFlag == "") {
+            if (lastPrioEmpty != "" &&
+                lastPrioEmpty != materialSets[k].priority) {
+              isNullData = true;
+              break;
+            }
+            lastPrioEmpty = materialSets[k].priority;
+            if (materialSets[k].bOMItem == activityNo[3]) {
+              print("trueeeeeeeeeeeeeeeeeeee6666666666666666666666");
+              var materialSet =
+                  materialSets[k].copyWith(isScanned: true, scanFlag: "X");
+              completedMaterialset++;
+              materialSets[k] = materialSet;
+              break;
+            } else if (k != materialSets.length &&
+                int.parse(materialSets[k + 1].priority) >
+                    int.parse(materialSets[k].priority)) {
+              print("mat--------------------------------+1");
+              isNullData = true;
+              lastPrioEmpty = "";
+              break;
+            }
+          } else if ((materialSets[k].bOMItem == activityNo[3])) {
+            isChecked = true;
+            if (k != materialSets.length - 1 &&
+                int.parse(materialSets[k + 1].priority) >
+                    int.parse(materialSets[k].priority)) {
+              lastPrioEmpty = "";
+              break;
+            }
+          } else {
+            isNullData = true;
           }
         }
-        isNullData = !matchFound;
-      } else if (activityNo.length == 6) {
-        if (materialSets[k].bOMItem == activityNo[3] &&
-            materialSets[k].counter.isEmpty &&
-            materialSets[k].priority == lowestUnscannedPriority) {
-          matchFound = true;
-          if (materialSets[k].isScanned) {
-            isChecked = true;
-          } else {
-            var materialSet = materialSets[k].copyWith(isScanned: true);
-            materialSets[k] = materialSet;
-            emit(state.copyWith(tong: activityNo[2]));
-          }
-        }
-        isNullData = !matchFound;
-      }
-
-      if (materialSets[k].isScanned) {
-        completedMaterialset++;
-      }
-    }
-
-    if (activityNo.length == 1) {
-      line = activityNo[0];
+        break;
+      case 1:
+        line = activityNo[0];
     }
     var formattedDate = state.startDate;
     if (formattedDate == "") {
       var now = DateTime.now();
       formattedDate = DateFormat('yyyyMMdd-HHmmss').format(now);
     }
+    var isCompleted = tongs.isNotEmpty && completed == tongs.length;
+    var isCompletedFullpack =
+        fullpack.isNotEmpty && completedFullpack == fullpack.length;
+    var isCompletedMaterial =
+        materialSets.isNotEmpty && completedMaterialset == materialSets.length;
+    print("00000000000000000000000000000000000000000000000000000");
+    print(materialSets);
     emit(state.copyWith(
         tongs: tongs,
         fullpack: fullpack,
@@ -211,13 +353,11 @@ class HandoverCubit extends Cubit<HandoverState> {
         isLoadingTong: false,
         isLoadingFullpack: false,
         isLoadingMaterialset: false,
-        isComplete:
-            completed == tongs.length && completedFullpack == fullpack.length,
-        isCompleteTong: completed == tongs.length &&
-            completedFullpack == fullpack.length &&
-            completedMaterialset == materialSets.length,
-        isCompleteMaterials: completedMaterialset == materialSets.length &&
-            completedMaterialset != 0,
+        isComplete: isCompleted && isCompletedFullpack,
+        isCompleteTong:
+            isCompleted && isCompletedFullpack && isCompletedMaterial,
+        isCompleteMaterials: isCompletedMaterial && completedMaterialset != 0,
+        isCompleteWeighingResults: isCompletedFullpack,
         startDate: formattedDate,
         isChecked: isChecked,
         isNullData: isNullData));
@@ -231,6 +371,10 @@ class HandoverCubit extends Cubit<HandoverState> {
   void setMaterialSet(List<ResultsMaterialset> materialSet) {
     emit(state.copyWith(isLoadingMaterialset: true));
     emit(state.copyWith(materialSet: materialSet, isLoadingMaterialset: false));
+  }
+
+  void setIsLoadingMaterialSet(bool isLoading) {
+    emit(state.copyWith(isLoadingMaterialset: isLoading));
   }
 
   void setOperator(String operator) {
@@ -263,5 +407,21 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   void setWadahSet(List<ResultTong> wadah) {
     emit(state.copyWith(wadah: wadah));
+  }
+
+  void setMaterials(List<ResultsMaterial> materials) {
+    emit(state.copyWith(materials: materials));
+  }
+
+  void setStartDate() {
+    var date = DateTime.now();
+    var formatDate = DateFormat('yyyyMMdd-HHmmss').format(date);
+    print("============================");
+    print(formatDate);
+    emit(state.copyWith(startTime: formatDate));
+  }
+
+  void setStartDateByString(String startDate) {
+    emit(state.copyWith(startTime: startDate));
   }
 }

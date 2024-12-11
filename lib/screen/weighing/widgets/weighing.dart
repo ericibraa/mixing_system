@@ -6,7 +6,6 @@ import 'package:dumping_system/bloc/order_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
-import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/screen/weighing/bloc/expired_set_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
@@ -36,7 +35,6 @@ class _WeighingScreenState extends State<WeighingScreen> {
   ExpiredSetBloc expiredSetBloc = ExpiredSetBloc();
   ResultOperation operation = const ResultOperation();
   String? materialValue;
-  List<ResultsMaterial> listMaterials = List.empty();
   final plant = TextEditingController();
   final _dateController = TextEditingController();
   final productCode = TextEditingController();
@@ -108,9 +106,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
               BlocListener<MaterialsBloc, MaterialsState>(
                   listener: (context, state) {
                 if (state is MaterialsLoaded) {
-                  setState(() {
-                    listMaterials = state.material.d!.results!;
-                  });
+                  _weighingCubit.setMaterials(state.material.d!.results!);
                 }
               }),
               BlocListener<WeighingBloc, WeighingBlocState>(
@@ -142,9 +138,12 @@ class _WeighingScreenState extends State<WeighingScreen> {
                           activityNo: selected.activityNo != null
                               ? selected.activityNo!
                               : '',
-                          activityWh: selected.activityWh != null
-                              ? selected.activityWh!
-                              : ''));
+                          activityWh:
+                              _weighingCubit.state.operationType == 'DECOCT'
+                                  ? ''
+                                  : selected.activityWh != null
+                                      ? selected.activityWh!
+                                      : ''));
                     }
                     _weighingCubit.setTab(WeighingStatus.scale);
                     _weighingCubit.setPrevTab(WeighingStatus.weighing);
@@ -274,7 +273,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                       return const Iterable<
                                           ResultsMaterial>.empty();
                                     }
-                                    return listMaterials
+                                    return weighingState.materials
                                         .where((ResultsMaterial material) {
                                       return material.material!
                                           .toLowerCase()
@@ -430,17 +429,14 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                       padding:
                                           const EdgeInsets.only(bottom: 10),
                                       child: Text(
-                                        "Order List",
+                                        "Orders",
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleLarge,
                                       ),
                                     ),
                                     if (weighingState.orders.isNotEmpty) ...[
-                                      for (var dataOrder
-                                          in weighingState.orders)
-                                        _orderList(
-                                            context, dataOrder, weighingState),
+                                      _orderList(context, weighingState),
                                     ] else ...[
                                       Center(
                                         child: Padding(
@@ -484,24 +480,29 @@ class _WeighingScreenState extends State<WeighingScreen> {
                       width: double.infinity,
                       height: 50,
                       child: TextButton(
-                        onPressed: () {
-                          orderBloc.add(SendDataOrder(
-                              plant: plant.text,
-                              materialCode: productCode.text,
-                              operationType: materialValue!,
-                              startDate: _dateController.text,
-                              batchFG: batch.text));
-                          _weighingCubit.setDataOrder(
-                              plant.text,
-                              productCode.text,
-                              _dateController.text,
-                              materialValue!);
-                        },
+                        onPressed: plant.text.isNotEmpty &&
+                                materialValue != null &&
+                                productCode.text.isNotEmpty &&
+                                batch.text.isNotEmpty
+                            ? () {
+                                orderBloc.add(SendDataOrder(
+                                    plant: plant.text,
+                                    materialCode: productCode.text,
+                                    operationType: materialValue!,
+                                    startDate: _dateController.text,
+                                    batchFG: batch.text));
+                                _weighingCubit.setDataOrder(
+                                    plant.text,
+                                    productCode.text,
+                                    _dateController.text,
+                                    materialValue!);
+                              }
+                            : null,
                         style: TextButton.styleFrom(
                           backgroundColor: plant.text.isNotEmpty &&
                                   materialValue != null &&
                                   productCode.text.isNotEmpty &&
-                                  _dateController.text.isNotEmpty
+                                  batch.text.isNotEmpty
                               ? Colors.black
                               : Colors.grey[500],
                           shape: RoundedRectangleBorder(
@@ -509,7 +510,7 @@ class _WeighingScreenState extends State<WeighingScreen> {
                           ),
                         ),
                         child: Text(
-                          "Show Weighing List",
+                          "Show Orders",
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.white,
@@ -525,96 +526,113 @@ class _WeighingScreenState extends State<WeighingScreen> {
             })));
   }
 
-  Widget _orderList(BuildContext context, ResultsOrder listOrder,
-      WeighingState weighingState) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: InkWell(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              _weighingCubit.setOrderList(listOrder);
-              operationBloc.add(SendDataOperation(
-                  operationType: listOrder.operationType!,
-                  routingNo: listOrder.routingNo!,
-                  operationApps: "eq '${weighingState.operationApps}'"));
-              return _showOperationNo(context);
-            },
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          color: Colors.grey.shade50,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '(${listOrder.material!}) ${listOrder.materialDesc}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+  Widget _orderList(BuildContext context, WeighingState weighingState) {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+          itemCount: weighingState.orders.length,
+          itemBuilder: (BuildContext context, int index) {
+            final selectedOrder = weighingState.orders[index];
+
+            return Card(
+                elevation: 7,
+                shadowColor: Colors.blueGrey[100],
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                color: Colors.grey[100],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+                child: ListTile(
+                  title: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Process order",
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
+                          '(${selectedOrder.material}) ${selectedOrder.materialDesc}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          listOrder.orderNo!,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Process order",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedOrder.orderNo!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Batch",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedOrder.batchFG!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Batch",
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          listOrder.batchFG!,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        _weighingCubit.setSelectedOrder(selectedOrder);
+                        operationBloc.add(SendDataOperation(
+                            operationType: selectedOrder.operationType!,
+                            routingNo: selectedOrder.routingNo!,
+                            operationApps:
+                                "eq '${weighingState.operationApps}'"));
+                        return _showOperationNo(context);
+                      },
+                    );
+                  },
+                ));
+          }),
     );
   }
 
@@ -622,7 +640,6 @@ class _WeighingScreenState extends State<WeighingScreen> {
     return MultiBlocProvider(
         providers: [
           BlocProvider.value(value: _weighingCubit),
-          BlocProvider.value(value: operationBloc),
           BlocProvider.value(value: weighingBloc)
         ],
         child: Dialog(
@@ -667,11 +684,20 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                       selectedOperation.activityNo;
 
                               return Card(
-                                elevation: 5,
+                                elevation: weighingState
+                                            .operations[index].lastOperation ==
+                                        ''
+                                    ? 7
+                                    : 0,
+                                shadowColor: Colors.blueGrey[100],
                                 margin: const EdgeInsets.symmetric(vertical: 8),
-                                color: isSelected
-                                    ? Colors.black
-                                    : Colors.grey[200],
+                                color: weighingState
+                                            .operations[index].lastOperation ==
+                                        ''
+                                    ? isSelected
+                                        ? Colors.black
+                                        : Colors.grey[100]
+                                    : Colors.grey[400],
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -680,18 +706,22 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        selectedOperation.operationDesc ?? '',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
+                                      Text(selectedOperation.operationDesc,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
-                                                color: isSelected
-                                                    ? Colors.white
-                                                    : Colors.black),
-                                      ),
+                                                color: weighingState
+                                                            .operations[index]
+                                                            .lastOperation ==
+                                                        ''
+                                                    ? isSelected
+                                                        ? Colors.white
+                                                        : Colors.black
+                                                    : Colors.grey[600],
+                                              )),
                                       const SizedBox(height: 10),
                                       Row(
                                         mainAxisAlignment:
@@ -707,22 +737,33 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                                     .textTheme
                                                     .bodySmall
                                                     ?.copyWith(
-                                                      color: isSelected
-                                                          ? Colors.white
-                                                          : Colors.black,
+                                                      color: weighingState
+                                                                  .operations[
+                                                                      index]
+                                                                  .lastOperation ==
+                                                              ''
+                                                          ? isSelected
+                                                              ? Colors.white
+                                                              : Colors.black
+                                                          : Colors.grey[600],
                                                     ),
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                selectedOperation.activityNo ??
-                                                    '',
+                                                selectedOperation.activityNo,
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .bodyLarge
                                                     ?.copyWith(
-                                                      color: isSelected
-                                                          ? Colors.white
-                                                          : Colors.black,
+                                                      color: weighingState
+                                                                  .operations[
+                                                                      index]
+                                                                  .lastOperation ==
+                                                              ''
+                                                          ? isSelected
+                                                              ? Colors.white
+                                                              : Colors.black
+                                                          : Colors.grey[600],
                                                       fontWeight:
                                                           FontWeight.w500,
                                                     ),
@@ -739,23 +780,33 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                                     .textTheme
                                                     .bodySmall
                                                     ?.copyWith(
-                                                      color: isSelected
-                                                          ? Colors.white
-                                                          : Colors.black,
+                                                      color: weighingState
+                                                                  .operations[
+                                                                      index]
+                                                                  .lastOperation ==
+                                                              ''
+                                                          ? isSelected
+                                                              ? Colors.white
+                                                              : Colors.black
+                                                          : Colors.grey[600],
                                                     ),
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                selectedOperation
-                                                        .operationApps ??
-                                                    '',
+                                                selectedOperation.operationApps,
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .bodyLarge
                                                     ?.copyWith(
-                                                      color: isSelected
-                                                          ? Colors.white
-                                                          : Colors.black,
+                                                      color: weighingState
+                                                                  .operations[
+                                                                      index]
+                                                                  .lastOperation ==
+                                                              ''
+                                                          ? isSelected
+                                                              ? Colors.white
+                                                              : Colors.black
+                                                          : Colors.grey[600],
                                                       fontWeight:
                                                           FontWeight.w500,
                                                     ),
@@ -766,23 +817,49 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                       ),
                                     ],
                                   ),
-                                  onTap: () {
-                                    _weighingCubit.setSelectedOperation(
-                                        selectedOperation);
-                                    weighingBloc.add(SendDataWeighing(
-                                        routingNo: selectedOperation.routingNo!,
-                                        internalCntr:
-                                            selectedOperation.internalCntr!,
-                                        activityNo:
-                                            selectedOperation.activityNo!,
-                                        operationType:
-                                            weighingState.operationType,
-                                        operationApps:
-                                            weighingState.operationApps));
-                                    if (mounted) {
-                                      Navigator.of(context).pop();
-                                    }
-                                  },
+                                  onTap: weighingState.operations[index]
+                                              .lastOperation ==
+                                          ''
+                                      ? selectedOperation
+                                              .operationDesc2!.isEmpty
+                                          ? () {
+                                              _weighingCubit
+                                                  .setSelectedOperation(
+                                                      selectedOperation);
+                                              weighingBloc.add(SendDataWeighing(
+                                                  routingNo: selectedOperation
+                                                      .routingNo,
+                                                  internalCntr:
+                                                      selectedOperation
+                                                          .internalCntr,
+                                                  activityNo: selectedOperation
+                                                      .activityNo,
+                                                  operationType: weighingState
+                                                      .operationType,
+                                                  operationApps: weighingState
+                                                      .operationApps));
+                                              if (mounted) {
+                                                Navigator.of(context).pop();
+                                              }
+                                            }
+                                          : () {
+                                              final List<ResultOperation>
+                                                  operations = [
+                                                selectedOperation,
+                                                selectedOperation.copyWith(
+                                                    operationDesc:
+                                                        selectedOperation
+                                                            .operationDesc2)
+                                              ];
+                                              _weighingCubit
+                                                  .setChooseOperations(
+                                                      operations);
+                                              _weighingCubit.setTab(
+                                                  WeighingStatus
+                                                      .chooseOperation);
+                                              Navigator.of(context).pop();
+                                            }
+                                      : null,
                                 ),
                               );
                             },

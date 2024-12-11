@@ -2,6 +2,7 @@ import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/bloc/tong_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
 import 'package:dumping_system/bloc/post_handover_bloc.dart';
+import 'package:dumping_system/models/response/tong.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -84,10 +85,14 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
             listener: (context, state) {
               if (state is TongLoaded) {
                 _handoverCubit.setResultTong(state.tong.d!.resultsTong!);
+                List<ResultsFullPack> fullpacks = [];
                 for (var fullpack in state.tong.d!.resultsTong!) {
-                  _handoverCubit
-                      .setFullpack(fullpack.wadToMatNav!.resultsFullPack!);
+                  if (fullpack.wadToMatNav!.resultsFullPack != null) {
+                    fullpacks.addAll(fullpack.wadToMatNav!.resultsFullPack!);
+                  }
                 }
+                print(fullpacks.toList());
+                _handoverCubit.setFullpack(fullpacks);
               }
             },
           ),
@@ -96,22 +101,10 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
               if (state.isResultOperationLoaded == true &&
                   state.tongs.isEmpty) {
                 tongBloc.add(SendDataTong(
-                    routingNo: state.selectedOperationNumber.routingNo != null
-                        ? _handoverCubit
-                            .state.selectedOperationNumber.routingNo!
-                        : "",
-                    activityNo: state.selectedOperationNumber.activityNo != null
-                        ? _handoverCubit
-                            .state.selectedOperationNumber.activityNo!
-                        : "",
-                    controlRecipe:
-                        state.selectedOperationNumber.controlRecipe != null
-                            ? _handoverCubit
-                                .state.selectedOperationNumber.controlRecipe!
-                            : "",
-                    operationType: state.selectedOperation.operationType != null
-                        ? _handoverCubit.state.selectedOperation.operationType!
-                        : ""));
+                    routingNo: state.selectedOperation.routingNo,
+                    activityNo: state.selectedOperation.activityNo,
+                    controlRecipe: state.selectedOperation.controlRecipe,
+                    operationType: state.operationType));
               }
               line.text = state.line;
             },
@@ -152,11 +145,13 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
               backgroundColor: Colors.grey[100],
               appBar: AppBar(
                 title: Text(
-                    "Handover - ${handoverState.selectedOperationNumber.operationDesc} (${handoverState.selectedOperationNumber.activityNo})"),
-                leading: BackButton(
+                    "Handover - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                leading: IconButton(
                   onPressed: () {
                     _handoverCubit.setTab(HandoverStatus.handover);
+                    _handoverCubit.resetFullpackWadah();
                   },
+                  icon: const Icon(Icons.chevron_left_rounded),
                 ),
               ),
               body: SingleChildScrollView(
@@ -227,9 +222,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    handoverState.selectedOperation.material !=
-                                            null
-                                        ? '(${handoverState.selectedOperation.material}) ${handoverState.selectedOperation.materialDesc}'
+                                    handoverState.selectedOrder.material != null
+                                        ? '(${handoverState.selectedOrder.material}) ${handoverState.selectedOrder.materialDesc}'
                                         : '',
                                     style: Theme.of(context)
                                         .textTheme
@@ -240,10 +234,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                                         ),
                                   ),
                                   Text(
-                                    handoverState.selectedOperation.orderNo !=
-                                            null
-                                        ? handoverState
-                                            .selectedOperation.orderNo!
+                                    handoverState.selectedOrder.orderNo != null
+                                        ? handoverState.selectedOrder.orderNo!
                                         : '',
                                     style: Theme.of(context)
                                         .textTheme
@@ -254,10 +246,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                                         ),
                                   ),
                                   Text(
-                                    handoverState.selectedOperation.batchFG !=
-                                            null
-                                        ? handoverState
-                                            .selectedOperation.batchFG!
+                                    handoverState.selectedOrder.batchFG != null
+                                        ? handoverState.selectedOrder.batchFG!
                                         : '',
                                     style: Theme.of(context)
                                         .textTheme
@@ -268,12 +258,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                                         ),
                                   ),
                                   Text(
-                                    handoverState.selectedOperationNumber
-                                                .activityNo !=
-                                            null
-                                        ? handoverState
-                                            .selectedOperationNumber.activityNo!
-                                        : '',
+                                    handoverState.selectedOperation.activityNo,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -283,12 +268,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                                         ),
                                   ),
                                   Text(
-                                    handoverState.selectedOperationNumber
-                                                .operationDesc !=
-                                            null
-                                        ? handoverState.selectedOperationNumber
-                                            .operationDesc!
-                                        : '',
+                                    handoverState
+                                        .selectedOperation.operationDesc,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -308,6 +289,17 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                           padding: const EdgeInsets.only(bottom: 20),
                           child: TextFormField(
                             controller: line,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => ScanBarcodeScreen(
+                                    onBarcodeScanned: (barcode) {
+                                      _scanOperator(barcode);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -315,21 +307,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                                 labelText: 'Line',
                                 filled: true,
                                 fillColor: Colors.grey.shade100,
-                                suffixIcon: GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => ScanBarcodeScreen(
-                                          onBarcodeScanned: (barcode) {
-                                            _scanOperator(barcode);
-                                          },
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child:
-                                      const Icon(Icons.qr_code_scanner_rounded),
-                                )),
+                                suffixIcon:
+                                    const Icon(Icons.qr_code_scanner_rounded)),
                             readOnly: true,
                           ),
                         ),
@@ -455,7 +434,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                   padding: const EdgeInsets.all(10),
                   alignment: Alignment.center,
                   child: Text(
-                    "List Containers",
+                    "Containers",
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge!
@@ -476,14 +455,11 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
-                        if (tong.isScanned == false) ...[
-                          const Icon(Icons.qr_code_scanner_rounded)
-                        ] else ...[
+                        if (tong.isScanned == true)
                           const Icon(
                             Icons.check,
                             color: Colors.green,
                           )
-                        ]
                       ],
                     ),
                   ),
@@ -505,9 +481,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
-                        if (fullpack.isScannedFullpack == false) ...[
-                          const Icon(Icons.qr_code_scanner_rounded)
-                        ] else ...[
+                        if (fullpack.isScannedFullpack == true) ...[
                           const Icon(
                             Icons.check,
                             color: Colors.green,

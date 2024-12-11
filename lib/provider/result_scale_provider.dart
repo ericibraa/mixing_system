@@ -6,13 +6,13 @@ class ResultScaleProvider extends Provider {
   Future<ResultScaleListResponse> fetchresultscale(
       String orderNo, String activityNo, String activityWh) async {
     try {
+      var filter = "OrderNo eq '$orderNo' and ActivityNo eq '$activityNo'";
+      if (activityWh != '') {
+        filter += " and ActivityWh eq '$activityWh'";
+      }
       Response response = await dio.get(
           "${apiUrl.dumpingApi}/ZDMP_GET_WEIGHT_SRV/HasilTimbangSet",
-          queryParameters: {
-            "\$filter":
-                "OrderNo eq '$orderNo' and ActivityNo eq '$activityNo' and ActivityWh eq '$activityWh'",
-            "\$format": 'json'
-          });
+          queryParameters: {"\$filter": filter, "\$format": 'json'});
       return ResultScaleListResponse.fromJson(response.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");

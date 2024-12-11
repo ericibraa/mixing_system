@@ -6,7 +6,7 @@ class OrderResponse {
   OrderResponse({this.d});
 
   OrderResponse.fromJson(Map<String, dynamic> json) {
-    d = json['d'] != null ? new D.fromJson(json['d']) : null;
+    d = json['d'] != null ? D.fromJson(json['d']) : null;
   }
 }
 

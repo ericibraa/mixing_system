@@ -36,8 +36,8 @@ class SubmitBloc extends Bloc<SubmitEvent, SubmitState> {
                 finishTime: DateFormat('HHmmss').format(finishDate),
                 line: event.submitConfirmation.line,
                 postDate: DateFormat('yyyyMMdd').format(finishDate),
-                machineHour: '0',
-                laborHour: '0',
+                machineHour: event.submitConfirmation.yieldSet.machineHour,
+                laborHour: event.submitConfirmation.yieldSet.laborHour,
                 operationApps: '40',
                 operator: event.submitConfirmation.operator,
                 pengawas: event.submitConfirmation.pengawas);

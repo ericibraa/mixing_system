@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:dumping_system/models/response/expired_set.dart';
+import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/models/response/order.dart';
@@ -43,7 +44,7 @@ class WeighingCubit extends Cubit<WeighingState> {
         operationType: operationType));
   }
 
-  void setOrderList(ResultsOrder orderList) {
+  void setSelectedOrder(ResultsOrder orderList) {
     emit(state.copyWith(selectedOrder: orderList));
   }
 
@@ -94,6 +95,10 @@ class WeighingCubit extends Cubit<WeighingState> {
 
   void resetScaleWeighing() {
     emit(state.copyWith(scaleWeighing: const Scale()));
+  }
+
+  void resetResultScale() {
+    emit(state.copyWith(resultScales: []));
   }
 
   void setEquipments(List<ResultScale> equipments) {
@@ -150,5 +155,13 @@ class WeighingCubit extends Cubit<WeighingState> {
 
   void setPrevTab(WeighingStatus prevTab) {
     emit(state.copyWith(prevTab: prevTab));
+  }
+
+  void setMaterials(List<ResultsMaterial> materials) {
+    emit(state.copyWith(materials: materials));
+  }
+
+  void setChooseOperations(List<ResultOperation> chooseOperations) {
+    emit(state.copyWith(chooseOperations: chooseOperations));
   }
 }

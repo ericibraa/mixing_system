@@ -4,6 +4,8 @@ class SubmitHandoverMixingRequest {
   String? activityWh;
   String? operationApps;
   String? operationType;
+  String? startDate;
+  String? startTime;
   String? finishDate;
   String? finishTime;
   String? operator;
@@ -15,6 +17,8 @@ class SubmitHandoverMixingRequest {
     this.activityWh,
     this.operationApps,
     this.operationType,
+    this.startDate,
+    this.startTime,
     this.finishDate,
     this.finishTime,
     this.operator,
@@ -27,6 +31,8 @@ class SubmitHandoverMixingRequest {
     activityWh = json['ActivityWh'];
     operationApps = json['OperationApps'];
     operationType = json['OperationType'];
+    startDate = json['StartDate'];
+    startTime = json['StartTime'];
     finishDate = json['FinishDate'];
     finishTime = json['FinishTime'];
     operator = json['Operator'];
@@ -40,6 +46,8 @@ class SubmitHandoverMixingRequest {
     data['ActivityWh'] = activityWh;
     data['OperationApps'] = operationApps;
     data['OperationType'] = operationType;
+    data['StartDate'] = startDate;
+    data['StartTime'] = startTime;
     data['FinishDate'] = finishDate;
     data['FinishTime'] = finishTime;
     data['Operator'] = operator;

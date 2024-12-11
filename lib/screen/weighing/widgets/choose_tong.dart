@@ -177,7 +177,7 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                               expiredSetBloc.add(GetExpiredSet(
                                   orderNo: weighingState.selectedOrder.orderNo!,
                                   activityNo: weighingState
-                                      .selectedOperation.activityNo!));
+                                      .selectedOperation.activityNo));
                               resultScaleBloc.add(SendDataResultScale(
                                   orderNo:
                                       weighingState.selectedOrder.orderNo !=
@@ -187,9 +187,13 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                                   activityNo: dataWeighing.activityNo != null
                                       ? dataWeighing.activityNo!
                                       : '',
-                                  activityWh: dataWeighing.activityWh != null
-                                      ? dataWeighing.activityWh!
-                                      : ''));
+                                  activityWh:
+                                      _weighingCubit.state.operationType ==
+                                              'DECOCT'
+                                          ? ''
+                                          : dataWeighing.activityWh != null
+                                              ? dataWeighing.activityWh!
+                                              : ''));
                               _weighingCubit.setTab(WeighingStatus.scale);
                             },
                           ),

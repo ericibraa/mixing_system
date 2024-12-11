@@ -1,6 +1,6 @@
 part of 'weighing_cubit.dart';
 
-enum WeighingStatus { weighing, scaleWeighing, scale }
+enum WeighingStatus { weighing, scaleWeighing, scale, chooseOperation }
 
 @immutable
 class WeighingState extends Equatable {
@@ -14,6 +14,7 @@ class WeighingState extends Equatable {
   final ResultsOrder selectedOrder;
   final List<ResultsOrder> orders;
   final List<ResultOperation> operations;
+  final List<ResultOperation> chooseOperations;
   final ResultOperation selectedOperation;
   final bool isResultOperationLoaded;
   final bool isConnectedTcp;
@@ -35,6 +36,7 @@ class WeighingState extends Equatable {
   final String totalContainer;
   final DateTime? startWork;
   final bool onChangeStartWork;
+  final List<ResultsMaterial> materials;
 
   const WeighingState(
       {this.plant = "",
@@ -47,6 +49,7 @@ class WeighingState extends Equatable {
       this.selectedOrder = const ResultsOrder(),
       this.orders = const [],
       this.operations = const [],
+      this.chooseOperations = const [],
       this.selectedOperation = const ResultOperation(),
       this.isResultOperationLoaded = false,
       this.isConnectedTcp = false,
@@ -67,7 +70,8 @@ class WeighingState extends Equatable {
       this.resultsOpr = const ResultsOperationType(),
       this.totalContainer = '',
       this.startWork,
-      this.onChangeStartWork = false});
+      this.onChangeStartWork = false,
+      this.materials = const []});
 
   WeighingState copyWith(
       {String? plant,
@@ -80,6 +84,7 @@ class WeighingState extends Equatable {
       ResultsOrder? selectedOrder,
       List<ResultsOrder>? orders,
       List<ResultOperation>? operations,
+      List<ResultOperation>? chooseOperations,
       ResultOperation? selectedOperation,
       bool? isResultOperationLoaded,
       bool? isConnectedTcp,
@@ -100,7 +105,8 @@ class WeighingState extends Equatable {
       ResultsOperationType? resultsOpr,
       String? totalContainer,
       DateTime? startWork,
-      bool? onChangeStartWork}) {
+      bool? onChangeStartWork,
+      List<ResultsMaterial>? materials}) {
     return WeighingState(
         plant: plant ?? this.plant,
         materialCode: materialCode ?? this.materialCode,
@@ -112,6 +118,7 @@ class WeighingState extends Equatable {
         selectedOrder: selectedOrder ?? this.selectedOrder,
         orders: orders ?? this.orders,
         operations: operations ?? this.operations,
+        chooseOperations: chooseOperations ?? this.chooseOperations,
         selectedOperation: selectedOperation ?? this.selectedOperation,
         isResultOperationLoaded:
             isResultOperationLoaded ?? this.isResultOperationLoaded,
@@ -133,7 +140,8 @@ class WeighingState extends Equatable {
         resultsOpr: resultsOpr ?? this.resultsOpr,
         totalContainer: totalContainer ?? this.totalContainer,
         startWork: startWork ?? this.startWork,
-        onChangeStartWork: onChangeStartWork ?? this.onChangeStartWork);
+        onChangeStartWork: onChangeStartWork ?? this.onChangeStartWork,
+        materials: materials ?? this.materials);
   }
 
   @override
@@ -148,6 +156,7 @@ class WeighingState extends Equatable {
         selectedOrder,
         orders,
         operations,
+        chooseOperations,
         selectedOperation,
         isResultOperationLoaded,
         isConnectedTcp,
@@ -167,6 +176,7 @@ class WeighingState extends Equatable {
         operationTypes,
         resultsOpr,
         totalContainer,
-        onChangeStartWork
+        onChangeStartWork,
+        materials
       ];
 }

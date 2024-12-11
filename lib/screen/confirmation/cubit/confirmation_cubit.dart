@@ -84,6 +84,16 @@ class ConfirmationCubit extends Cubit<ConfirmationState> {
     emit(state.copyWith(yieldSet: yieldSet));
   }
 
+  void editMachineTime(String machineTime) {
+    var data = ResultsYieldSet(machineHour: machineTime);
+    emit(state.copyWith(yieldSet: data));
+  }
+
+  void editLaborTime(String laborTime) {
+    var data = ResultsYieldSet(laborHour: laborTime);
+    emit(state.copyWith(yieldSet: data));
+  }
+
   void setLine(String line) {
     emit(state.copyWith(line: line));
   }

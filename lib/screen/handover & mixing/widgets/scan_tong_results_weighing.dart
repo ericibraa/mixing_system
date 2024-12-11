@@ -1,6 +1,7 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/bloc/post_handover_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/bloc/flag_materials_bloc.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/bloc/material_set_bloc.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +23,10 @@ class _ScanTongResultsWeighingScreenState
   HandoverCubit _handoverCubit = HandoverCubit();
   SubmitHandoverBloc submitHandoverBloc = SubmitHandoverBloc();
   MaterialSetBloc materialSetBloc = MaterialSetBloc();
+  FlagMaterialsBloc flagMaterialsBloc = FlagMaterialsBloc();
   String scannedBarcode = "";
   final line = TextEditingController();
+  List<dynamic> hasScanned = [];
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -37,30 +40,40 @@ class _ScanTongResultsWeighingScreenState
     if (barcode != null && barcode.displayValue != null) {
       setState(() {
         scannedBarcode = barcode.displayValue!;
-        _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+        hasScanned = parseStringAndWrapInMap(scannedBarcode);
       });
-      if (mounted) {
-        if (_handoverCubit.state.isChecked) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text("Data is Scanned"),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ));
-        }
-        if (_handoverCubit.state.isNullData) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text("Data not found"),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ));
-        }
+      // if (hasScanned.length >= 6) {
+      //   flagMaterialsBloc.add(GetFlagMaterials(hasScanned));
+      // } else {
+      _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+      if (hasScanned.length == 4 || hasScanned.length == 5) {
+        _handoverCubit.resetCompleteMaterial(false);
+        materialSetBloc.add(SendDataMaterialset(
+            routingNo: _handoverCubit.state.selectedOperation.routingNo,
+            activityNo: hasScanned[3],
+            operationType: _handoverCubit.state.selectedOrder.operationType!));
       }
+      if (_handoverCubit.state.isChecked) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text("Data is Scanned"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+        ));
+      }
+      if (_handoverCubit.state.isNullData) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text("Data not found"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+        ));
+      }
+      // }
     }
   }
 
@@ -77,272 +90,327 @@ class _ScanTongResultsWeighingScreenState
       providers: [
         BlocProvider.value(value: _handoverCubit),
         BlocProvider.value(value: materialSetBloc),
+        BlocProvider<SubmitHandoverBloc>(
+            create: (context) => submitHandoverBloc),
       ],
-      child: BlocBuilder<HandoverCubit, HandoverState>(
-          builder: (context, handoverState) {
-        return Scaffold(
-          backgroundColor: Colors.grey[100],
-          appBar: AppBar(
-            title: Text(
-                "Handover Mixing - ${handoverState.selectedOperationNumber.operationDesc} (${handoverState.selectedOperationNumber.activityNo})"),
-            leading: BackButton(
-              onPressed: () {
-                _handoverCubit.setTab(HandoverStatus.handover);
-              },
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<SubmitHandoverBloc, SubmitHandoverState>(
+              listener: (context, state) {
+            if (state is SubmitHandoverLoaded) {
+              if (state.submitHandover == 'success') {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text("Send data successfully"),
+                  backgroundColor: Colors.black,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+                if (_handoverCubit.state.isNext) {
+                  Future.delayed(const Duration(seconds: 2), () {
+                    _handoverCubit.resetFullpackWadah();
+                    _handoverCubit.setTab(HandoverStatus.scantongmaterial);
+                  });
+                } else {
+                  _handoverCubit.resetFullpackWadah();
+                  _handoverCubit.setTab(HandoverStatus.handover);
+                }
+              }
+            }
+          }),
+          BlocListener<HandoverCubit, HandoverState>(
+              listener: (context, handoverState) {
+            line.text = handoverState.line;
+          })
+        ],
+        child: BlocBuilder<HandoverCubit, HandoverState>(
+            builder: (context, handoverState) {
+          return Scaffold(
+            backgroundColor: Colors.grey[100],
+            appBar: AppBar(
+              title: Text(
+                  "Handover Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+              leading: IconButton(
+                onPressed: () {
+                  _handoverCubit.setTab(handoverState.prevTab);
+                },
+                icon: const Icon(Icons.chevron_left_rounded),
+              ),
             ),
-          ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: 20, left: 10, right: 10),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Material",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                            ),
-                            Text(
-                              "Process order",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                            ),
-                            Text(
-                              "Batch",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                            ),
-                            Text(
-                              "Operation No",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                            ),
-                            Text(
-                              "Operation text",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                            ),
-                            Text(
-                              "ActivityWh",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          width: 40,
-                        ),
-                        Expanded(
-                          child: Column(
+            body: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: 20, left: 10, right: 10),
+                      child: Row(
+                        children: [
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                handoverState.selectedOperation.material != null
-                                    ? '(${handoverState.selectedOperation.material}) ${handoverState.selectedOperation.materialDesc}'
-                                    : '',
+                                "Material",
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade600,
                                     ),
                               ),
                               Text(
-                                handoverState.selectedOperation.orderNo != null
-                                    ? handoverState.selectedOperation.orderNo!
-                                    : '',
+                                "Process order",
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade600,
                                     ),
                               ),
                               Text(
-                                handoverState.selectedOperation.batchFG != null
-                                    ? handoverState.selectedOperation.batchFG!
-                                    : '',
+                                "Batch",
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade600,
                                     ),
                               ),
                               Text(
-                                handoverState.selectedOperationNumber
-                                            .activityNo !=
-                                        null
-                                    ? handoverState
-                                        .selectedOperationNumber.activityNo!
-                                    : '',
+                                "Operation No",
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade600,
                                     ),
                               ),
                               Text(
-                                handoverState.selectedOperationNumber
-                                            .operationDesc !=
-                                        null
-                                    ? handoverState
-                                        .selectedOperationNumber.operationDesc!
-                                    : '',
+                                "Operation text",
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade600,
                                     ),
                               ),
                               Text(
-                                handoverState.tongs.isNotEmpty
-                                    ? handoverState.tongs[0].activityNo!
-                                    : '',
+                                "ActivityWh",
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade600,
+                                    ),
+                              )
+                            ],
+                          ),
+                          const SizedBox(
+                            width: 40,
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  handoverState.selectedOrder.material != null
+                                      ? '(${handoverState.selectedOrder.material}) ${handoverState.selectedOrder.materialDesc}'
+                                      : '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                Text(
+                                  handoverState.selectedOrder.orderNo != null
+                                      ? handoverState.selectedOrder.orderNo!
+                                      : '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                Text(
+                                  handoverState.selectedOrder.batchFG != null
+                                      ? handoverState.selectedOrder.batchFG!
+                                      : '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                Text(
+                                  handoverState.selectedOperation.activityNo,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                Text(
+                                  handoverState.selectedOperation.operationDesc,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                Text(
+                                  handoverState.tongs.isNotEmpty
+                                      ? handoverState.tongs[0].activityNo!
+                                      : '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Form(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: TextFormField(
+                          controller: line,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ScanBarcodeScreen(
+                                  onBarcodeScanned: (barcode) {
+                                    _scanOperator(barcode);
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              labelText: 'Line',
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              suffixIcon:
+                                  const Icon(Icons.qr_code_scanner_rounded)),
+                          readOnly: true,
+                        ),
+                      ),
+                    ),
+                    _listTong(context, handoverState)
+                  ],
+                ),
+              ),
+            ),
+            bottomNavigationBar: BottomAppBar(
+              elevation: 10,
+              color: Colors.transparent,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: handoverState.isCompleteWeighingResults
+                      ? TextButton(
+                          onPressed: () {
+                            submitHandoverBloc
+                                .add(SubmitHandover(orderData: handoverState));
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                "Complete",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ScanBarcodeScreen(
+                                  onBarcodeScanned: (barcode) {
+                                    _scanOperator(barcode);
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.qr_code_scanner_rounded,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                "Scan Barcode",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
                                     ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  _listTong(context, handoverState)
-                ],
+                ),
               ),
             ),
-          ),
-          bottomNavigationBar: BottomAppBar(
-            elevation: 10,
-            color: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: handoverState.isComplete
-                    ? TextButton(
-                        onPressed: () {
-                          submitHandoverBloc
-                              .add(SubmitHandover(orderData: handoverState));
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              "Complete",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : TextButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => ScanBarcodeScreen(
-                                onBarcodeScanned: (barcode) {
-                                  _scanOperator(barcode);
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.qr_code_scanner_rounded,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              "Scan Barcode Label",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-              ),
-            ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 
@@ -369,7 +437,7 @@ class _ScanTongResultsWeighingScreenState
                   padding: const EdgeInsets.all(10),
                   alignment: Alignment.center,
                   child: Text(
-                    "Scan Containers",
+                    "Containers",
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge!
@@ -390,7 +458,7 @@ class _ScanTongResultsWeighingScreenState
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
-                        if (fullpack.isScannedFullpack == true) ...[
+                        if (fullpack.scanFlag == "X") ...[
                           const Icon(
                             Icons.check,
                             color: Colors.green,

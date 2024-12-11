@@ -1,3 +1,14 @@
+class ResponseSubmitWeighing {
+  SubmitWeighing? submitWeighing;
+
+  ResponseSubmitWeighing({this.submitWeighing});
+
+  ResponseSubmitWeighing.fromJson(Map<String, dynamic> json) {
+    submitWeighing =
+        json['d'] != null ? SubmitWeighing.fromJson(json['d']) : null;
+  }
+}
+
 class SubmitWeighing {
   String? orderNo;
   String? activityNo;

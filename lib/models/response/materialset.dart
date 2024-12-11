@@ -37,6 +37,10 @@ class ResultsMaterialset extends Equatable {
   final String recipient;
   final String counter;
   final String priority;
+  final String activityDmp;
+  final String scanFlag;
+  final String scanDate;
+  final String scanTime;
   final bool isScanned;
 
   const ResultsMaterialset(
@@ -51,9 +55,13 @@ class ResultsMaterialset extends Equatable {
       required this.recipient,
       required this.counter,
       required this.priority,
+      required this.activityDmp,
+      required this.scanFlag,
+      required this.scanDate,
+      required this.scanTime,
       this.isScanned = false});
 
-  ResultsMaterialset copyWith({required bool isScanned}) {
+  ResultsMaterialset copyWith({required bool isScanned, String? scanFlag}) {
     return ResultsMaterialset(
         routingNo: routingNo,
         activityNo: activityNo,
@@ -66,6 +74,10 @@ class ResultsMaterialset extends Equatable {
         recipient: recipient,
         counter: counter,
         priority: priority,
+        activityDmp: activityDmp,
+        scanFlag: scanFlag ?? this.scanFlag,
+        scanDate: scanDate,
+        scanTime: scanTime,
         isScanned: isScanned);
   }
 
@@ -81,10 +93,14 @@ class ResultsMaterialset extends Equatable {
           uom: json['Uom'],
           recipient: json['Recipient'],
           counter: json['Counter'],
-          priority: json['Priority']);
+          priority: json['Priority'],
+          activityDmp: json['ActivityDmp'],
+          scanFlag: json['ScanFlag'],
+          scanDate: json['ScanDate'],
+          scanTime: json['ScanTime']);
 
   @override
-  List<Object?> get props => [
+  List<Object> get props => [
         routingNo,
         activityNo,
         operationType,
@@ -96,6 +112,10 @@ class ResultsMaterialset extends Equatable {
         recipient,
         counter,
         priority,
+        activityDmp,
+        scanFlag,
+        scanDate,
+        scanTime,
         isScanned
       ];
 }

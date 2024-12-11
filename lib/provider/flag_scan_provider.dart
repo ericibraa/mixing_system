@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:dumping_system/models/request/submit_weighing.dart';
+import 'package:dumping_system/models/request/flag_materials.dart';
 import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/provider/auth_provider.dart';
 import 'package:dumping_system/provider/provider.dart';
@@ -14,15 +14,14 @@ FlutterSecureStorage storage = const FlutterSecureStorage(
   ),
 );
 
-class SubmitWeighingProvider extends Provider {
-  Future<ResponseSubmitWeighing> submitweighing(
-      SubmitWeighing submitWeighing) async {
+class FlagScanProvider extends Provider {
+  Future<String> fetchSubmitFlag(FlagMaterials flagMaterials) async {
     try {
       String? token = await storage.read(key: 'token');
       var authReturn = await AuthProvider().loginWithToken(token!);
       Response response = await dio.post(
-          "${apiUrl.dumpingApi}/ZDMP_POST_WEIGHT_SRV/WeighingSet",
-          data: jsonEncode(submitWeighing),
+          "${apiUrl.dumpingApi}/ZDMP_POST_ORDER_SRV/MaterialFlagSet",
+          data: jsonEncode(flagMaterials),
           options: Options(
             headers: {
               'x-csrf-token': authReturn['csrfToken'],
@@ -31,10 +30,11 @@ class SubmitWeighingProvider extends Provider {
               'Accept': 'application/json'
             },
           ));
-      var data = response.data;
-      print("=====================+PROVIDER=========================");
-      print(data);
-      return ResponseSubmitWeighing.fromJson(data);
+      if (response.statusCode == 201) {
+        return 'success';
+      } else {
+        return 'error';
+      }
     } on DioException catch (e) {
       throw ErrorResponse.fromJson(e.response!.data);
     } catch (error, stacktrace) {

@@ -4,16 +4,15 @@ import 'package:dumping_system/bloc/tong_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
-import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/bloc/material_bloc.dart';
 import 'package:dumping_system/bloc/operation_bloc.dart';
 import 'package:dumping_system/bloc/order_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/bloc/location_set_bloc.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/bloc/wadah_set_bloc.dart';
-import 'package:dumping_system/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class HandoverMixingScreen extends StatefulWidget {
@@ -29,9 +28,6 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
   MaterialsBloc materialBloc = MaterialsBloc();
   OrderBloc orderBloc = OrderBloc();
   OperationBloc operationBloc = OperationBloc();
-  List<ResultsMaterial> listMaterials = List.empty();
-  List<ResultsOrder> listOrder = List.empty();
-  List<ResultOperation> listOperation = List.empty();
   OperationTypeBloc operationTypeBloc = OperationTypeBloc();
   LocationSetBloc locationSetBloc = LocationSetBloc();
   WadahSetBloc wadahSetBloc = WadahSetBloc();
@@ -94,11 +90,8 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
           create: (BuildContext context) => orderBloc,
         ),
         BlocProvider.value(value: _handoverCubit),
-        BlocProvider<TongBloc>(
-          create: (BuildContext context) => tongBloc,
-        ),
-        BlocProvider<WadahSetBloc>(
-            create: (BuildContext context) => wadahSetBloc),
+        BlocProvider.value(value: tongBloc),
+        BlocProvider.value(value: wadahSetBloc),
         BlocProvider<OperationTypeBloc>(
             create: (BuildContext context) => operationTypeBloc),
         BlocProvider<LocationSetBloc>(
@@ -109,24 +102,23 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
           BlocListener<MaterialsBloc, MaterialsState>(
             listener: (context, state) {
               if (state is MaterialsLoaded) {
-                setState(() {
-                  listMaterials = state.material.d!.results!;
-                });
+                _handoverCubit.setMaterials(state.material.d!.results!);
               }
             },
           ),
           BlocListener<OrderBloc, OrderState>(
             listener: (context, state) {
               if (state is OrderLoaded) {
-                setState(() {
-                  listOrder = state.order.d!.results!;
-                });
+                _handoverCubit.setOrders(state.order.d!.results!);
               }
             },
           ),
           BlocListener<OperationBloc, OperationState>(
               listener: (context, state) {
-            if (state is OperationLoaded) {}
+            if (state is OperationLoaded) {
+              _handoverCubit
+                  .setOperations(state.operation.d!.resultsOperationNo!);
+            }
           }),
           BlocListener<OperationTypeBloc, OperationTypeState>(
               listener: (context, state) {
@@ -143,40 +135,28 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
             if (state is LocationSetLoaded) {
               if (state.locationSet.d!.locationSet!.isEmpty) {
                 tongBloc.add(SendDataTong(
-                    routingNo: _handoverCubit
-                                .state.selectedOperationNumber.routingNo !=
-                            null
-                        ? _handoverCubit
-                            .state.selectedOperationNumber.routingNo!
-                        : "",
-                    activityNo: _handoverCubit
-                                .state.selectedOperationNumber.activityNo !=
-                            null
-                        ? _handoverCubit
-                            .state.selectedOperationNumber.activityNo!
-                        : "",
-                    controlRecipe: _handoverCubit
-                                .state.selectedOperationNumber.controlRecipe !=
-                            null
-                        ? _handoverCubit
-                            .state.selectedOperationNumber.controlRecipe!
-                        : "",
-                    operationType: _handoverCubit
-                                .state.selectedOperation.operationType !=
-                            null
-                        ? _handoverCubit.state.selectedOperation.operationType!
-                        : ""));
-                if (int.parse(_handoverCubit
-                        .state.selectedOperationNumber.operationApps!) >
+                    routingNo: _handoverCubit.state.selectedOperation.routingNo,
+                    activityNo:
+                        _handoverCubit.state.selectedOperation.activityNo,
+                    controlRecipe:
+                        _handoverCubit.state.selectedOperation.controlRecipe,
+                    operationType: _handoverCubit.state.operationType));
+                if (int.parse(
+                        _handoverCubit.state.selectedOperation.operationApps) >
                     20) {
                   _handoverCubit.setTab(HandoverStatus.scantongmaterial);
+                  _handoverCubit.setPrevTab(HandoverStatus.handover);
                 } else {
                   _handoverCubit.setTab(HandoverStatus.scantong);
+                  _handoverCubit.setPrevTab(HandoverStatus.handover);
                 }
                 Navigator.of(context).pop();
               } else {
                 _handoverCubit
                     .setLocationSet(state.locationSet.d!.locationSet!);
+                _handoverCubit.setTab(HandoverStatus.chooseLocation);
+                _handoverCubit.setPrevTab(HandoverStatus.handover);
+                Navigator.pop(context);
               }
             }
           }),
@@ -189,17 +169,6 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
               }
             }
           }),
-          BlocListener<WadahSetBloc, WadahSetState>(listener: (context, state) {
-            if (state is WadahSetLoaded) {
-              _handoverCubit.setResultTong(state.wadahSet.d!.resultsTong!);
-              for (var fullpack in state.wadahSet.d!.resultsTong!) {
-                _handoverCubit
-                    .setFullpack(fullpack.wadToMatNav!.resultsFullPack!);
-              }
-              _handoverCubit.setTab(HandoverStatus.scanTongResultsWeighing);
-              Navigator.of(context).pop();
-            }
-          })
         ],
         child: BlocBuilder<HandoverCubit, HandoverState>(
           builder: (context, handoverState) {
@@ -273,7 +242,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                     return const Iterable<
                                         ResultsMaterial>.empty();
                                   }
-                                  return listMaterials
+                                  return handoverState.materials
                                       .where((ResultsMaterial material) {
                                     return material.material!
                                         .toLowerCase()
@@ -431,61 +400,42 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                 ),
                               ),
                             ],
-                            BlocBuilder<OrderBloc, OrderState>(
-                              builder: (context, state) {
-                                if (state is OrderLoaded) {
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 10),
-                                        child: Text(
-                                          "Operation List",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge,
+                            if (handoverState.orders.isNotEmpty) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: Text(
+                                  "Orders",
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                              ),
+                              if (handoverState.orders.isNotEmpty) ...[
+                                _orderList(context, handoverState),
+                              ] else ...[
+                                Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 20),
+                                    child: Column(
+                                      children: [
+                                        Image.asset(
+                                          "assets/images/bg_image/not_found.png",
+                                          height: 250,
                                         ),
-                                      ),
-                                      if (state
-                                          .order.d!.results!.isNotEmpty) ...[
-                                        for (var dataOrder
-                                            in state.order.d!.results!)
-                                          _orderList(context, dataOrder),
-                                      ] else ...[
-                                        Center(
-                                          child: Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 20),
-                                            child: Column(
-                                              children: [
-                                                Image.asset(
-                                                  "assets/images/bg_image/not_found.png",
-                                                  height: 250,
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 10),
-                                                  child: Text(
-                                                    "No operation list data",
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyLarge,
-                                                  ),
-                                                )
-                                              ],
-                                            ),
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 10),
+                                          child: Text(
+                                            "No operation list data",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
                                           ),
                                         )
-                                      ]
-                                    ],
-                                  );
-                                }
-                                return const Center();
-                              },
-                            ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              ]
+                            ]
                           ],
                         ),
                       ),
@@ -551,95 +501,112 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
     );
   }
 
-  Widget _orderList(BuildContext context, ResultsOrder listOrder) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: InkWell(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              _handoverCubit.setOrderList(listOrder);
-              operationBloc.add(SendDataOperation(
-                  operationType: listOrder.operationType!,
-                  routingNo: listOrder.routingNo!,
-                  operationApps: "ge '20'"));
-              return _showOperationNo(context);
-            },
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          color: Colors.grey.shade50,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '(${listOrder.material!}) ${listOrder.materialDesc}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+  Widget _orderList(BuildContext context, HandoverState handoverState) {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+          itemCount: handoverState.orders.length,
+          itemBuilder: (BuildContext context, int index) {
+            final selectedOrder = handoverState.orders[index];
+
+            return Card(
+                elevation: 7,
+                shadowColor: Colors.blueGrey[100],
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                color: Colors.grey[100],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+                child: ListTile(
+                  title: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Process order",
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
+                          '(${selectedOrder.material}) ${selectedOrder.materialDesc}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          listOrder.orderNo!,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Process order",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedOrder.orderNo ?? '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Batch",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedOrder.batchFG ?? '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Batch",
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          listOrder.batchFG!,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        _handoverCubit.setSelectedOrder(selectedOrder);
+                        operationBloc.add(SendDataOperation(
+                            operationType: selectedOrder.operationType ?? '',
+                            routingNo: selectedOrder.routingNo ?? '',
+                            operationApps: "ge '20'"));
+                        return _showOperationNo(context);
+                      },
+                    );
+                  },
+                ));
+          }),
     );
   }
 
@@ -647,273 +614,201 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _handoverCubit),
-        BlocProvider.value(value: operationBloc),
         BlocProvider.value(value: locationSetBloc)
       ],
       child: Dialog(
         insetPadding: EdgeInsets.zero,
         child: BlocBuilder<HandoverCubit, HandoverState>(
           builder: (context, handoverState) {
-            return BlocBuilder<OperationBloc, OperationState>(
-              builder: (context, state) {
-                if (state is OperationLoading) {
-                  return const Loading();
-                }
-                if (state is OperationLoaded) {
-                  listOperation = state.operation.d!.resultsOperationNo!;
-                  return Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Choose Operation No'),
-                      automaticallyImplyLeading: false,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    ),
-                    body: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Please choose an operation number:',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge!
-                                .copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Choose Operation No'),
+                leading: IconButton(
+                    onPressed: () {
+                      _handoverCubit.setOperation(const ResultOperation());
+                      context.pop();
+                    },
+                    icon: const Icon(Icons.chevron_left_rounded)),
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Please choose an operation number:',
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: listOperation.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final operationNo = listOperation[index];
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: handoverState.operations.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final selectedOperation =
+                              handoverState.operations[index];
 
-                                final isSelected = handoverState
-                                        .selectedOperationNumber.activityNo ==
-                                    operationNo.activityNo;
+                          final isSelected =
+                              handoverState.selectedOperation.activityNo ==
+                                  selectedOperation.activityNo;
 
-                                return Card(
-                                  elevation: 5,
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 8),
-                                  color: isSelected
-                                      ? Colors.black
-                                      : Colors.grey[200],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: ListTile(
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                          return Card(
+                            elevation:
+                                handoverState.operations[index].lastOperation ==
+                                        ''
+                                    ? 7
+                                    : 0,
+                            shadowColor: Colors.blueGrey[100],
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            color:
+                                handoverState.operations[index].lastOperation ==
+                                        ''
+                                    ? isSelected
+                                        ? Colors.black
+                                        : Colors.grey[100]
+                                    : Colors.grey[400],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              title: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      selectedOperation.operationDesc,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: handoverState
+                                                        .operations[index]
+                                                        .lastOperation ==
+                                                    ''
+                                                ? isSelected
+                                                    ? Colors.white
+                                                    : Colors.black
+                                                : Colors.grey[600],
+                                          ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          operationNo.operationDesc ?? '',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                  color: isSelected
-                                                      ? Colors.white
-                                                      : Colors.black),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  "Operation number",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isSelected
+                                            Text(
+                                              "Operation number",
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: handoverState
+                                                                .operations[
+                                                                    index]
+                                                                .lastOperation ==
+                                                            ''
+                                                        ? isSelected
                                                             ? Colors.white
-                                                            : Colors.black,
-                                                      ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  operationNo.activityNo ?? '',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyLarge
-                                                      ?.copyWith(
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                ),
-                                              ],
+                                                            : Colors.black
+                                                        : Colors.grey[600],
+                                                  ),
                                             ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "Operation Apps",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isSelected
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              selectedOperation.activityNo,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.copyWith(
+                                                    color: handoverState
+                                                                .operations[
+                                                                    index]
+                                                                .lastOperation ==
+                                                            ''
+                                                        ? isSelected
                                                             ? Colors.white
-                                                            : Colors.black,
-                                                      ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  operationNo.operationApps ??
-                                                      '',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyLarge
-                                                      ?.copyWith(
-                                                        color: isSelected
+                                                            : Colors.black
+                                                        : Colors.grey[600],
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              "Operation Apps",
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: handoverState
+                                                                .operations[
+                                                                    index]
+                                                                .lastOperation ==
+                                                            ''
+                                                        ? isSelected
                                                             ? Colors.white
-                                                            : Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                ),
-                                              ],
+                                                            : Colors.black
+                                                        : Colors.grey[600],
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              selectedOperation.operationApps,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.copyWith(
+                                                    color: handoverState
+                                                                .operations[
+                                                                    index]
+                                                                .lastOperation ==
+                                                            ''
+                                                        ? isSelected
+                                                            ? Colors.white
+                                                            : Colors.black
+                                                        : Colors.grey[600],
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                             ),
                                           ],
                                         ),
                                       ],
                                     ),
-                                    onTap: () {
-                                      _handoverCubit.setOperation(operationNo);
-                                      locationSetBloc.add(GetLocationSet(
-                                          operationNo.routingNo!,
-                                          operationNo.internalCntr!,
-                                          operationNo.activityNo!));
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          Text(
-                            'Choose location:',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge!
-                                .copyWith(
-                                  fontWeight: FontWeight.bold,
+                                  ],
                                 ),
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                              child: ListView.builder(
-                                  itemCount: handoverState.locationSets.length,
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
-                                    final selectedLocation =
-                                        handoverState.locationSets[index];
-
-                                    final isSelected = handoverState
-                                            .selectedLocationSet.activityNo ==
-                                        selectedLocation.activityNo;
-
-                                    return Card(
-                                        elevation: 5,
-                                        margin: const EdgeInsets.symmetric(
-                                            vertical: 8, horizontal: 20),
-                                        color: isSelected
-                                            ? Colors.black
-                                            : Colors.grey[200],
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        child: ListTile(
-                                          title: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                selectedLocation.operationDesc!,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyMedium
-                                                    ?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 16,
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.black),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    "Line",
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodySmall
-                                                        ?.copyWith(
-                                                          color: isSelected
-                                                              ? Colors.white
-                                                              : Colors.black,
-                                                        ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    selectedLocation.line!,
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyLarge
-                                                        ?.copyWith(
-                                                          color: isSelected
-                                                              ? Colors.white
-                                                              : Colors.black,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                          onTap: () {
-                                            _handoverCubit
-                                                .setSelectedLocationSet(
-                                                    selectedLocation);
-                                            wadahSetBloc.add(GetWadahSet(
-                                                selectedLocation.routingNo!,
-                                                selectedLocation.activityNo!,
-                                                handoverState.operationType));
-                                          },
-                                        ));
-                                  }))
-                        ],
+                              ),
+                              onTap: handoverState
+                                          .operations[index].lastOperation ==
+                                      ''
+                                  ? () {
+                                      _handoverCubit
+                                          .setOperation(selectedOperation);
+                                      locationSetBloc.add(GetLocationSet(
+                                          selectedOperation.routingNo,
+                                          selectedOperation.internalCntr,
+                                          selectedOperation.activityNo));
+                                    }
+                                  : null,
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  );
-                } else {
-                  return const Center();
-                }
-              },
+                  ],
+                ),
+              ),
             );
           },
         ),

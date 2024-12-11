@@ -1,16 +1,14 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/bloc/operation_type_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
-import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
-import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/bloc/material_bloc.dart';
 import 'package:dumping_system/bloc/operation_bloc.dart';
 import 'package:dumping_system/bloc/order_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
-import 'package:dumping_system/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class HandoverScreen extends StatefulWidget {
@@ -26,9 +24,6 @@ class _HandoverScreenState extends State<HandoverScreen> {
   MaterialsBloc materialBloc = MaterialsBloc();
   OrderBloc orderBloc = OrderBloc();
   OperationBloc operationBloc = OperationBloc();
-  List<ResultsMaterial> listMaterials = List.empty();
-  List<ResultsOrder> listOrder = List.empty();
-  List<ResultOperation> listOperation = List.empty();
   OperationTypeBloc operationTypeBloc = OperationTypeBloc();
   String? materialValue;
   final plant = TextEditingController();
@@ -39,6 +34,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
       "${option.material!} - ${option.materialDesc}";
   String selectedOperation = '';
   HandoverCubit _handoverCubit = HandoverCubit();
+  bool isSelected = false;
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? picked = await showDatePicker(
@@ -96,24 +92,23 @@ class _HandoverScreenState extends State<HandoverScreen> {
           BlocListener<MaterialsBloc, MaterialsState>(
             listener: (context, state) {
               if (state is MaterialsLoaded) {
-                setState(() {
-                  listMaterials = state.material.d!.results!;
-                });
+                _handoverCubit.setMaterials(state.material.d!.results!);
               }
             },
           ),
           BlocListener<OrderBloc, OrderState>(
             listener: (context, state) {
               if (state is OrderLoaded) {
-                setState(() {
-                  listOrder = state.order.d!.results!;
-                });
+                _handoverCubit.setOrders(state.order.d!.results!);
               }
             },
           ),
           BlocListener<OperationBloc, OperationState>(
               listener: (context, state) {
-            if (state is OperationLoaded) {}
+            if (state is OperationLoaded) {
+              _handoverCubit
+                  .setOperations(state.operation.d!.resultsOperationNo!);
+            }
           }),
           BlocListener<OperationTypeBloc, OperationTypeState>(
               listener: (context, state) {
@@ -131,271 +126,266 @@ class _HandoverScreenState extends State<HandoverScreen> {
             return Scaffold(
               appBar: AppBar(
                 title: const Text("Handover"),
+                leading: IconButton(
+                    onPressed: () {
+                      isSelected = false;
+                      context.pop();
+                    },
+                    icon: const Icon(Icons.keyboard_arrow_left_sharp)),
               ),
               body: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Form(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: TextFormField(
-                                controller: plant,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  labelText: 'Plant',
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
-                                ),
-                                readOnly: true,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: RawAutocomplete<ResultsMaterial>(
-                                displayStringForOption: _displayStringForOption,
-                                fieldViewBuilder: (
-                                  BuildContext context,
-                                  TextEditingController textEditingController,
-                                  FocusNode focusNode,
-                                  VoidCallback onFieldSubmitted,
-                                ) {
-                                  return TextFormField(
-                                    controller: textEditingController,
-                                    focusNode: focusNode,
-                                    keyboardType: TextInputType.number,
-                                    onFieldSubmitted: (String value) {
-                                      onFieldSubmitted();
-                                    },
-                                    decoration: InputDecoration(
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        labelText: 'Material Code',
-                                        filled: true,
-                                        fillColor: Colors.grey.shade100,
-                                        suffixIcon: IconButton(
-                                            onPressed:
-                                                textEditingController.clear,
-                                            icon: const Icon(Icons.close))),
-                                  );
-                                },
-                                optionsBuilder:
-                                    (TextEditingValue textEditingValue) async {
-                                  materialBloc.add(SendPlant(
-                                    plant: plant.text,
-                                    search: textEditingValue.text,
-                                  ));
-                                  if (textEditingValue.text.isEmpty) {
-                                    return const Iterable<
-                                        ResultsMaterial>.empty();
-                                  }
-                                  return listMaterials
-                                      .where((ResultsMaterial material) {
-                                    return material.material!
-                                        .toLowerCase()
-                                        .contains(textEditingValue.text
-                                            .toLowerCase());
-                                  }).toList();
-                                },
-                                optionsViewBuilder: (
-                                  BuildContext context,
-                                  AutocompleteOnSelected<ResultsMaterial>
-                                      onSelected,
-                                  Iterable<ResultsMaterial> options,
-                                ) {
-                                  return Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Material(
-                                      elevation: 4.0,
-                                      color: Colors.white,
-                                      child: SizedBox(
-                                        height: 200.0,
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.93,
-                                        child: ListView.builder(
-                                          itemCount: options.length,
-                                          itemBuilder: (BuildContext context,
-                                              int index) {
-                                            final ResultsMaterial option =
-                                                options.elementAt(index);
-                                            return ListTile(
-                                              onTap: () {
-                                                onSelected(option);
-                                                setState(() {
-                                                  productCode.text =
-                                                      option.material!;
-                                                });
-                                                operationTypeBloc.add(
-                                                    SendDataOperationType(
-                                                        startDate:
-                                                            _dateController
-                                                                .text,
-                                                        materialCode:
-                                                            productCode.text,
-                                                        plant: plant.text,
-                                                        batchFG: batch.text));
-                                              },
-                                              title: Text(
-                                                _displayStringForOption(option),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: TextFormField(
-                                controller: batch,
-                                keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  batch.text = value;
-                                  if (value.length > 5) {
-                                    operationTypeBloc.add(SendDataOperationType(
-                                        startDate: _dateController.text,
-                                        materialCode: productCode.text,
-                                        plant: plant.text,
-                                        batchFG: value));
-                                  }
-                                },
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  labelText: 'Batch',
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: TextFormField(
-                                controller: _dateController,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  suffixIcon: const Icon(Icons.calendar_today),
-                                  labelText: 'Select Date',
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
-                                ),
-                                readOnly: true,
-                                onTap: () {
-                                  _selectDate(context);
-                                },
-                              ),
-                            ),
-                            if (handoverState.operationTypeList.isNotEmpty) ...[
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Form(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 20),
-                                child: DropdownButtonFormField(
-                                  value: materialValue,
-                                  items: handoverState.operationTypeList
-                                      .map<DropdownMenuItem<String>>(
-                                          (ResultsOprType value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value.operationType,
-                                      child: Text(value.operationType!),
-                                    );
-                                  }).toList(),
-                                  onChanged: (String? value) {
-                                    setState(() {
-                                      materialValue = value!;
-                                    });
-                                  },
-                                  iconEnabledColor: Colors.black,
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                  ),
-                                  dropdownColor: Colors.white,
+                                child: TextFormField(
+                                  controller: plant,
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    labelText: 'Operation Type',
+                                    labelText: 'Plant',
+                                    filled: true,
+                                    fillColor: Colors.grey.shade100,
+                                  ),
+                                  readOnly: true,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: RawAutocomplete<ResultsMaterial>(
+                                  displayStringForOption:
+                                      _displayStringForOption,
+                                  fieldViewBuilder: (
+                                    BuildContext context,
+                                    TextEditingController textEditingController,
+                                    FocusNode focusNode,
+                                    VoidCallback onFieldSubmitted,
+                                  ) {
+                                    return TextFormField(
+                                      controller: textEditingController,
+                                      focusNode: focusNode,
+                                      keyboardType: TextInputType.number,
+                                      onFieldSubmitted: (String value) {
+                                        onFieldSubmitted();
+                                      },
+                                      decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          labelText: 'Material Code',
+                                          filled: true,
+                                          fillColor: Colors.grey.shade100,
+                                          suffixIcon: IconButton(
+                                              onPressed:
+                                                  textEditingController.clear,
+                                              icon: const Icon(Icons.close))),
+                                    );
+                                  },
+                                  optionsBuilder: (TextEditingValue
+                                      textEditingValue) async {
+                                    materialBloc.add(SendPlant(
+                                      plant: plant.text,
+                                      search: textEditingValue.text,
+                                    ));
+                                    if (textEditingValue.text.isEmpty) {
+                                      return const Iterable<
+                                          ResultsMaterial>.empty();
+                                    }
+                                    return handoverState.materials
+                                        .where((ResultsMaterial material) {
+                                      return material.material!
+                                          .toLowerCase()
+                                          .contains(textEditingValue.text
+                                              .toLowerCase());
+                                    }).toList();
+                                  },
+                                  optionsViewBuilder: (
+                                    BuildContext context,
+                                    AutocompleteOnSelected<ResultsMaterial>
+                                        onSelected,
+                                    Iterable<ResultsMaterial> options,
+                                  ) {
+                                    return Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Material(
+                                        elevation: 4.0,
+                                        color: Colors.white,
+                                        child: SizedBox(
+                                          height: 200.0,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.93,
+                                          child: ListView.builder(
+                                            itemCount: options.length,
+                                            itemBuilder: (BuildContext context,
+                                                int index) {
+                                              final ResultsMaterial option =
+                                                  options.elementAt(index);
+                                              return ListTile(
+                                                onTap: () {
+                                                  onSelected(option);
+                                                  setState(() {
+                                                    productCode.text =
+                                                        option.material!;
+                                                  });
+                                                  operationTypeBloc.add(
+                                                      SendDataOperationType(
+                                                          startDate:
+                                                              _dateController
+                                                                  .text,
+                                                          materialCode:
+                                                              productCode.text,
+                                                          plant: plant.text,
+                                                          batchFG: batch.text));
+                                                },
+                                                title: Text(
+                                                  _displayStringForOption(
+                                                      option),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: TextFormField(
+                                  controller: batch,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (value) {
+                                    batch.text = value;
+                                    if (value.length > 5) {
+                                      operationTypeBloc.add(
+                                          SendDataOperationType(
+                                              startDate: _dateController.text,
+                                              materialCode: productCode.text,
+                                              plant: plant.text,
+                                              batchFG: value));
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    labelText: 'Batch',
                                     filled: true,
                                     fillColor: Colors.grey.shade100,
                                   ),
                                 ),
                               ),
-                            ],
-                            BlocBuilder<OrderBloc, OrderState>(
-                              builder: (context, state) {
-                                if (state is OrderLoaded) {
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 10),
-                                        child: Text(
-                                          "Operation List",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge,
-                                        ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: TextFormField(
+                                  controller: _dateController,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    suffixIcon:
+                                        const Icon(Icons.calendar_today),
+                                    labelText: 'Select Date',
+                                    filled: true,
+                                    fillColor: Colors.grey.shade100,
+                                  ),
+                                  readOnly: true,
+                                  onTap: () {
+                                    _selectDate(context);
+                                  },
+                                ),
+                              ),
+                              if (handoverState
+                                  .operationTypeList.isNotEmpty) ...[
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  child: DropdownButtonFormField(
+                                    value: materialValue,
+                                    items: handoverState.operationTypeList
+                                        .map<DropdownMenuItem<String>>(
+                                            (ResultsOprType value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value.operationType,
+                                        child: Text(value.operationType!),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? value) {
+                                      setState(() {
+                                        materialValue = value!;
+                                        _handoverCubit.setOrders([]);
+                                        isSelected = false;
+                                      });
+                                    },
+                                    iconEnabledColor: Colors.black,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                    dropdownColor: Colors.white,
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      if (state
-                                          .order.d!.results!.isNotEmpty) ...[
-                                        for (var dataOrder
-                                            in state.order.d!.results!)
-                                          _orderList(context, dataOrder),
-                                      ] else ...[
-                                        Center(
-                                          child: Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 20),
-                                            child: Column(
-                                              children: [
-                                                Image.asset(
-                                                  "assets/images/bg_image/not_found.png",
-                                                  height: 250,
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 10),
-                                                  child: Text(
-                                                    "No operation list data",
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyLarge,
-                                                  ),
-                                                )
-                                              ],
-                                            ),
+                                      labelText: 'Operation Type',
+                                      filled: true,
+                                      fillColor: Colors.grey.shade100,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (handoverState.orders.isNotEmpty) ...[
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                    "Orders",
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                ),
+                                if (handoverState.orders.isNotEmpty) ...[
+                                  _orderList(context, handoverState),
+                                ] else ...[
+                                  Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 20),
+                                      child: Column(
+                                        children: [
+                                          Image.asset(
+                                            "assets/images/bg_image/not_found.png",
+                                            height: 250,
                                           ),
-                                        )
-                                      ]
-                                    ],
-                                  );
-                                }
-                                return const Center();
-                              },
-                            ),
-                          ],
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 10),
+                                            child: Text(
+                                              "No operation list data",
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                ]
+                              ]
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ]),
                 ),
               ),
               bottomNavigationBar: BottomAppBar(
@@ -456,95 +446,112 @@ class _HandoverScreenState extends State<HandoverScreen> {
     );
   }
 
-  Widget _orderList(BuildContext context, ResultsOrder listOrder) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: InkWell(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              _handoverCubit.setOrderList(listOrder);
-              operationBloc.add(SendDataOperation(
-                  operationType: listOrder.operationType!,
-                  routingNo: listOrder.routingNo!,
-                  operationApps: "eq '10'"));
-              return _showOperationNo(context);
-            },
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          color: Colors.grey.shade50,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '(${listOrder.material!}) ${listOrder.materialDesc}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+  Widget _orderList(BuildContext context, HandoverState handoverState) {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+          itemCount: handoverState.orders.length,
+          itemBuilder: (BuildContext context, int index) {
+            final selectedOrder = handoverState.orders[index];
+
+            return Card(
+                elevation: 7,
+                shadowColor: Colors.blueGrey[100],
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                color: Colors.grey[100],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+                child: ListTile(
+                  title: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Process order",
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
+                          '(${selectedOrder.material}) ${selectedOrder.materialDesc}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          listOrder.orderNo!,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Process order",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedOrder.orderNo ?? '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Batch",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedOrder.batchFG ?? '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Batch",
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          listOrder.batchFG!,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        _handoverCubit.setSelectedOrder(selectedOrder);
+                        operationBloc.add(SendDataOperation(
+                            operationType: selectedOrder.operationType ?? '',
+                            routingNo: selectedOrder.routingNo ?? '',
+                            operationApps: "eq '10'"));
+                        return _showOperationNo(context);
+                      },
+                    );
+                  },
+                ));
+          }),
     );
   }
 
@@ -552,144 +559,157 @@ class _HandoverScreenState extends State<HandoverScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _handoverCubit),
-        BlocProvider.value(value: operationBloc)
       ],
       child: Dialog(
         insetPadding: EdgeInsets.zero,
         child: BlocBuilder<HandoverCubit, HandoverState>(
           builder: (context, handoverState) {
-            return BlocBuilder<OperationBloc, OperationState>(
-              builder: (context, state) {
-                if (state is OperationLoading) {
-                  return const Loading();
-                }
-                if (state is OperationLoaded) {
-                  listOperation = state.operation.d!.resultsOperationNo!;
-                  return Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Choose Operation No'),
-                      automaticallyImplyLeading: false,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    ),
-                    body: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Please choose an operation number:',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge!
-                                .copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Choose Operation No'),
+                leading: IconButton(
+                    onPressed: () {
+                      isSelected = false;
+                      context.pop();
+                    },
+                    icon: const Icon(Icons.chevron_left_rounded)),
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Please choose an operation number:',
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: listOperation.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final operationNo = listOperation[index];
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: handoverState.operations.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final selectedOperation =
+                              handoverState.operations[index];
 
-                                final isSelected = handoverState
-                                        .selectedOperationNumber.activityNo ==
-                                    operationNo.activityNo;
-
-                                return Card(
-                                  elevation: 5,
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 8),
-                                  color: isSelected
-                                      ? Colors.black
-                                      : Colors.grey[200],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: ListTile(
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                          isSelected =
+                              handoverState.selectedOperation.activityNo ==
+                                  selectedOperation.activityNo;
+                          return Card(
+                            elevation:
+                                handoverState.operations[index].lastOperation ==
+                                        ''
+                                    ? 7
+                                    : 0,
+                            shadowColor: Colors.blueGrey[100],
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            color:
+                                handoverState.operations[index].lastOperation ==
+                                        ''
+                                    ? isSelected
+                                        ? Colors.black
+                                        : Colors.grey[100]
+                                    : Colors.grey[400],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              title: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      selectedOperation.operationDesc,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: handoverState.operations.any(
+                                                    (element) =>
+                                                        element.lastOperation ==
+                                                        '')
+                                                ? isSelected
+                                                    ? Colors.white
+                                                    : Colors.black
+                                                : Colors.grey[600],
+                                          ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          operationNo.operationDesc ?? '',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                  color: isSelected
-                                                      ? Colors.white
-                                                      : Colors.black),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  "Operation number",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isSelected
+                                            Text(
+                                              "Operation number",
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: handoverState
+                                                                .operations[
+                                                                    index]
+                                                                .lastOperation ==
+                                                            ''
+                                                        ? isSelected
                                                             ? Colors.white
-                                                            : Colors.black,
-                                                      ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  operationNo.activityNo ?? '',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyLarge
-                                                      ?.copyWith(
-                                                        color: isSelected
+                                                            : Colors.black
+                                                        : Colors.grey[600],
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              selectedOperation.activityNo,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.copyWith(
+                                                    color: handoverState
+                                                                .operations[
+                                                                    index]
+                                                                .lastOperation ==
+                                                            ''
+                                                        ? isSelected
                                                             ? Colors.white
-                                                            : Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                ),
-                                              ],
+                                                            : Colors.black
+                                                        : Colors.grey[600],
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                             ),
                                           ],
                                         ),
                                       ],
                                     ),
-                                    onTap: () {
-                                      _handoverCubit.setOperation(operationNo);
+                                  ],
+                                ),
+                              ),
+                              onTap: handoverState
+                                          .operations[index].lastOperation ==
+                                      ''
+                                  ? () {
+                                      _handoverCubit
+                                          .setOperation(selectedOperation);
                                       _handoverCubit.setOperationApps('20');
                                       _handoverCubit
                                           .setTab(HandoverStatus.scantong);
                                       Navigator.of(context).pop();
-                                    },
-                                  ),
-                                );
-                              },
+                                    }
+                                  : null,
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ),
-                  );
-                } else {
-                  return const Center();
-                }
-              },
+                  ],
+                ),
+              ),
             );
           },
         ),

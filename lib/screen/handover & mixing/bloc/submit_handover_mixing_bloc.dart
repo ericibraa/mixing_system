@@ -21,14 +21,20 @@ class SubmitHandoverMixingBloc
         var dateNow = DateTime.now();
         var formattedDate = DateFormat('yyyyMMdd-HHmmss').format(dateNow);
         var finishdate = formattedDate.split("-");
+        var startDate = [];
+        startDate = event.handoverMixingData.startTime.split("-");
+        print("------------------------");
+        print(startDate);
         SubmitHandoverMixingRequest submitHandoverMixing =
             SubmitHandoverMixingRequest(
-                routingNo: event.handoverMixingData.selectedOperation.routingNo,
+                routingNo: event.handoverMixingData.selectedOrder.routingNo,
                 activityNo:
-                    event.handoverMixingData.selectedOperationNumber.activityNo,
+                    event.handoverMixingData.selectedOperation.activityNo,
                 activityWh: event.handoverMixingData.tong,
                 operationType: event.handoverMixingData.operationType,
                 operationApps: event.handoverMixingData.operationApps,
+                startDate: startDate[0],
+                startTime: startDate[1],
                 finishDate: finishdate[0],
                 finishTime: finishdate[1],
                 operator: event.handoverMixingData.operator,

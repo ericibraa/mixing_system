@@ -4,7 +4,6 @@ import 'package:dumping_system/bloc/operation_type_bloc.dart';
 import 'package:dumping_system/bloc/order_bloc.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
-import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/screen/confirmation/bloc/operation_confirmation_bloc.dart';
 import 'package:dumping_system/screen/confirmation/bloc/yield_set_bloc.dart';
 import 'package:dumping_system/screen/confirmation/cubit/confirmation_cubit.dart';
@@ -363,10 +362,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                     ),
                                     if (confirmationState
                                         .orders.isNotEmpty) ...[
-                                      for (var dataOrder
-                                          in confirmationState.orders)
-                                        _orderList(context, dataOrder,
-                                            confirmationState),
+                                      _orderList(context, confirmationState),
                                     ] else ...[
                                       Center(
                                         child: Padding(
@@ -410,24 +406,29 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                       width: double.infinity,
                       height: 50,
                       child: TextButton(
-                        onPressed: () {
-                          orderBloc.add(SendDataOrder(
-                              plant: plant.text,
-                              materialCode: productCode.text,
-                              operationType: materialValue!,
-                              startDate: _dateController.text,
-                              batchFG: batch.text));
-                          _confirmationCubit.setDataOrder(
-                              plant.text,
-                              productCode.text,
-                              _dateController.text,
-                              materialValue!);
-                        },
+                        onPressed: plant.text.isNotEmpty &&
+                                materialValue != null &&
+                                productCode.text.isNotEmpty &&
+                                batch.text.isNotEmpty
+                            ? () {
+                                orderBloc.add(SendDataOrder(
+                                    plant: plant.text,
+                                    materialCode: productCode.text,
+                                    operationType: materialValue!,
+                                    startDate: _dateController.text,
+                                    batchFG: batch.text));
+                                _confirmationCubit.setDataOrder(
+                                    plant.text,
+                                    productCode.text,
+                                    _dateController.text,
+                                    materialValue!);
+                              }
+                            : null,
                         style: TextButton.styleFrom(
                           backgroundColor: plant.text.isNotEmpty &&
                                   materialValue != null &&
                                   productCode.text.isNotEmpty &&
-                                  _dateController.text.isNotEmpty
+                                  batch.text.isNotEmpty
                               ? Colors.black
                               : Colors.grey[500],
                           shape: RoundedRectangleBorder(
@@ -435,7 +436,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                           ),
                         ),
                         child: Text(
-                          "Show Confirmation List",
+                          "Show Orders",
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.white,
@@ -451,96 +452,112 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
             })));
   }
 
-  Widget _orderList(BuildContext context, ResultsOrder order,
-      ConfirmationState confirmationState) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: InkWell(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              _confirmationCubit.setSelectedOrder(order);
-              operationConfirmationBloc.add(GetOperationConfirmation(
-                  order.routingNo!,
-                  order.operationType!,
-                  "eq '${confirmationState.operationApps}'"));
-              return _showOperationNo(context);
-            },
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          color: Colors.grey.shade50,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '(${order.material!}) ${order.materialDesc}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+  Widget _orderList(BuildContext context, ConfirmationState confirmationState) {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+          itemCount: confirmationState.orders.length,
+          itemBuilder: (BuildContext context, int index) {
+            final selectedOrder = confirmationState.orders[index];
+
+            return Card(
+                elevation: 7,
+                shadowColor: Colors.blueGrey[100],
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                color: Colors.grey[100],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+                child: ListTile(
+                  title: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Process order",
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
+                          '(${selectedOrder.material}) ${selectedOrder.materialDesc}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          order.orderNo!,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Process order",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedOrder.orderNo ?? '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Batch",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedOrder.batchFG ?? '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Batch",
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          order.batchFG!,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        _confirmationCubit.setSelectedOrder(selectedOrder);
+                        operationConfirmationBloc.add(GetOperationConfirmation(
+                            selectedOrder.routingNo!,
+                            selectedOrder.operationType!,
+                            "eq '${confirmationState.operationApps}'"));
+                        return _showOperationNo(context);
+                      },
+                    );
+                  },
+                ));
+          }),
     );
   }
 
@@ -602,7 +619,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    selectedOperation.operationDesc ?? '',
+                                    selectedOperation.operationDesc,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -635,7 +652,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            selectedOperation.activityNo ?? '',
+                                            selectedOperation.activityNo,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodyLarge
@@ -665,8 +682,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            selectedOperation.operationApps ??
-                                                '',
+                                            selectedOperation.operationApps,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodyLarge
@@ -687,9 +703,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                 _confirmationCubit
                                     .setSelectedOperation(selectedOperation);
                                 yieldSetBloc.add(GetYieldSet(
-                                    selectedOperation.routingNo!,
-                                    selectedOperation.internalCntr!,
-                                    selectedOperation.activityNo!));
+                                    selectedOperation.routingNo,
+                                    selectedOperation.internalCntr,
+                                    selectedOperation.activityNo));
                                 if (mounted) {
                                   Navigator.of(context).pop();
                                 }
