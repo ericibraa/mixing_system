@@ -6,7 +6,9 @@ import 'package:dumping_system/bloc/tong_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/bloc/wadah_set_bloc.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/widgets/choose_location.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/widgets/choose_operation.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/widgets/handover_mixing.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/widgets/scan_material_mixing.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/widgets/scan_tong.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/widgets/scan_tong_material.dart';
 import 'package:dumping_system/screen/handover%20&%20mixing/widgets/scan_tong_results_weighing.dart';
@@ -61,9 +63,11 @@ class _MainViewState extends State<MainView> {
                 children: const [
                   HandoverMixingScreen(),
                   ScanTongMaterialScreen(),
+                  ChooseOperation(),
                   ScanTongMaterialSetScreen(),
                   ScanTongResultsWeighing(),
-                  ChooseLocation()
+                  ChooseLocation(),
+                  ScanMaterialMixing(),
                 ],
               );
             },

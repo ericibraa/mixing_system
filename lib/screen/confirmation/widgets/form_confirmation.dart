@@ -44,7 +44,6 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
         scannedBarcode = barcode.displayValue!;
       });
       line.text = scannedBarcode;
-      numberOfLabor.text = '1';
       _confirmationCubit.setLine(line.text);
       _confirmationCubit.setStartDate();
     }

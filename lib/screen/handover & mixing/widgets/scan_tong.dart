@@ -6,7 +6,9 @@ import 'package:dumping_system/models/response/tong.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:vibration/vibration.dart';
 
 class ScanTongMaterialScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -30,6 +32,12 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
     scanned = parts;
 
     return scanned;
+  }
+
+  void _scanLine(Barcode? barcode) async {
+    if (barcode != null && barcode.displayValue != null) {
+      _handoverCubit.setLine(barcode.displayValue!);
+    }
   }
 
   void _scanOperator(Barcode? barcode) async {
@@ -70,6 +78,10 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
+          FlutterRingtonePlayer().play(fromAsset: "assets/ringtone/wrong.mp3");
+          Future.delayed(const Duration(milliseconds: 200), () {
+            Vibration.vibrate(duration: 800);
+          });
           break;
       }
     }
@@ -299,7 +311,7 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => ScanBarcodeScreen(
                                     onBarcodeScanned: (barcode) {
-                                      _scanOperator(barcode);
+                                      _scanLine(barcode);
                                     },
                                   ),
                                 ),
@@ -662,7 +674,7 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                         Padding(
                           padding: const EdgeInsets.all(10),
                           child: Text(
-                            '${fullpack.materialDesc} ${fullpack.counter}',
+                            '${fullpack.materialNo} - ${fullpack.materialDesc} ${fullpack.counter}',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),

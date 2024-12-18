@@ -108,6 +108,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
             if (state is OperationLoaded) {
               _handoverCubit
                   .setOperations(state.operation.d!.resultsOperationNo!);
+              _handoverCubit.setTab(HandoverStatus.chooseOperation);
             }
           }),
           BlocListener<OperationTypeBloc, OperationTypeState>(
@@ -539,182 +540,14 @@ class _HandoverScreenState extends State<HandoverScreen> {
                     ),
                   ),
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        _handoverCubit.setSelectedOrder(selectedOrder);
-                        operationBloc.add(SendDataOperation(
-                            operationType: selectedOrder.operationType ?? '',
-                            routingNo: selectedOrder.routingNo ?? '',
-                            operationApps: "eq '10'"));
-                        return _showOperationNo(context);
-                      },
-                    );
+                    _handoverCubit.setSelectedOrder(selectedOrder);
+                    operationBloc.add(SendDataOperation(
+                        operationType: selectedOrder.operationType ?? '',
+                        routingNo: selectedOrder.routingNo ?? '',
+                        operationApps: "eq '10'"));
                   },
                 ));
           }),
-    );
-  }
-
-  Widget _showOperationNo(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: _handoverCubit),
-      ],
-      child: Dialog(
-        insetPadding: EdgeInsets.zero,
-        child: BlocBuilder<HandoverCubit, HandoverState>(
-          builder: (context, handoverState) {
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Choose Operation No'),
-                leading: IconButton(
-                    onPressed: () {
-                      isSelected = false;
-                      context.pop();
-                    },
-                    icon: const Icon(Icons.chevron_left_rounded)),
-              ),
-              body: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Please choose an operation number:',
-                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: handoverState.operations.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final selectedOperation =
-                              handoverState.operations[index];
-
-                          isSelected =
-                              handoverState.selectedOperation.activityNo ==
-                                  selectedOperation.activityNo;
-                          return Card(
-                            elevation:
-                                handoverState.operations[index].lastOperation ==
-                                        ''
-                                    ? 7
-                                    : 0,
-                            shadowColor: Colors.blueGrey[100],
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            color:
-                                handoverState.operations[index].lastOperation ==
-                                        ''
-                                    ? isSelected
-                                        ? Colors.black
-                                        : Colors.grey[100]
-                                    : Colors.grey[400],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: ListTile(
-                              title: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      selectedOperation.operationDesc,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: handoverState.operations.any(
-                                                    (element) =>
-                                                        element.lastOperation ==
-                                                        '')
-                                                ? isSelected
-                                                    ? Colors.white
-                                                    : Colors.black
-                                                : Colors.grey[600],
-                                          ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "Operation number",
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: handoverState
-                                                                .operations[
-                                                                    index]
-                                                                .lastOperation ==
-                                                            ''
-                                                        ? isSelected
-                                                            ? Colors.white
-                                                            : Colors.black
-                                                        : Colors.grey[600],
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              selectedOperation.activityNo,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyLarge
-                                                  ?.copyWith(
-                                                    color: handoverState
-                                                                .operations[
-                                                                    index]
-                                                                .lastOperation ==
-                                                            ''
-                                                        ? isSelected
-                                                            ? Colors.white
-                                                            : Colors.black
-                                                        : Colors.grey[600],
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              onTap: handoverState
-                                          .operations[index].lastOperation ==
-                                      ''
-                                  ? () {
-                                      _handoverCubit
-                                          .setOperation(selectedOperation);
-                                      _handoverCubit.setOperationApps('20');
-                                      _handoverCubit
-                                          .setTab(HandoverStatus.scantong);
-                                      Navigator.of(context).pop();
-                                    }
-                                  : null,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      ),
     );
   }
 }

@@ -6,8 +6,10 @@ import 'package:dumping_system/screen/handover%20&%20mixing/bloc/submit_handover
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:vibration/vibration.dart';
 
 class ScanTongMaterialSetScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -43,53 +45,70 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
         hasScanned = parseStringAndWrapInMap(scannedBarcode);
       });
       _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
-      if (hasScanned.length == 4 || hasScanned.length == 5) {
-        _handoverCubit.resetCompleteMaterial(false);
-        _handoverCubit.setTongActivity(hasScanned[3]);
-        materialSetBloc.add(SendDataMaterialset(
-            routingNo: _handoverCubit.state.selectedOperation.routingNo,
-            activityNo: hasScanned[3],
-            operationType: _handoverCubit.state.selectedOrder.operationType!));
-      }
-      switch (_handoverCubit.state.errorScanType) {
-        case ErrorScanType.dataScanned:
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text("Data is Scanned"),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ));
-          break;
-        case ErrorScanType.incorrectPriority:
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text("Invalid Priority"),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ));
-          break;
-        case ErrorScanType.noError:
-          if (hasScanned.length >= 6) {
-            if (_handoverCubit.state.startTime == '') {
-              _handoverCubit.setStartDate();
+      if (mounted) {
+        switch (_handoverCubit.state.errorScanType) {
+          case ErrorScanType.dataScanned:
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: const Text("Data is Scanned"),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ));
+            if (hasScanned.length == 4 || hasScanned.length == 5) {
+              _handoverCubit.resetCompleteMaterial(false);
+              _handoverCubit.setTongActivity(hasScanned[3]);
+              materialSetBloc.add(SendDataMaterialset(
+                  routingNo: _handoverCubit.state.selectedOperation.routingNo,
+                  activityNo: hasScanned[3],
+                  operationType:
+                      _handoverCubit.state.selectedOrder.operationType!));
             }
-            flagMaterialsBloc.add(GetFlagMaterials(hasScanned));
-          }
-          break;
-        case ErrorScanType.dataNull:
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text("Data Not Found"),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ));
-          break;
+            break;
+          case ErrorScanType.incorrectPriority:
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: const Text("Invalid Priority"),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ));
+            break;
+          case ErrorScanType.noError:
+            if (hasScanned.length == 4 || hasScanned.length == 5) {
+              _handoverCubit.resetCompleteMaterial(false);
+              _handoverCubit.setTongActivity(hasScanned[3]);
+              materialSetBloc.add(SendDataMaterialset(
+                  routingNo: _handoverCubit.state.selectedOperation.routingNo,
+                  activityNo: hasScanned[3],
+                  operationType:
+                      _handoverCubit.state.selectedOrder.operationType!));
+            }
+            if (hasScanned.length >= 6) {
+              if (_handoverCubit.state.startTime == '') {
+                _handoverCubit.setStartDate();
+              }
+              flagMaterialsBloc.add(GetFlagMaterials(hasScanned));
+            }
+            break;
+          case ErrorScanType.dataNull:
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: const Text("Data Not Found"),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ));
+            FlutterRingtonePlayer()
+                .play(fromAsset: "assets/ringtone/wrong.mp3");
+            Future.delayed(const Duration(milliseconds: 200), () {
+              Vibration.vibrate(duration: 800);
+            });
+            break;
+        }
       }
     }
   }
@@ -130,12 +149,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                     '${materialSets[0].scanDate}-${materialSets[0].scanTime}');
               }
               _handoverCubit.setMaterialSet(materialSets);
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return _showMaterialSets(context);
-                },
-              );
+              _handoverCubit.setTab(HandoverStatus.scanMaterialMixing);
             }
           }),
           BlocListener<SubmitHandoverMixingBloc, SubmitHandoverMixingState>(
@@ -516,11 +530,13 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Text(
-                              '${materialSet.materialNo.isNotEmpty ? "${materialSet.materialNo} -" : ''} ${materialSet.materialDesc} - ${materialSet.bOMItem} - ${materialSet.quantity.replaceAll('.', ',')} ${materialSet.uom} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
-                              style: Theme.of(context).textTheme.bodyMedium,
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Text(
+                                '${materialSet.materialNo.isNotEmpty ? "${materialSet.materialNo} -" : ''} ${materialSet.materialDesc} - ${materialSet.bOMItem} - ${materialSet.quantity.replaceAll('.', ',')} ${materialSet.uom} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
                             ),
                           ),
                           if (materialSet.isScanned ||
@@ -529,8 +545,6 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                               Icons.check,
                               color: Colors.green,
                             )
-                          ] else ...[
-                            const Icon(Icons.qr_code_scanner_rounded)
                           ]
                         ],
                       ),

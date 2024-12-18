@@ -23,8 +23,6 @@ class SubmitHandoverMixingBloc
         var finishdate = formattedDate.split("-");
         var startDate = [];
         startDate = event.handoverMixingData.startTime.split("-");
-        print("------------------------");
-        print(startDate);
         SubmitHandoverMixingRequest submitHandoverMixing =
             SubmitHandoverMixingRequest(
                 routingNo: event.handoverMixingData.selectedOrder.routingNo,

@@ -1,31 +1,33 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
-import 'package:dumping_system/bloc/tong_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
-import 'package:dumping_system/bloc/post_handover_bloc.dart';
-import 'package:dumping_system/models/response/tong.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/bloc/flag_materials_bloc.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/bloc/material_set_bloc.dart';
+import 'package:dumping_system/screen/handover%20&%20mixing/bloc/submit_handover_mixing_bloc.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:vibration/vibration.dart';
 
-class ScanTongScreen extends StatefulWidget {
+class ScanMaterialMixing extends StatefulWidget {
   // ignore: use_super_parameters
-  const ScanTongScreen({Key? key}) : super(key: key);
+  const ScanMaterialMixing({Key? key}) : super(key: key);
 
   @override
-  State<ScanTongScreen> createState() => _ScanTongScreenState();
+  State<ScanMaterialMixing> createState() => _ScanMaterialMixingState();
 }
 
-class _ScanTongScreenState extends State<ScanTongScreen> {
+class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
   AuthBloc authBloc = AuthBloc();
   HandoverCubit _handoverCubit = HandoverCubit();
-  TongBloc tongBloc = TongBloc();
-  SubmitHandoverBloc submitHandoverBloc = SubmitHandoverBloc();
+  MaterialSetBloc materialSetBloc = MaterialSetBloc();
+  SubmitHandoverMixingBloc submitHandoverMixingBloc =
+      SubmitHandoverMixingBloc();
+  FlagMaterialsBloc flagMaterialsBloc = FlagMaterialsBloc();
   String scannedBarcode = "";
-  final line = TextEditingController();
+  List<dynamic> hasScanned = [];
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -35,18 +37,21 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
     return scanned;
   }
 
-  void _scanLine(Barcode? barcode) async {
-    if (barcode != null && barcode.displayValue != null) {
-      _handoverCubit.setLine(barcode.displayValue!);
-    }
-  }
-
   void _scanOperator(Barcode? barcode) async {
     if (barcode != null && barcode.displayValue != null) {
       setState(() {
         scannedBarcode = barcode.displayValue!;
-        _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+        hasScanned = parseStringAndWrapInMap(scannedBarcode);
       });
+      _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+      if (hasScanned.length == 4 || hasScanned.length == 5) {
+        _handoverCubit.resetCompleteMaterial(false);
+        _handoverCubit.setTongActivity(hasScanned[3]);
+        materialSetBloc.add(SendDataMaterialset(
+            routingNo: _handoverCubit.state.selectedOperation.routingNo,
+            activityNo: hasScanned[3],
+            operationType: _handoverCubit.state.selectedOrder.operationType!));
+      }
       switch (_handoverCubit.state.errorScanType) {
         case ErrorScanType.dataScanned:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -57,7 +62,6 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
-          FlutterRingtonePlayer().play(fromAsset: "assets/ringtone/wrong.mp3");
           break;
         case ErrorScanType.incorrectPriority:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -70,6 +74,12 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
           ));
           break;
         case ErrorScanType.noError:
+          if (hasScanned.length >= 6) {
+            if (_handoverCubit.state.startTime == '') {
+              _handoverCubit.setStartDate();
+            }
+            flagMaterialsBloc.add(GetFlagMaterials(hasScanned));
+          }
           break;
         case ErrorScanType.dataNull:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -101,43 +111,17 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _handoverCubit),
-        BlocProvider.value(value: tongBloc),
-        BlocProvider.value(value: submitHandoverBloc)
+        BlocProvider.value(value: materialSetBloc),
+        BlocProvider.value(value: submitHandoverMixingBloc),
+        BlocProvider<FlagMaterialsBloc>(
+            create: (BuildContext context) => flagMaterialsBloc)
       ],
       child: MultiBlocListener(
         listeners: [
-          BlocListener<TongBloc, TongState>(
-            listener: (context, state) {
-              if (state is TongLoaded) {
-                _handoverCubit.setResultTong(state.tong.d!.resultsTong!);
-                List<ResultsFullPack> fullpacks = [];
-                for (var fullpack in state.tong.d!.resultsTong!) {
-                  if (fullpack.wadToMatNav!.resultsFullPack != null) {
-                    fullpacks.addAll(fullpack.wadToMatNav!.resultsFullPack!);
-                  }
-                }
-                print(fullpacks.toList());
-                _handoverCubit.setFullpack(fullpacks);
-              }
-            },
-          ),
-          BlocListener<HandoverCubit, HandoverState>(
-            listener: (context, state) {
-              if (state.isResultOperationLoaded == true &&
-                  state.tongs.isEmpty) {
-                tongBloc.add(SendDataTong(
-                    routingNo: state.selectedOperation.routingNo,
-                    activityNo: state.selectedOperation.activityNo,
-                    controlRecipe: state.selectedOperation.controlRecipe,
-                    operationType: state.operationType));
-              }
-              line.text = state.line;
-            },
-          ),
-          BlocListener<SubmitHandoverBloc, SubmitHandoverState>(
+          BlocListener<SubmitHandoverMixingBloc, SubmitHandoverMixingState>(
               listener: (context, state) {
             switch (state) {
-              case SubmitHandoverLoaded():
+              case SubmitHandoverMixingLoaded():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: const Text("Send data successfully"),
                   backgroundColor: Colors.black,
@@ -146,12 +130,13 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ));
-                Future.delayed(const Duration(seconds: 2), () {
+                Navigator.of(context).pop();
+                Future.delayed(const Duration(seconds: 1), () {
                   // ignore: use_build_context_synchronously
                   context.go("/home");
                 });
                 break;
-              case SubmitHandoverError():
+              case SubmitHandoverMixingError():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(state.error),
                   backgroundColor: Colors.red,
@@ -162,7 +147,45 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                 ));
                 break;
             }
-          })
+          }),
+          BlocListener<FlagMaterialsBloc, FlagMaterialsState>(
+              listener: (context, state) {
+            switch (state) {
+              case FlagMaterialsSuccess():
+                materialSetBloc.add(SendDataMaterialset(
+                    routingNo: _handoverCubit.state.selectedOperation.routingNo,
+                    activityNo: _handoverCubit.state.tong,
+                    operationType:
+                        _handoverCubit.state.selectedOrder.operationType!));
+
+                break;
+              case FlagMaterialsError():
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+                break;
+            }
+          }),
+          BlocListener<MaterialSetBloc, MaterialSetState>(
+              listener: (context, state) {
+            if (state is MaterialSetLoaded) {
+              var materialSets = state.materialset.d!.results!;
+              if (materialSets.isNotEmpty) {
+                if (materialSets[0].priority == '') {
+                  materialSets.sort((a, b) => '${a.scanDate} ${a.scanTime}'
+                      .compareTo('${b.scanDate} ${b.scanTime}'));
+                } else {
+                  materialSets.sort((a, b) => a.priority.compareTo(b.priority));
+                }
+              }
+              _handoverCubit.setMaterialSet(materialSets);
+            }
+          }),
         ],
         child: BlocBuilder<HandoverCubit, HandoverState>(
           builder: (context, handoverState) {
@@ -170,11 +193,10 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
               backgroundColor: Colors.grey[100],
               appBar: AppBar(
                 title: Text(
-                    "Handover - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                    "Handover Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
                 leading: IconButton(
                   onPressed: () {
-                    _handoverCubit.setTab(HandoverStatus.chooseOperation);
-                    _handoverCubit.resetFullpackWadah();
+                    _handoverCubit.setTab(HandoverStatus.scantongmaterial);
                   },
                   icon: const Icon(Icons.chevron_left_rounded),
                 ),
@@ -309,35 +331,6 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                           ],
                         ),
                       ),
-                      Form(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: TextFormField(
-                            controller: line,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => ScanBarcodeScreen(
-                                    onBarcodeScanned: (barcode) {
-                                      _scanLine(barcode);
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                labelText: 'Line',
-                                filled: true,
-                                fillColor: Colors.grey.shade100,
-                                suffixIcon:
-                                    const Icon(Icons.qr_code_scanner_rounded)),
-                            readOnly: true,
-                          ),
-                        ),
-                      ),
                       _listTong(context, handoverState)
                     ],
                   ),
@@ -352,11 +345,14 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 50,
-                    child: handoverState.isCompletedcontainer
+                    child: handoverState.materialSet
+                                .where((test) => test.scanFlag == 'X')
+                                .length ==
+                            handoverState.materialSet.length
                         ? TextButton(
                             onPressed: () {
-                              submitHandoverBloc.add(
-                                  SubmitHandover(orderData: handoverState));
+                              submitHandoverMixingBloc.add(SubmitHandoverMixing(
+                                  handoverMixingData: handoverState));
                             },
                             style: TextButton.styleFrom(
                               backgroundColor: Colors.green,
@@ -373,7 +369,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
-                                  "Complete",
+                                  "Save",
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium
@@ -447,55 +443,57 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
           builder: (context, handoverState) {
         return SingleChildScrollView(
           child: Container(
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.only(top: 5),
-            decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  alignment: Alignment.center,
-                  child: Text(
-                    "Handover containers",
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge!
-                        .copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const Divider(endIndent: 10, indent: 10),
-                for (var tong in handoverState.tongs) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Text(
-                            '${tong.operationDesc} ${tong.activityNo}',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                        if (tong.isScanned == true)
-                          const Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          )
-                      ],
+              height: MediaQuery.of(context).size.height,
+              padding: const EdgeInsets.only(top: 5),
+              decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(10))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    alignment: Alignment.center,
+                    child: Text(
+                      "Mixing materials",
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge!
+                          .copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  const Divider(
-                    endIndent: 10,
-                    indent: 10,
-                  ),
+                  const Divider(endIndent: 10, indent: 10),
+                  for (var materialSet in handoverState.materialSet) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10, right: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Text(
+                                '${materialSet.materialNo.isNotEmpty ? "${materialSet.materialNo} -" : ''} ${materialSet.materialDesc} - ${materialSet.bOMItem} - ${materialSet.quantity.replaceAll('.', ',')} ${materialSet.uom} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                          if (materialSet.scanFlag == 'X') ...[
+                            const Icon(
+                              Icons.check,
+                              color: Colors.green,
+                            )
+                          ]
+                        ],
+                      ),
+                    ),
+                    const Divider(
+                      endIndent: 10,
+                      indent: 10,
+                    ),
+                  ]
                 ],
-              ],
-            ),
-          ),
+              )),
         );
       }),
     );

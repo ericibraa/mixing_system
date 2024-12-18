@@ -81,6 +81,10 @@ class HandoverCubit extends Cubit<HandoverState> {
     emit(state.copyWith(operationApps: operationApps));
   }
 
+  void setLine(String line) {
+    emit(state.copyWith(line: line));
+  }
+
   void setScannedTong(List<String> activityNo) {
     emit(state.copyWith(
         isLoadingTong: true,
@@ -89,13 +93,12 @@ class HandoverCubit extends Cubit<HandoverState> {
     var tongs = state.tongs;
     var fullpack = state.fullpack;
     var materialSets = state.materialSet;
-    var line = state.line;
     var completed = tongs.where((tong) => tong.isScanned == true).length;
     var completedFullpack =
         fullpack.where((pack) => pack.isScannedFullpack == true).length;
     var completedMaterialset =
         materialSets.where((material) => material.scanFlag == 'X').length;
-    var errorType = ErrorScanType.noError;
+    var errorType = ErrorScanType.dataNull;
     String lastPrioEmpty = "";
     bool isMatch = false;
 
@@ -110,27 +113,22 @@ class HandoverCubit extends Cubit<HandoverState> {
           case 5:
             isMatch = tongs[i].activityNo == activityNo[3];
             break;
-          case 1:
-            line = activityNo[0];
+        }
+        if (tongs[i].isScanned!) {
+          if (isMatch) {
+            errorType = ErrorScanType.dataScanned;
+            isFound = true;
             break;
+          }
+          continue;
         }
         if (isMatch) {
-          if (tongs[i].isScanned!) {
-            if (isMatch) {
-              errorType = ErrorScanType.dataScanned;
-              isFound = true;
-              break;
-            }
-            continue;
-          }
           var tong = tongs[i].copyWith(isScanned: true);
           completed++;
           tongs[i] = tong;
           isFound = true;
+          errorType = ErrorScanType.noError;
           break;
-        }
-        if (activityNo.length > 1) {
-          errorType = ErrorScanType.dataNull;
         }
       }
       if (!isFound) {
@@ -148,9 +146,6 @@ class HandoverCubit extends Cubit<HandoverState> {
             case 9:
               isMatch = fullpack[k].bOMItem == activityNo[3] &&
                   fullpack[k].counter == activityNo[6];
-              break;
-            case 1:
-              line = activityNo[0];
               break;
           }
           if (fullpack[k].isScannedFullpack ||
@@ -176,54 +171,74 @@ class HandoverCubit extends Cubit<HandoverState> {
               break;
             }
           }
-          if (activityNo.length > 1) {
-            errorType = ErrorScanType.dataNull;
-          }
         }
       }
     } else {
-      for (var k = 0; k < materialSets.length; k++) {
+      var isFound = false;
+      for (var i = 0; i < tongs.length; i++) {
         switch (activityNo.length) {
-          case 6:
-            isMatch = materialSets[k].bOMItem == activityNo[3];
+          case 4:
+            isMatch = tongs[i].activityNo == activityNo[3];
             break;
-          case 7:
-            isMatch = materialSets[k].activityDmp == activityNo[2] &&
-                materialSets[k].counter == activityNo[5] &&
-                materialSets[k].activityWh == activityNo[6];
-            break;
-          case 9:
-            isMatch = materialSets[k].bOMItem == activityNo[3] &&
-                materialSets[k].counter == activityNo[6];
-            break;
-          case 1:
-            line = activityNo[0];
+          case 5:
+            isMatch = tongs[i].activityNo == activityNo[3];
             break;
         }
-        if (materialSets[k].scanFlag == "X") {
+        if (tongs[i].isScanned!) {
           if (isMatch) {
             errorType = ErrorScanType.dataScanned;
+            isFound = true;
             break;
           }
           continue;
         }
-        if (materialSets[k].scanFlag == "") {
-          if (lastPrioEmpty != "" &&
-              lastPrioEmpty != materialSets[k].priority) {
-            errorType = ErrorScanType.incorrectPriority;
-            break;
+        if (isMatch) {
+          var tong = tongs[i].copyWith(isScanned: true);
+          completed++;
+          tongs[i] = tong;
+          isFound = true;
+          errorType = ErrorScanType.noError;
+          break;
+        }
+      }
+      if (!isFound) {
+        for (var k = 0; k < materialSets.length; k++) {
+          switch (activityNo.length) {
+            case 6:
+              isMatch = materialSets[k].bOMItem == activityNo[3];
+              break;
+            case 7:
+              isMatch = materialSets[k].activityDmp == activityNo[2] &&
+                  materialSets[k].counter == activityNo[5] &&
+                  materialSets[k].activityWh == activityNo[6];
+              break;
+            case 9:
+              isMatch = materialSets[k].bOMItem == activityNo[3] &&
+                  materialSets[k].counter == activityNo[6];
+              break;
           }
-          lastPrioEmpty = materialSets[k].priority;
-          if (isMatch) {
-            var materialSet =
-                materialSets[k].copyWith(isScanned: true, scanFlag: "X");
-            completedMaterialset++;
-            materialSets[k] = materialSet;
-            errorType = ErrorScanType.noError;
-            break;
+          if (materialSets[k].scanFlag == "X") {
+            if (isMatch) {
+              errorType = ErrorScanType.dataScanned;
+              break;
+            }
+            continue;
           }
-          if (activityNo.length > 1) {
-            errorType = ErrorScanType.dataNull;
+          if (materialSets[k].scanFlag == "") {
+            if (lastPrioEmpty != "" &&
+                lastPrioEmpty != materialSets[k].priority) {
+              errorType = ErrorScanType.incorrectPriority;
+              break;
+            }
+            lastPrioEmpty = materialSets[k].priority;
+            if (isMatch) {
+              var materialSet =
+                  materialSets[k].copyWith(isScanned: true, scanFlag: "X");
+              completedMaterialset++;
+              materialSets[k] = materialSet;
+              errorType = ErrorScanType.noError;
+              break;
+            }
           }
         }
       }
@@ -243,7 +258,6 @@ class HandoverCubit extends Cubit<HandoverState> {
         tongs: tongs,
         fullpack: fullpack,
         materialSet: materialSets,
-        line: line,
         isLoadingTong: false,
         isLoadingFullpack: false,
         isLoadingMaterialset: false,

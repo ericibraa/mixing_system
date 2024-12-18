@@ -41,6 +41,14 @@ class _ScanTongResultsWeighingScreenState
     return scanned;
   }
 
+  void _scanLine(Barcode? barcode) async {
+    if (barcode != null && barcode.displayValue != null) {
+      setState(() {
+        _handoverCubit.setLine(barcode.displayValue!);
+      });
+    }
+  }
+
   void _scanOperator(Barcode? barcode) async {
     if (barcode != null && barcode.displayValue != null) {
       setState(() {
@@ -333,7 +341,7 @@ class _ScanTongResultsWeighingScreenState
                               MaterialPageRoute(
                                 builder: (context) => ScanBarcodeScreen(
                                   onBarcodeScanned: (barcode) {
-                                    _scanOperator(barcode);
+                                    _scanLine(barcode);
                                   },
                                 ),
                               ),

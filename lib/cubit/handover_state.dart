@@ -3,9 +3,11 @@ part of 'handover_cubit.dart';
 enum HandoverStatus {
   handover,
   scantong,
+  chooseOperation,
   scantongmaterial,
   scanTongResultsWeighing,
-  chooseLocation
+  chooseLocation,
+  scanMaterialMixing,
 }
 
 enum ErrorScanType { noError, dataScanned, dataNull, incorrectPriority }
@@ -174,7 +176,8 @@ class HandoverState extends Equatable {
         startTime: startTime ?? this.startTime,
         isStartDateStatus: isStartDateStatus ?? this.isStartDateStatus,
         errorScanType: errorScanType ?? this.errorScanType,
-        isCompletedcontainer: isCompletedcontainer ?? this.isCompletedcontainer);
+        isCompletedcontainer:
+            isCompletedcontainer ?? this.isCompletedcontainer);
   }
 
   @override

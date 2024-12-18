@@ -3,6 +3,7 @@ import 'package:dumping_system/bloc/material_bloc.dart';
 import 'package:dumping_system/bloc/operation_bloc.dart';
 import 'package:dumping_system/bloc/order_bloc.dart';
 import 'package:dumping_system/cubit/handover_cubit.dart';
+import 'package:dumping_system/screen/handover/widget/choose_operation.dart';
 import 'package:dumping_system/screen/handover/widget/handover.dart';
 import 'package:dumping_system/screen/handover/widget/scantong.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +52,7 @@ class _MainViewState extends State<MainView> {
             builder: (context, state) {
               return IndexedStack(
                 index: state.tab.index,
-                children: const [HandoverScreen(), ScanTongScreen()],
+                children: const [HandoverScreen(), ScanTongScreen(), ChooseOperation()],
               );
             },
           ),
