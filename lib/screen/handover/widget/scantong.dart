@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:vibration/vibration.dart';
 
 class ScanTongScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -49,6 +51,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
+          FlutterRingtonePlayer().play(fromAsset: "assets/ringtone/wrong.mp3");
           break;
         case ErrorScanType.incorrectPriority:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -71,6 +74,10 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
+          FlutterRingtonePlayer().play(fromAsset: "assets/ringtone/wrong.mp3");
+          Future.delayed(const Duration(milliseconds: 200), () {
+            Vibration.vibrate(duration: 800);
+          });
           break;
       }
     }
@@ -414,6 +421,88 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                             ),
                           ),
                   ),
+                  // )
+                  // : Padding(
+                  //   padding:
+                  //       const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  //   child: SizedBox(
+                  //     width: double.infinity,
+                  //     height: 50,
+                  //     child:  handoverState.isCompletedcontainer
+                  //         ? TextButton(
+                  //             onPressed: () {
+                  //               submitHandoverBloc.add(
+                  //                   SubmitHandover(orderData: handoverState));
+                  //             },
+                  //             style: TextButton.styleFrom(
+                  //               backgroundColor: Colors.green,
+                  //               shape: RoundedRectangleBorder(
+                  //                 borderRadius: BorderRadius.circular(12),
+                  //               ),
+                  //             ),
+                  //             child: Row(
+                  //               mainAxisAlignment: MainAxisAlignment.center,
+                  //               children: [
+                  //                 const Icon(
+                  //                   Icons.check,
+                  //                   color: Colors.white,
+                  //                 ),
+                  //                 const SizedBox(width: 10),
+                  //                 Text(
+                  //                   "Complete",
+                  //                   style: Theme.of(context)
+                  //                       .textTheme
+                  //                       .bodyMedium
+                  //                       ?.copyWith(
+                  //                         color: Colors.white,
+                  //                         fontWeight: FontWeight.bold,
+                  //                         fontSize: 16,
+                  //                       ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //           )
+                  //         : TextButton(
+                  //             onPressed: () {
+                  //               Navigator.of(context).push(
+                  //                 MaterialPageRoute(
+                  //                   builder: (context) => ScanBarcodeScreen(
+                  //                     onBarcodeScanned: (barcode) {
+                  //                       _scanOperator(barcode);
+                  //                     },
+                  //                   ),
+                  //                 ),
+                  //               );
+                  //             },
+                  //             style: TextButton.styleFrom(
+                  //               backgroundColor: Colors.black,
+                  //               shape: RoundedRectangleBorder(
+                  //                 borderRadius: BorderRadius.circular(12),
+                  //               ),
+                  //             ),
+                  //             child: Row(
+                  //               mainAxisAlignment: MainAxisAlignment.center,
+                  //               children: [
+                  //                 const Icon(
+                  //                   Icons.qr_code_scanner_rounded,
+                  //                   color: Colors.white,
+                  //                 ),
+                  //                 const SizedBox(width: 10),
+                  //                 Text(
+                  //                   "Scan Barcode",
+                  //                   style: Theme.of(context)
+                  //                       .textTheme
+                  //                       .bodyMedium
+                  //                       ?.copyWith(
+                  //                         color: Colors.white,
+                  //                         fontWeight: FontWeight.bold,
+                  //                         fontSize: 16,
+                  //                       ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //           ),
+                  //   ),
                 ),
               ),
             );
@@ -446,7 +535,7 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                   padding: const EdgeInsets.all(10),
                   alignment: Alignment.center,
                   child: Text(
-                    "Containers",
+                    "Handover containers",
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge!
@@ -480,33 +569,33 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
                     indent: 10,
                   ),
                 ],
-                for (var fullpack in handoverState.fullpack) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Text(
-                            '${fullpack.materialDesc} ${fullpack.counter}',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                        if (fullpack.isScannedFullpack == true) ...[
-                          const Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          )
-                        ]
-                      ],
-                    ),
-                  ),
-                  const Divider(
-                    endIndent: 10,
-                    indent: 10,
-                  ),
-                ]
+                // for (var fullpack in handoverState.fullpack) ...[
+                //   Padding(
+                //     padding: const EdgeInsets.only(left: 10, right: 20),
+                //     child: Row(
+                //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //       children: [
+                //         Padding(
+                //           padding: const EdgeInsets.all(10),
+                //           child: Text(
+                //             '${fullpack.materialDesc} ${fullpack.counter}',
+                //             style: Theme.of(context).textTheme.bodyMedium,
+                //           ),
+                //         ),
+                //         if (fullpack.isScannedFullpack == true) ...[
+                //           const Icon(
+                //             Icons.check,
+                //             color: Colors.green,
+                //           )
+                //         ]
+                //       ],
+                //     ),
+                //   ),
+                //   const Divider(
+                //     endIndent: 10,
+                //     indent: 10,
+                //   ),
+                // ]
               ],
             ),
           ),

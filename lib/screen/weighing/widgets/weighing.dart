@@ -118,33 +118,28 @@ class _WeighingScreenState extends State<WeighingScreen> {
                     _weighingCubit.setTab(WeighingStatus.scaleWeighing);
                   } else {
                     _weighingCubit.setWeighing(state.weighing.d!.resultsTong!);
-                    for (var selected in state.weighing.d!.resultsTong!) {
-                      _weighingCubit.selectedWeighing(selected);
-                      scaleBloc.add(
-                          SendDataScale(plant: _weighingCubit.state.plant));
-                      expiredSetBloc.add(GetExpiredSet(
-                          orderNo:
-                              _weighingCubit.state.selectedOrder.orderNo != null
-                                  ? _weighingCubit.state.selectedOrder.orderNo!
-                                  : '',
-                          activityNo: selected.activityNo != null
-                              ? selected.activityNo!
-                              : ''));
-                      resultScaleBloc.add(SendDataResultScale(
-                          orderNo:
-                              _weighingCubit.state.selectedOrder.orderNo != null
-                                  ? _weighingCubit.state.selectedOrder.orderNo!
-                                  : '',
-                          activityNo: selected.activityNo != null
-                              ? selected.activityNo!
-                              : '',
-                          activityWh:
-                              _weighingCubit.state.operationType == 'DECOCT'
-                                  ? ''
-                                  : selected.activityWh != null
-                                      ? selected.activityWh!
-                                      : ''));
+                    if (state.weighing.d!.resultsTong!.isNotEmpty) {
+                      _weighingCubit
+                          .selectedWeighing(state.weighing.d!.resultsTong![0]);
                     }
+                    scaleBloc
+                        .add(SendDataScale(plant: _weighingCubit.state.plant));
+                    expiredSetBloc.add(GetExpiredSet(
+                        orderNo:
+                            _weighingCubit.state.selectedOrder.orderNo != null
+                                ? _weighingCubit.state.selectedOrder.orderNo!
+                                : '',
+                        activityNo:
+                            _weighingCubit.state.selectedOperation.activityNo));
+                    resultScaleBloc.add(SendDataResultScale(
+                        orderNo:
+                            _weighingCubit.state.selectedOrder.orderNo ?? '',
+                        activityNo:
+                            _weighingCubit.state.selectedOperation.activityNo,
+                        activityWh:
+                            _weighingCubit.state.selectedContainer.activityWh ??
+                                ''));
+
                     _weighingCubit.setTab(WeighingStatus.scale);
                     _weighingCubit.setPrevTab(WeighingStatus.weighing);
                   }
@@ -188,9 +183,8 @@ class _WeighingScreenState extends State<WeighingScreen> {
                 if (state is ResultScaleLoaded) {
                   _weighingCubit
                       .setResultScaleList(state.resultScale.d!.results!);
-                  for (var data in state.resultScale.d!.results!) {
-                    _weighingCubit.setTotalContainer(data.totalWadah!);
-                  }
+                  _weighingCubit.setTotalContainer(
+                      state.resultScale.d!.results![0].totalWadah!);
                 }
               }),
               BlocListener<OperationBloc, OperationState>(

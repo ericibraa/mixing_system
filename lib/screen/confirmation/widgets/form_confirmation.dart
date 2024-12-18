@@ -27,11 +27,14 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
   final startExecution = TextEditingController();
   final finishExecution = TextEditingController();
   final postingDate = TextEditingController();
+  final numberOfLabor = TextEditingController();
+  var laborTimeValue = 0.0;
 
   @override
   void initState() {
     authBloc = BlocProvider.of<AuthBloc>(context);
     _confirmationCubit = BlocProvider.of<ConfirmationCubit>(context);
+    numberOfLabor.text = '1';
     super.initState();
   }
 
@@ -41,6 +44,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
         scannedBarcode = barcode.displayValue!;
       });
       line.text = scannedBarcode;
+      numberOfLabor.text = '1';
       _confirmationCubit.setLine(line.text);
       _confirmationCubit.setStartDate();
     }
@@ -60,8 +64,6 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
           BlocListener<ConfirmationCubit, ConfirmationState>(
               listener: (context, state) {
             if (state.tab == ConfirmationStatus.formConfirmation) {
-              print("=================");
-              print(state.yieldSet.toString());
               String date = state.yieldSet.startDateOpr;
               DateTime? parsedDate = DateTime.parse(date);
               String hours = state.yieldSet.startTimeOpr.substring(0, 2);
@@ -111,6 +113,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     onPressed: () {
                       _confirmationCubit
                           .setTab(ConfirmationStatus.confirmation);
+                      numberOfLabor.text = '1';
                     },
                   ),
                 ),
@@ -372,8 +375,11 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                   keyboardType: TextInputType.number,
                   onChanged: (value) {
                     var data = _confirmationCubit.state.yieldSet;
+
+                    laborTimeValue = double.parse(value) * double.parse(numberOfLabor.text);
+
                     _confirmationCubit
-                        .setYieldSet(data.copyWith(machineHour: value));
+                        .setYieldSet(data.copyWith(machineHour: value, laborHour: laborTimeValue.toStringAsFixed(3)));
                   },
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
@@ -391,17 +397,39 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                 child: TextFormField(
                   controller: laborTime,
                   keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    var data = _confirmationCubit.state.yieldSet;
-                    _confirmationCubit
-                        .setYieldSet(data.copyWith(laborHour: value));
-                  },
+                  readOnly: true,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     suffixIcon: const Icon(Icons.access_time_rounded),
                     labelText: 'Labor Time',
+                    filled: true,
+                    fillColor: Colors.grey[350],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: TextFormField(
+                  controller: numberOfLabor,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    var data = _confirmationCubit.state.yieldSet;
+
+                    laborTimeValue =
+                        double.parse(data.machineHour) * double.parse(value);
+                    print(laborTime);
+
+                    _confirmationCubit.setYieldSet(
+                        data.copyWith(laborHour: laborTimeValue.toStringAsFixed(3)));
+                  },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    suffixIcon: const Icon(Icons.access_time_rounded),
+                    labelText: 'Number Of Labor',
                     filled: true,
                     fillColor: Colors.grey.shade100,
                   ),

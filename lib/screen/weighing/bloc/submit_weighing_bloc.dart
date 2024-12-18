@@ -25,7 +25,11 @@ class SubmitWeighingBloc
         String finalExpTime = '';
         String lotNo = '';
         if (event.weighingState.operationType == 'DECOCT') {
-          lotNo = event.weighingState.scaleWeighing.lot;
+          if (event.weighingState.scaleWeighing.lot == '-') {
+            lotNo = event.weighingState.selectedContainer.lot!;
+          } else {
+            lotNo = event.weighingState.scaleWeighing.lot;
+          }
         }
         if (event.weighingState.expiredSet.expiredNo != '0,000') {
           if (event.weighingState.expiredSet.unit == 'DAY') {

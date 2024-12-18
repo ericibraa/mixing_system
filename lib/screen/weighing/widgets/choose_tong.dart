@@ -63,9 +63,8 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                 if (state is ResultScaleLoaded) {
                   _weighingCubit.setContainerCounter(
                       state.resultScale.d!.results!.length + 1);
-                  for (var data in state.resultScale.d!.results!) {
-                    _weighingCubit.setTotalContainer(data.totalWadah!);
-                  }
+                  _weighingCubit.setTotalContainer(
+                      state.resultScale.d!.results![0].totalWadah!);
                 }
               },
             ),

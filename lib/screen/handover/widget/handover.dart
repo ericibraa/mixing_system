@@ -325,6 +325,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                       setState(() {
                                         materialValue = value!;
                                         _handoverCubit.setOrders([]);
+
                                         isSelected = false;
                                       });
                                     },

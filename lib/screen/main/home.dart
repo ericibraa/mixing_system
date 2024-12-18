@@ -65,9 +65,9 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Image.asset(
-          "assets/images/logo/dumping_system.png",
+          "assets/images/logo/mixing_system.png",
           fit: BoxFit.cover,
-          width: 150,
+          width: 100,
         ),
         actions: [
           Padding(

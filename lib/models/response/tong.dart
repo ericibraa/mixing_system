@@ -146,6 +146,7 @@ class ResultsFullPack extends Equatable {
   final String activityWh;
   final String? activityDmp;
   final String scanFlag;
+  final String handoverFlag;
   final bool isScannedFullpack;
 
   const ResultsFullPack(
@@ -163,6 +164,7 @@ class ResultsFullPack extends Equatable {
       required this.activityWh,
       this.activityDmp,
       this.scanFlag = '',
+      this.handoverFlag = '',
       this.isScannedFullpack = false});
   ResultsFullPack copyWith(
       {required bool isScannedFullpack, String? scanFlag}) {
@@ -181,6 +183,7 @@ class ResultsFullPack extends Equatable {
         activityWh: activityWh,
         activityDmp: activityDmp,
         scanFlag: scanFlag ?? this.scanFlag,
+        handoverFlag: handoverFlag,
         isScannedFullpack: isScannedFullpack);
   }
 
@@ -199,6 +202,7 @@ class ResultsFullPack extends Equatable {
           priority: json['Priority'],
           activityWh: json['ActivityWh'],
           activityDmp: json['ActivityDmp'] ?? '',
+          handoverFlag: json['HandoverFlag'] ?? '',
           scanFlag: json['ScanFlag'] ?? '');
 
   @override
@@ -215,6 +219,7 @@ class ResultsFullPack extends Equatable {
         counter,
         priority,
         activityWh,
+        handoverFlag,
         isScannedFullpack
       ];
 }

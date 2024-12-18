@@ -373,7 +373,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                         operationDesc: _weighingCubit
                             .state.selectedOperation.operationDesc,
                         lot: _weighingCubit.state.operationType == 'DECOCT'
-                            ? _weighingCubit.state.scaleWeighing.lot
+                            ? _weighingCubit.state.scaleWeighing.lot == '-'
+                                ? _weighingCubit.state.selectedContainer.lot!
+                                : _weighingCubit.state.scaleWeighing.lot
                             : _weighingCubit.state.selectedContainer.lot!,
                         operator:
                             state.submitWeighing.submitWeighing!.operator!,
@@ -403,7 +405,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                         activityWh:
                             state.submitWeighing.submitWeighing!.activityWh!,
                         activityNo:
-                            state.submitWeighing.submitWeighing!.activityNo!)
+                            state.submitWeighing.submitWeighing!.activityNo!,
+                        temperature:
+                            state.submitWeighing.submitWeighing!.temperature!)
                     .getZpl();
                 await zsdk
                     .printZplDataOverTCPIP(
@@ -438,25 +442,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                     print(cause);
                   }
                 });
-                // if (state.isPrinted) {
-                //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                //     content: const Text("Label printed"),
-                //     backgroundColor: Colors.black,
-                //     behavior: SnackBarBehavior.floating,
-                //     shape: RoundedRectangleBorder(
-                //       borderRadius: BorderRadius.circular(10.0),
-                //     ),
-                //   ));
-                // } else {
-                //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                //     content: const Text("failed to print"),
-                //     backgroundColor: Colors.red,
-                //     behavior: SnackBarBehavior.floating,
-                //     shape: RoundedRectangleBorder(
-                //       borderRadius: BorderRadius.circular(10.0),
-                //     ),
-                //   ));
-                // }
                 _weighingCubit.setStartWork();
                 break;
               case SubmitWeighingError():
@@ -620,8 +605,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                         ),
                                   ),
                                   Text(
-                                    '${weighingState
-                                        .selectedOperation.operationDesc} / ${weighingState.selectedContainer.operationDesc}',
+                                    '${weighingState.selectedOperation.operationDesc} / ${weighingState.selectedContainer.operationDesc}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -766,7 +750,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                                   expiredUnit: weighingState.expiredSet.unit ?? '',
                                                   startWork: DateFormat('dd.MM.yyyy HH:mm:ss').format(weighingState.startWork!),
                                                   activityWh: weighingState.selectedContainer.activityWh ?? '',
-                                                  activityNo: weighingState.selectedOperation.activityNo)
+                                                  activityNo: weighingState.selectedOperation.activityNo,
+                                                  temperature: weighingState.scaleWeighing.temperature)
                                               .getZpl();
                                           zsdk
                                               .printZplDataOverTCPIP(
@@ -1271,7 +1256,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                                 expiredUnit: '',
                                                 startWork: '$formattedDate $hours:$minutes:$seconds',
                                                 activityWh: dataLabel.activityWh!,
-                                                activityNo: dataLabel.activityNo!)
+                                                activityNo: dataLabel.activityNo!,
+                                                temperature: dataLabel.temperature!)
                                             .getZpl();
 
                                         zsdk

@@ -25,6 +25,7 @@ class ZplData {
   final String startWork;
   final String activityWh;
   final String activityNo;
+  final String temperature;
 
   const ZplData(
       {required this.materialCode,
@@ -50,7 +51,8 @@ class ZplData {
       required this.expiredUnit,
       required this.startWork,
       required this.activityWh,
-      required this.activityNo});
+      required this.activityNo,
+      this.temperature = ''});
 
   String Formatted(double value) {
     var currencyFormatter = NumberFormat.currency(
@@ -91,20 +93,22 @@ class ZplData {
           ^FO200,450^FD$startWork^FS        ; Date and time
           ^FO30,480^FD${expiredNo != '0,000' ? 'Staging Time' : ''}^FS
           ^FO200,480^FD$stagingTime^FS       ; Holding time
-          ^FO30,510^A0N,26^FD$operationType^FS          ; CB label
+          ^FO30,510^FD${operationType == 'DECOCT' ? 'Temperature' : ''}^FS                    ; Temperature
+          ^FO200, 510^FH\\^FD ${operationType == 'DECOCT' ? '$temperature\\F8C' : ''}^FS
+          ^FO30,550^A0N,26^FD$operationType^FS          ; CB label
           ^FO395,114^FB200,,,R^BQN,2,4^FDQA,$orderNo;$materialCode;$activityNo;$operationType;${Formatted(netto)};${int.parse(containerConter)}/${int.parse(totalContainer)};$activityWh^FS          ; QR code at top right
-          ^FO470,560^FDJumlah^FS
+          ^FO470,580^FDJumlah^FS
           ^FO495,745^FD${int.parse(containerConter)}/${int.parse(totalContainer)}^FS        ; Page number
           ^CF0,30       
-          ^FO30,595^FDBruto^FS                   ; "Nett" label
-          ^FO290,595^FB180,,,R^FD${Formatted(bruto)}^FS          ; Aligned value
-          ^FO330,595^FB200,,,R^FD$unit^FS                    ; Aligned unit
-          ^FO30,635^FDTara^FS                   ; "Nett" label
-          ^FO290,635^FB180,,,R^FD${Formatted(tara)}^FS           ; Aligned value
-          ^FO330,635^FB200,,,R^FD$unit^FS                    ; Aligned unit
-          ^FO30,675^FDNetto^FS                   ; "Nett" label
-          ^FO290,675^FB180,,,R^FD${Formatted(netto)}^FS         ; Aligned value
-          ^FO330,675^FB200,,,R^FD$unit^FS                    ; Aligned unit
+          ^FO30,615^FDBruto^FS                   ; "Nett" label
+          ^FO290,615^FB180,,,R^FD${Formatted(bruto)}^FS          ; Aligned value
+          ^FO330,615^FB200,,,R^FD$unit^FS                    ; Aligned unit
+          ^FO30,655^FDTara^FS                   ; "Nett" label
+          ^FO290,655^FB180,,,R^FD${Formatted(tara)}^FS           ; Aligned value
+          ^FO330,655^FB200,,,R^FD$unit^FS                    ; Aligned unit
+          ^FO30,695^FDNetto^FS                   ; "Nett" label
+          ^FO290,695^FB180,,,R^FD${Formatted(netto)}^FS         ; Aligned value
+          ^FO330,695^FB200,,,R^FD$unit^FS                    ; Aligned unit
           ^XZ
         ''';
   }

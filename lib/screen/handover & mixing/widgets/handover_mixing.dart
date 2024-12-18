@@ -381,6 +381,7 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                           break;
                                       }
                                       _handoverCubit.setOperationApps(title);
+                                      _handoverCubit.setOrders([]);
                                     });
                                   },
                                   iconEnabledColor: Colors.black,

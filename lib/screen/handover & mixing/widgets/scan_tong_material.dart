@@ -453,7 +453,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                     padding: const EdgeInsets.all(10),
                     alignment: Alignment.center,
                     child: Text(
-                      "Containers",
+                      "Mixing containers",
                       style: Theme.of(context)
                           .textTheme
                           .bodyLarge!
@@ -519,7 +519,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                           Padding(
                             padding: const EdgeInsets.all(10),
                             child: Text(
-                              '${materialSet.materialDesc} - ${materialSet.bOMItem} - ${materialSet.quantity.replaceAll('.', ',')} ${materialSet.uom} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
+                              '${materialSet.materialNo.isNotEmpty ? "${materialSet.materialNo} -" : ''} ${materialSet.materialDesc} - ${materialSet.bOMItem} - ${materialSet.quantity.replaceAll('.', ',')} ${materialSet.uom} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),

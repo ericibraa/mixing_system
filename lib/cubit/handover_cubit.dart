@@ -105,15 +105,14 @@ class HandoverCubit extends Cubit<HandoverState> {
       for (var i = 0; i < tongs.length; i++) {
         switch (activityNo.length) {
           case 4:
+            isMatch = tongs[i].activityNo == activityNo[3];
+            break;
           case 5:
             isMatch = tongs[i].activityNo == activityNo[3];
             break;
           case 1:
             line = activityNo[0];
             break;
-        }
-        if (line.isNotEmpty) {
-          break;
         }
         if (isMatch) {
           if (tongs[i].isScanned!) {
@@ -130,7 +129,9 @@ class HandoverCubit extends Cubit<HandoverState> {
           isFound = true;
           break;
         }
-        errorType = ErrorScanType.dataNull;
+        if (activityNo.length > 1) {
+          errorType = ErrorScanType.dataNull;
+        }
       }
       if (!isFound) {
         for (var k = 0; k < fullpack.length; k++) {
@@ -143,28 +144,24 @@ class HandoverCubit extends Cubit<HandoverState> {
                 isMatch = fullpack[k].activityDmp == activityNo[2] &&
                     fullpack[k].counter == activityNo[5];
               }
-
               break;
             case 9:
               isMatch = fullpack[k].bOMItem == activityNo[3] &&
                   fullpack[k].counter == activityNo[6];
-
               break;
             case 1:
               line = activityNo[0];
               break;
           }
-          if (line.isNotEmpty) {
-            break;
-          }
-          if (fullpack[k].isScannedFullpack) {
+          if (fullpack[k].isScannedFullpack ||
+              fullpack[k].handoverFlag == 'X') {
             if (isMatch) {
               errorType = ErrorScanType.dataScanned;
               break;
             }
             continue;
           }
-          if (fullpack[k].scanFlag == "") {
+          if (fullpack[k].scanFlag == "" || fullpack[k].handoverFlag == '') {
             if (lastPrioEmpty != "" && lastPrioEmpty != fullpack[k].priority) {
               errorType = ErrorScanType.incorrectPriority;
               break;
@@ -178,6 +175,8 @@ class HandoverCubit extends Cubit<HandoverState> {
               errorType = ErrorScanType.noError;
               break;
             }
+          }
+          if (activityNo.length > 1) {
             errorType = ErrorScanType.dataNull;
           }
         }
@@ -201,9 +200,6 @@ class HandoverCubit extends Cubit<HandoverState> {
             line = activityNo[0];
             break;
         }
-        if (line.isNotEmpty) {
-          break;
-        }
         if (materialSets[k].scanFlag == "X") {
           if (isMatch) {
             errorType = ErrorScanType.dataScanned;
@@ -226,7 +222,9 @@ class HandoverCubit extends Cubit<HandoverState> {
             errorType = ErrorScanType.noError;
             break;
           }
-          errorType = ErrorScanType.dataNull;
+          if (activityNo.length > 1) {
+            errorType = ErrorScanType.dataNull;
+          }
         }
       }
     }
@@ -261,7 +259,13 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   void resetFullpackWadah() {
     emit(state.copyWith(
-        tongs: [], fullpack: [], isComplete: false, isCompleteTong: false));
+        tongs: [],
+        fullpack: [],
+        isComplete: false,
+        isCompleteTong: false,
+        isCompletedcontainer: false,
+        isCompleteMaterials: false,
+        isCompleteWeighingResults: false));
   }
 
   void setMaterialSet(List<ResultsMaterialset> materialSet) {

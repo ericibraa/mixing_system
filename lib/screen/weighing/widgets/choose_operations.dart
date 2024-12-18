@@ -45,32 +45,21 @@ class _ChooseOperationsState extends State<ChooseOperations> {
           BlocListener<WeighingBloc, WeighingBlocState>(
             listener: (context, state) {
               if (state is WeighingLoaded) {
-                for (var selected in state.weighing.d!.resultsTong!) {
-                  _weighingCubit.selectedWeighing(selected);
-                  scaleBloc
-                      .add(SendDataScale(plant: _weighingCubit.state.plant));
-                  expiredSetBloc.add(GetExpiredSet(
-                      orderNo:
-                          _weighingCubit.state.selectedOrder.orderNo != null
-                              ? _weighingCubit.state.selectedOrder.orderNo!
-                              : '',
-                      activityNo: selected.activityNo != null
-                          ? selected.activityNo!
-                          : ''));
-                  resultScaleBloc.add(SendDataResultScale(
-                      orderNo:
-                          _weighingCubit.state.selectedOrder.orderNo != null
-                              ? _weighingCubit.state.selectedOrder.orderNo!
-                              : '',
-                      activityNo: selected.activityNo != null
-                          ? selected.activityNo!
-                          : '',
-                      activityWh: _weighingCubit.state.operationType == 'DECOCT'
-                          ? ''
-                          : selected.activityWh != null
-                              ? selected.activityWh!
-                              : ''));
-                }
+                scaleBloc.add(SendDataScale(plant: _weighingCubit.state.plant));
+                expiredSetBloc.add(GetExpiredSet(
+                    orderNo: _weighingCubit.state.selectedOrder.orderNo != null
+                        ? _weighingCubit.state.selectedOrder.orderNo!
+                        : '',
+                    activityNo:
+                        _weighingCubit.state.selectedOperation.activityNo));
+                resultScaleBloc.add(SendDataResultScale(
+                    orderNo: _weighingCubit.state.selectedOrder.orderNo ?? '',
+                    activityNo:
+                        _weighingCubit.state.selectedOperation.activityNo,
+                    activityWh:
+                        _weighingCubit.state.selectedContainer.activityWh ??
+                            ''));
+
                 _weighingCubit.setTab(WeighingStatus.scale);
                 _weighingCubit.setPrevTab(WeighingStatus.chooseOperation);
                 _weighingCubit.resetResultScale();

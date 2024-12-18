@@ -130,7 +130,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                     padding: const EdgeInsets.only(top: 200, bottom: 70),
                     alignment: Alignment.center,
                     child: Image.asset(
-                      "assets/images/logo/dumping_system.png",
+                      "assets/images/logo/mixing_system.png",
                       fit: BoxFit.cover,
                       width: 270,
                     ),
