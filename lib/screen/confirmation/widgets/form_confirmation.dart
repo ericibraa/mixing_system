@@ -108,12 +108,13 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
             return Scaffold(
                 appBar: AppBar(
                   title: const Text("Confirmation"),
-                  leading: BackButton(
+                  leading: IconButton(
                     onPressed: () {
                       _confirmationCubit
-                          .setTab(ConfirmationStatus.confirmation);
+                          .setTab(ConfirmationStatus.chooseOperation);
                       numberOfLabor.text = '1';
                     },
+                    icon: const Icon(Icons.chevron_left_rounded),
                   ),
                 ),
                 body: SingleChildScrollView(
@@ -375,10 +376,12 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                   onChanged: (value) {
                     var data = _confirmationCubit.state.yieldSet;
 
-                    laborTimeValue = double.parse(value) * double.parse(numberOfLabor.text);
+                    laborTimeValue =
+                        double.parse(value) * double.parse(numberOfLabor.text);
 
-                    _confirmationCubit
-                        .setYieldSet(data.copyWith(machineHour: value, laborHour: laborTimeValue.toStringAsFixed(3)));
+                    _confirmationCubit.setYieldSet(data.copyWith(
+                        machineHour: value,
+                        laborHour: laborTimeValue.toStringAsFixed(3)));
                   },
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
@@ -420,8 +423,8 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                         double.parse(data.machineHour) * double.parse(value);
                     print(laborTime);
 
-                    _confirmationCubit.setYieldSet(
-                        data.copyWith(laborHour: laborTimeValue.toStringAsFixed(3)));
+                    _confirmationCubit.setYieldSet(data.copyWith(
+                        laborHour: laborTimeValue.toStringAsFixed(3)));
                   },
                   decoration: InputDecoration(
                     border: OutlineInputBorder(

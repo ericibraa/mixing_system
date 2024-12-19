@@ -53,6 +53,7 @@ class HandoverState extends Equatable {
   final bool isStartDateStatus;
   final ErrorScanType errorScanType;
   final bool isCompletedcontainer;
+  final bool isMixing;
 
   const HandoverState(
       {this.operator = '',
@@ -93,7 +94,8 @@ class HandoverState extends Equatable {
       this.startTime = "",
       this.isStartDateStatus = false,
       this.errorScanType = ErrorScanType.noError,
-      this.isCompletedcontainer = false});
+      this.isCompletedcontainer = false,
+      this.isMixing = false});
 
   HandoverState copyWith(
       {String? operator,
@@ -134,7 +136,8 @@ class HandoverState extends Equatable {
       String? startTime,
       bool? isStartDateStatus,
       ErrorScanType? errorScanType,
-      bool? isCompletedcontainer}) {
+      bool? isCompletedcontainer,
+      bool? isMixing}) {
     return HandoverState(
         operator: operator ?? this.operator,
         pengawas: pengawas ?? this.pengawas,
@@ -176,8 +179,8 @@ class HandoverState extends Equatable {
         startTime: startTime ?? this.startTime,
         isStartDateStatus: isStartDateStatus ?? this.isStartDateStatus,
         errorScanType: errorScanType ?? this.errorScanType,
-        isCompletedcontainer:
-            isCompletedcontainer ?? this.isCompletedcontainer);
+        isCompletedcontainer: isCompletedcontainer ?? this.isCompletedcontainer,
+        isMixing: isMixing ?? this.isMixing);
   }
 
   @override
@@ -220,6 +223,7 @@ class HandoverState extends Equatable {
         isStartDateStatus,
         isCompleteWeighingResults,
         errorScanType,
-        isCompletedcontainer
+        isCompletedcontainer,
+        isMixing
       ];
 }

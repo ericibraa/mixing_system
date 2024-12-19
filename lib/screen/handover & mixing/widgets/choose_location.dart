@@ -62,18 +62,20 @@ class _ChooseLocationState extends State<ChooseLocation> {
                   if (fullpack.wadToMatNav!.resultsFullPack != null) {
                     fullpacks.addAll(fullpack.wadToMatNav!.resultsFullPack!);
                   }
-
-                  print(fullpacks.toList());
                   _handoverCubit.setFullpack(fullpacks);
                 }
-                if (int.parse(
-                        _handoverCubit.state.selectedOperation.operationApps) >
-                    20) {
-                  _handoverCubit.setPrevTab(HandoverStatus.chooseLocation);
-                  _handoverCubit.setTab(HandoverStatus.scantongmaterial);
-                } else {
-                  _handoverCubit.setTab(HandoverStatus.scantong);
-                  _handoverCubit.setPrevTab(HandoverStatus.chooseLocation);
+                print(_handoverCubit.state.isMixing);
+                var opApps = _handoverCubit.state.locationSets
+                    .any((item) => item.operationApps == '0010');
+                if (opApps) {
+                  if (!_handoverCubit.state.isMixing) {
+                    _handoverCubit.setTab(HandoverStatus.scantong);
+                    _handoverCubit.setPrevTab(HandoverStatus.chooseLocation);
+                  } else {
+                    _handoverCubit.setPrevTab(HandoverStatus.chooseLocation);
+                    _handoverCubit.setTab(HandoverStatus.scantongmaterial);
+                    _handoverCubit.SetMixing(false);
+                  }
                 }
               }
             }),
@@ -169,10 +171,9 @@ class _ChooseLocationState extends State<ChooseLocation> {
                                     onTap: () {
                                       _handoverCubit.setSelectedLocationSet(
                                           selectedLocation);
-                                      if (selectedLocation.operationApps ==
-                                              '0040' ||
-                                          selectedLocation.operationApps ==
-                                              '0031') {
+                                      if (int.parse(selectedLocation
+                                              .operationApps!) >=
+                                          31) {
                                         wadahSetBloc.add(GetWadahSet(
                                             selectedLocation.routingNo!,
                                             selectedLocation.activityNo!,
@@ -208,6 +209,7 @@ class _ChooseLocationState extends State<ChooseLocation> {
                                 height: 50,
                                 child: TextButton(
                                     onPressed: () {
+                                      _handoverCubit.SetMixing(true);
                                       tongBloc.add(SendDataTong(
                                           routingNo: handoverState
                                               .locationSets[0].routingNo!,

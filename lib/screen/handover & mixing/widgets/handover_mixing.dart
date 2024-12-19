@@ -11,6 +11,7 @@ import 'package:dumping_system/screen/handover%20&%20mixing/bloc/location_set_bl
 import 'package:dumping_system/screen/handover%20&%20mixing/bloc/wadah_set_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class HandoverMixingScreen extends StatefulWidget {
@@ -135,6 +136,11 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
             return Scaffold(
               appBar: AppBar(
                 title: const Text("Handover & Mixing"),
+                leading: IconButton(
+                    onPressed: () {
+                      context.go("/home");
+                    },
+                    icon: const Icon(Icons.chevron_left_rounded)),
               ),
               body: SingleChildScrollView(
                 child: Padding(
@@ -174,7 +180,6 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                   return TextFormField(
                                     controller: textEditingController,
                                     focusNode: focusNode,
-                                    keyboardType: TextInputType.number,
                                     onFieldSubmitted: (String value) {
                                       onFieldSubmitted();
                                     },

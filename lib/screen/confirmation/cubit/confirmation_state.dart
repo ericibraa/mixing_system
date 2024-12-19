@@ -1,6 +1,6 @@
 part of 'confirmation_cubit.dart';
 
-enum ConfirmationStatus { confirmation, formConfirmation }
+enum ConfirmationStatus { confirmation, formConfirmation, chooseOperation }
 
 @immutable
 class ConfirmationState extends Equatable {

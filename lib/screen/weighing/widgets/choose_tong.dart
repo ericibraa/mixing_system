@@ -34,10 +34,11 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Choose weighing"),
-        leading: BackButton(
+        leading: IconButton(
           onPressed: () {
             _weighingCubit.setTab(WeighingStatus.weighing);
           },
+          icon: const Icon(Icons.chevron_left_rounded),
         ),
       ),
       body: MultiBlocProvider(
@@ -61,6 +62,8 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
             BlocListener<ResultScaleBloc, ResultScaleState>(
               listener: (context, state) {
                 if (state is ResultScaleLoaded) {
+                  _weighingCubit
+                      .setResultScaleList(state.resultScale.d!.results!);
                   _weighingCubit.setContainerCounter(
                       state.resultScale.d!.results!.length + 1);
                   _weighingCubit.setTotalContainer(
@@ -196,6 +199,8 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                                                 ? dataWeighing.activityWh!
                                                 : ''));
                                 _weighingCubit.setTab(WeighingStatus.scale);
+                                _weighingCubit
+                                    .setPrevTab(WeighingStatus.chooseOperation);
                               },
                             ),
                           )

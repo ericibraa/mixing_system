@@ -4,6 +4,7 @@ import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
 import 'package:dumping_system/screen/weighing/widgets/choose_operations.dart';
 import 'package:dumping_system/screen/weighing/widgets/choose_tong.dart';
 import 'package:dumping_system/screen/weighing/widgets/scale_weighing.dart';
+import 'package:dumping_system/screen/weighing/widgets/select_operation.dart';
 import 'package:dumping_system/screen/weighing/widgets/weighing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -61,6 +62,7 @@ class _MainViewState extends State<MainView> {
                   ChooseTongScreen(),
                   ScaleWeighingScreen(),
                   ChooseOperations(),
+                  SelectOperation(),
                 ],
               );
             },

@@ -462,9 +462,10 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
               if (_weighingCubit.state.selectedEquipment.equipmentNo.isEmpty) {
                 _weighingCubit.setSelectedEquipment(
                     state.resultScale.d!.results![0].equipmentNo!);
-                line.text = state.resultScale.d!.results![0].line!;
-                _weighingCubit.setLine(line.text);
               }
+              _weighingCubit.setResultScaleList(state.resultScale.d!.results!);
+              line.text = state.resultScale.d!.results![0].line!;
+              _weighingCubit.setLine(line.text);
             }
           })
         ],
@@ -475,7 +476,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
               appBar: AppBar(
                 title: Text(
                     "Scale Weighing ${weighingState.selectedOperation.operationDesc}"),
-                leading: BackButton(
+                leading: IconButton(
                   onPressed: () {
                     _weighingCubit.setTab(_weighingCubit.state.prevTab);
                     _weighingCubit.resetScaleWeighing();
@@ -489,6 +490,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       closeConnection();
                     }
                   },
+                  icon: const Icon(Icons.chevron_left_rounded),
                 ),
               ),
               body: SingleChildScrollView(

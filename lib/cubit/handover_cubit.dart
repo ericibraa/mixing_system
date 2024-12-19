@@ -108,10 +108,14 @@ class HandoverCubit extends Cubit<HandoverState> {
       for (var i = 0; i < tongs.length; i++) {
         switch (activityNo.length) {
           case 4:
-            isMatch = tongs[i].activityNo == activityNo[3];
+            if (state.operationType != 'DECOCT') {
+              isMatch = tongs[i].activityNo == activityNo[3];
+            }
             break;
           case 5:
-            isMatch = tongs[i].activityNo == activityNo[3];
+            if (state.operationType == "DECOCT") {
+              isMatch = tongs[i].activityNo == activityNo[3];
+            }
             break;
         }
         if (tongs[i].isScanned!) {
@@ -178,10 +182,14 @@ class HandoverCubit extends Cubit<HandoverState> {
       for (var i = 0; i < tongs.length; i++) {
         switch (activityNo.length) {
           case 4:
-            isMatch = tongs[i].activityNo == activityNo[3];
+            if (state.operationType != 'DECOCT') {
+              isMatch = tongs[i].activityNo == activityNo[3];
+            }
             break;
           case 5:
-            isMatch = tongs[i].activityNo == activityNo[3];
+            if (state.operationType == "DECOCT") {
+              isMatch = tongs[i].activityNo == activityNo[3];
+            }
             break;
         }
         if (tongs[i].isScanned!) {
@@ -330,8 +338,6 @@ class HandoverCubit extends Cubit<HandoverState> {
   void setStartDate() {
     var date = DateTime.now();
     var formatDate = DateFormat('yyyyMMdd-HHmmss').format(date);
-    print("============================");
-    print(formatDate);
     emit(state.copyWith(startTime: formatDate));
   }
 
@@ -341,5 +347,9 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   void setTongActivity(String activityWh) {
     emit(state.copyWith(tong: activityWh));
+  }
+
+  void SetMixing(bool isMixing) {
+    emit(state.copyWith(isMixing: isMixing));
   }
 }

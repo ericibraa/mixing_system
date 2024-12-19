@@ -1,6 +1,12 @@
 part of 'weighing_cubit.dart';
 
-enum WeighingStatus { weighing, scaleWeighing, scale, chooseOperation }
+enum WeighingStatus {
+  weighing,
+  scaleWeighing,
+  scale,
+  chooseOperation,
+  selectOperation
+}
 
 @immutable
 class WeighingState extends Equatable {

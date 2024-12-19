@@ -173,7 +173,6 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                     return TextFormField(
                                       controller: textEditingController,
                                       focusNode: focusNode,
-                                      keyboardType: TextInputType.number,
                                       onFieldSubmitted: (String value) {
                                         onFieldSubmitted();
                                       },

@@ -2,6 +2,7 @@ import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/screen/confirmation/cubit/confirmation_cubit.dart';
 import 'package:dumping_system/screen/confirmation/widgets/confirmation.dart';
 import 'package:dumping_system/screen/confirmation/widgets/form_confirmation.dart';
+import 'package:dumping_system/screen/confirmation/widgets/choose_operation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -51,7 +52,8 @@ class _MainViewState extends State<MainView> {
                 index: state.tab.index,
                 children: const [
                   ConfirmationScreen(),
-                  FormConfirmationScreen()
+                  FormConfirmationScreen(),
+                  ChooseOperation()
                 ],
               );
             },
