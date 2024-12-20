@@ -58,12 +58,13 @@ dependencies:
   audioplayers: ^6.1.0
   flutter_ringtone_player: ^4.0.0+3
   vibration: ^2.0.1
+  package_info_plus: ^8.1.2
 
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo/dumping_icon.png"
+  image_path: "assets/images/logo/mixing_icon.png"
 
 
 dev_dependencies:

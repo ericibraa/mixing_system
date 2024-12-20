@@ -56,6 +56,9 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                 borderRadius: BorderRadius.circular(10.0),
               ),
             ));
+            Future.delayed(const Duration(milliseconds: 200), () {
+              Vibration.vibrate(duration: 800);
+            });
             if (hasScanned.length == 4 || hasScanned.length == 5) {
               _handoverCubit.resetCompleteMaterial(false);
               _handoverCubit.setTongActivity(hasScanned[3]);
@@ -75,6 +78,11 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                 borderRadius: BorderRadius.circular(10.0),
               ),
             ));
+            FlutterRingtonePlayer()
+                .play(fromAsset: "assets/ringtone/wrong.mp3");
+            Future.delayed(const Duration(milliseconds: 200), () {
+              Vibration.vibrate(duration: 800);
+            });
             break;
           case ErrorScanType.noError:
             if (hasScanned.length == 4 || hasScanned.length == 5) {

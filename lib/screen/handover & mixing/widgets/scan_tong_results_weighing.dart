@@ -9,7 +9,9 @@ import 'package:dumping_system/screen/handover%20&%20mixing/bloc/wadah_set_bloc.
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:vibration/vibration.dart';
 
 class ScanTongResultsWeighing extends StatefulWidget {
   // ignore: use_super_parameters
@@ -66,6 +68,9 @@ class _ScanTongResultsWeighingScreenState
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
+          Future.delayed(const Duration(milliseconds: 200), () {
+            Vibration.vibrate(duration: 800);
+          });
           break;
         case ErrorScanType.incorrectPriority:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -76,10 +81,13 @@ class _ScanTongResultsWeighingScreenState
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
+          FlutterRingtonePlayer().play(fromAsset: "assets/ringtone/wrong.mp3");
+          Future.delayed(const Duration(milliseconds: 200), () {
+            Vibration.vibrate(duration: 800);
+          });
           break;
         case ErrorScanType.noError:
           handoverFlagBloc.add(FlagHandover(handoverFlag: hasScanned));
-
           break;
         case ErrorScanType.dataNull:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -90,6 +98,10 @@ class _ScanTongResultsWeighingScreenState
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
+          FlutterRingtonePlayer().play(fromAsset: "assets/ringtone/wrong.mp3");
+          Future.delayed(const Duration(milliseconds: 200), () {
+            Vibration.vibrate(duration: 800);
+          });
           break;
       }
     }

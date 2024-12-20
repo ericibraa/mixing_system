@@ -179,6 +179,7 @@ class _ChooseLocationState extends State<ChooseLocation> {
                                             selectedLocation.activityNo!,
                                             handoverState.operationType));
                                       } else {
+                                        _handoverCubit.SetMixing(false);
                                         tongBloc.add(SendDataTong(
                                             routingNo:
                                                 selectedLocation.routingNo!,
@@ -221,7 +222,7 @@ class _ChooseLocationState extends State<ChooseLocation> {
                                               .selectedOrder.operationType!));
                                     },
                                     style: TextButton.styleFrom(
-                                      backgroundColor: Colors.black,
+                                      backgroundColor: Colors.blue,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),

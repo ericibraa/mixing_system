@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class ValidationScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -25,6 +26,14 @@ class _ValidationScreenState extends State<ValidationScreen> {
   List<String> hasScanned = [];
   String valueOperator = '';
   String valuePengawas = '';
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: 'Unknown',
+    buildNumber: 'Unknown',
+    buildSignature: 'Unknown',
+    installerStore: 'Unknown',
+  );
 
   @override
   void initState() {
@@ -35,7 +44,15 @@ class _ValidationScreenState extends State<ValidationScreen> {
       valueOperator = data.nrpOperator;
       valuePengawas = data.nrpPengawas;
     }
+    _initPackageInfo();
     super.initState();
+  }
+
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = info;
+    });
   }
 
   List<String> parseStringAndWrapInMap(String input) {
@@ -127,12 +144,19 @@ class _ValidationScreenState extends State<ValidationScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.only(top: 200, bottom: 70),
+                    padding: const EdgeInsets.only(top: 200),
                     alignment: Alignment.center,
                     child: Image.asset(
                       "assets/images/logo/mixing_system.png",
                       fit: BoxFit.cover,
                       width: 270,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 70),
+                    child: Text(
+                      "v ${_packageInfo.version}",
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ),
                   InkWell(

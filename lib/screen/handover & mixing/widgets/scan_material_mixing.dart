@@ -62,6 +62,9 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
+          Future.delayed(const Duration(milliseconds: 200), () {
+            Vibration.vibrate(duration: 800);
+          });
           break;
         case ErrorScanType.incorrectPriority:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -72,6 +75,10 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ));
+          FlutterRingtonePlayer().play(fromAsset: "assets/ringtone/wrong.mp3");
+          Future.delayed(const Duration(milliseconds: 200), () {
+            Vibration.vibrate(duration: 800);
+          });
           break;
         case ErrorScanType.noError:
           if (hasScanned.length >= 6) {
