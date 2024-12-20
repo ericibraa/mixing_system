@@ -66,7 +66,7 @@ class _ChooseLocationState extends State<ChooseLocation> {
                 }
                 print(_handoverCubit.state.isMixing);
                 var opApps = _handoverCubit.state.locationSets
-                    .any((item) => item.operationApps == '0010');
+                    .any((item) => item.operationApps == '0010' || item.operationApps == '0020' );
                 if (opApps) {
                   if (!_handoverCubit.state.isMixing) {
                     _handoverCubit.setTab(HandoverStatus.scantong);
