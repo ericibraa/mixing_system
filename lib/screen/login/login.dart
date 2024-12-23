@@ -17,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _loginBloc = LoginBloc();
   final passwordController = TextEditingController();
   final usernameController = TextEditingController();
-  bool obscurePasswordText = true;
+  bool _obscurePasswordText = true;
 
   @override
   void initState() {
@@ -93,8 +93,19 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding: const EdgeInsets.only(bottom: 50),
                               child: TextFormField(
                                 controller: passwordController,
-                                obscureText: obscurePasswordText,
+                                obscureText: _obscurePasswordText,
                                 decoration: InputDecoration(
+                                  suffixIcon: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _obscurePasswordText =
+                                            !_obscurePasswordText;
+                                      });
+                                    },
+                                    child: Icon(_obscurePasswordText
+                                        ? Icons.visibility
+                                        : Icons.visibility_off),
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),

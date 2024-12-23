@@ -97,8 +97,10 @@ class _SelectOperationState extends State<SelectOperation> {
               if (state is ResultScaleLoaded) {
                 _weighingCubit
                     .setResultScaleList(state.resultScale.d!.results!);
-                _weighingCubit.setTotalContainer(
-                    state.resultScale.d!.results![0].totalWadah!);
+                if (state.resultScale.d!.results!.isNotEmpty) {
+                  _weighingCubit.setTotalContainer(
+                      state.resultScale.d!.results![0].totalWadah!);
+                }
               }
             }),
           ],

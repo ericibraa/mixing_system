@@ -13,6 +13,9 @@ class ScanBarcodeScreen extends StatefulWidget {
 class _ScanBarcodeScreenState extends State<ScanBarcodeScreen> {
   Barcode? _barcode;
   int isLoading = 1;
+  final MobileScannerController controller =
+      MobileScannerController(torchEnabled: true);
+
   Widget _buildBarcode(Barcode? value) {
     if (value == null) {
       return const Text(
@@ -46,6 +49,16 @@ class _ScanBarcodeScreenState extends State<ScanBarcodeScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Scan Barcode'),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.flash_off,
+            ),
+            onPressed: () {
+              controller.toggleTorch();
+            },
+          ),
+        ],
         leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
@@ -55,6 +68,7 @@ class _ScanBarcodeScreenState extends State<ScanBarcodeScreen> {
       body: Stack(
         children: [
           MobileScanner(
+            controller: controller,
             onDetect: _handleBarcode,
           ),
           Align(

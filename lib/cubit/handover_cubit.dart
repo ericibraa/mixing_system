@@ -211,27 +211,28 @@ class HandoverCubit extends Cubit<HandoverState> {
       }
       if (!isFound) {
         for (var k = 0; k < materialSets.length; k++) {
+          print("============================================");
           switch (activityNo.length) {
             case 6:
-              isMatch = materialSets[k].bOMItem == activityNo[3];
+              isMatch = materialSets[k].bOMItem == activityNo[3] &&
+                  materialSets[k].recipient == "W";
+              print("tets1");
               break;
             case 7:
               isMatch = materialSets[k].activityDmp == activityNo[2] &&
                   materialSets[k].counter == activityNo[5] &&
                   materialSets[k].activityWh == activityNo[6];
+              print("tets2");
+
               break;
             case 9:
               isMatch = materialSets[k].bOMItem == activityNo[3] &&
                   materialSets[k].counter == activityNo[6];
               break;
           }
-          if (materialSets[k].scanFlag == "X") {
-            if (isMatch) {
-              errorType = ErrorScanType.dataScanned;
-              break;
-            }
-            continue;
-          }
+          print(materialSets[k].scanFlag);
+          print(materialSets[k].bOMItem);
+          print(materialSets[k].quantity);
           if (materialSets[k].scanFlag == "") {
             if (lastPrioEmpty != "" &&
                 lastPrioEmpty != materialSets[k].priority) {
@@ -247,6 +248,13 @@ class HandoverCubit extends Cubit<HandoverState> {
               errorType = ErrorScanType.noError;
               break;
             }
+          }
+          if (materialSets[k].scanFlag == "X") {
+            if (isMatch) {
+              errorType = ErrorScanType.dataScanned;
+              break;
+            }
+            continue;
           }
         }
       }
