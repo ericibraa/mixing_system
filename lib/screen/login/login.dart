@@ -3,6 +3,7 @@ import 'package:dumping_system/screen/login/bloc/login_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class LoginScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -18,10 +19,26 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   final usernameController = TextEditingController();
   bool _obscurePasswordText = true;
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: 'Unknown',
+    buildNumber: 'Unknown',
+    buildSignature: 'Unknown',
+    installerStore: 'Unknown',
+  );
 
   @override
   void initState() {
+    _initPackageInfo();
     super.initState();
+  }
+
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = info;
+    });
   }
 
   @override
@@ -57,12 +74,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.only(top: 200, bottom: 70),
+                      padding: const EdgeInsets.only(top: 200),
                       alignment: Alignment.center,
                       child: Image.asset(
                         "assets/images/logo/mixing_system.png",
                         fit: BoxFit.cover,
                         width: 270,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 70),
+                      child: Text(
+                        "v ${_packageInfo.version}",
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     ),
                     Form(
@@ -134,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   minimumSize: const Size.fromHeight(50)),
                               child: const Text(
-                                "Masuk",
+                                "Log In",
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 16),
                               ),

@@ -188,9 +188,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
       ));
       socket!.listen(
         (data) {
-          if (counter == 5) {
+          if (counter == 15) {
             var dataReg = regExp.firstMatch(dataString);
-            if (dataReg != null) {
+            if (dataReg != null) {  
               var brutoFloat = double.parse(
                 dataReg[1]!,
               );
@@ -333,6 +333,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 }
                 temperature.clear();
                 lot.clear();
+                tara.clear();
                 resultScaleBloc.add(SendDataResultScale(
                     orderNo: _weighingCubit.state.selectedOrder.orderNo != null
                         ? _weighingCubit.state.selectedOrder.orderNo!
@@ -1054,6 +1055,12 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                           padding: const EdgeInsets.only(bottom: 20),
                           child: TextFormField(
                             controller: tara,
+                            onChanged: (value) {
+                              var tara = double.parse(value);
+                              _weighingCubit.setScaleWeighing(_weighingCubit
+                                  .state.scaleWeighing
+                                  .copyWith(tara: tara));
+                            },
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(

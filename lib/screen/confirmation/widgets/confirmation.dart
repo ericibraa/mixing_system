@@ -261,7 +261,6 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                 padding: const EdgeInsets.only(bottom: 20),
                                 child: TextFormField(
                                   controller: batch,
-                                  keyboardType: TextInputType.number,
                                   onChanged: (value) {
                                     setState(() {
                                       batch.text = value;
@@ -350,7 +349,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                       padding:
                                           const EdgeInsets.only(bottom: 10),
                                       child: Text(
-                                        "Order List",
+                                        "Orders",
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleLarge,

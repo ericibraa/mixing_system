@@ -280,7 +280,6 @@ class _WeighingScreenState extends State<WeighingScreen> {
                                 padding: const EdgeInsets.only(bottom: 20),
                                 child: TextFormField(
                                   controller: batch,
-                                  keyboardType: TextInputType.number,
                                   onChanged: (value) {
                                     setState(() {
                                       batch.text = value;

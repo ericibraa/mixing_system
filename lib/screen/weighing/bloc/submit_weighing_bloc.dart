@@ -52,7 +52,7 @@ class SubmitWeighingBloc
             activityWh: event.weighingState.selectedContainer.activityWh,
             bruto: event.weighingState.scaleWeighing.bruto.toString(),
             tara: event.weighingState.scaleWeighing.tara.toString(),
-            netto: event.weighingState.scaleWeighing.netto.toStringAsFixed(1),
+            netto: event.weighingState.scaleWeighing.netto.toString(),
             unitWeighing: event.weighingState.scaleWeighing.unit,
             temperature: event.weighingState.scaleWeighing.temperature,
             unitTemperature: "GC",

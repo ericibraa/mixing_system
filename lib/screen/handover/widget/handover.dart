@@ -265,7 +265,6 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                 padding: const EdgeInsets.only(bottom: 20),
                                 child: TextFormField(
                                   controller: batch,
-                                  keyboardType: TextInputType.number,
                                   onChanged: (value) {
                                     batch.text = value;
                                     if (value.length > 5) {

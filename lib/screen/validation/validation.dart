@@ -258,7 +258,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                 }
               : null,
           child: Text(
-            "Masuk",
+            "Log In",
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium
