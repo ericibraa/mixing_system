@@ -450,7 +450,6 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
           builder: (context, handoverState) {
         return SingleChildScrollView(
           child: Container(
-              height: MediaQuery.of(context).size.height,
               padding: const EdgeInsets.only(top: 5),
               decoration: const BoxDecoration(
                   color: Colors.white,
