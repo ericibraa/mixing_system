@@ -36,6 +36,7 @@ class ResultOperation extends Equatable {
   final String operationApps;
   final String? lastOperation;
   final String? operationDesc2;
+  final String? objectName;
 
   const ResultOperation(
       {this.routingNo = '',
@@ -47,7 +48,8 @@ class ResultOperation extends Equatable {
       this.operationType = '',
       this.operationApps = '',
       this.lastOperation,
-      this.operationDesc2});
+      this.operationDesc2,
+      this.objectName});
 
   factory ResultOperation.fromJson(Map<String, dynamic> json) =>
       ResultOperation(
@@ -60,7 +62,8 @@ class ResultOperation extends Equatable {
           operationType: json['OperationType'],
           operationApps: json['OperationApps'],
           lastOperation: json['LastOperation'],
-          operationDesc2: json['OperationDesc2']);
+          operationDesc2: json['OperationDesc2'],
+          objectName: json['ObjectName']);
   Map<String, dynamic> toJson() => {
         'RoutingNo': routingNo,
         'InternalCntr': internalCntr,
@@ -71,23 +74,24 @@ class ResultOperation extends Equatable {
         'OperationType': operationType,
         'OperationApps': operationApps,
         'LastOperation': lastOperation,
-        'OperationDesc2': operationApps
+        'OperationDesc2': operationApps,
+        'ObjectName': objectName
       };
   ResultOperation copyWith({
     String? operationDesc,
   }) {
     return ResultOperation(
-      routingNo: routingNo,
-      internalCntr: internalCntr,
-      activityNo: activityNo,
-      controlKey: controlKey,
-      operationDesc: operationDesc ?? this.operationDesc,
-      controlRecipe: controlRecipe,
-      operationType: operationType,
-      operationApps: operationApps,
-      lastOperation: lastOperation,
-      operationDesc2: operationDesc2,
-    );
+        routingNo: routingNo,
+        internalCntr: internalCntr,
+        activityNo: activityNo,
+        controlKey: controlKey,
+        operationDesc: operationDesc ?? this.operationDesc,
+        controlRecipe: controlRecipe,
+        operationType: operationType,
+        operationApps: operationApps,
+        lastOperation: lastOperation,
+        operationDesc2: operationDesc2,
+        objectName: objectName);
   }
 
   @override

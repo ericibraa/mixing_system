@@ -14,7 +14,7 @@ void main() async {
     Environment().initConfig(Environment.prod);
   } else {
     Environment().initConfig(Environment.dev);
-  }
+  } 
 
   await DioClient().initDio();
 

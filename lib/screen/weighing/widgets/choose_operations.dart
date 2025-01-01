@@ -1,5 +1,6 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/expired_set_bloc.dart';
+import 'package:dumping_system/screen/weighing/bloc/result_scale_2_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/weighing_bloc.dart';
@@ -21,6 +22,7 @@ class _ChooseOperationsState extends State<ChooseOperations> {
   ScaleBloc scaleBloc = ScaleBloc();
   ExpiredSetBloc expiredSetBloc = ExpiredSetBloc();
   ResultScaleBloc resultScaleBloc = ResultScaleBloc();
+  ResultScale2Bloc resultScale2Bloc = ResultScale2Bloc();
 
   @override
   void initState() {
@@ -38,7 +40,8 @@ class _ChooseOperationsState extends State<ChooseOperations> {
         BlocProvider<WeighingBloc>(create: (context) => weighingBloc),
         BlocProvider<ScaleBloc>(create: (context) => scaleBloc),
         BlocProvider<ExpiredSetBloc>(create: (context) => expiredSetBloc),
-        BlocProvider<ResultScaleBloc>(create: (context) => resultScaleBloc)
+        BlocProvider<ResultScaleBloc>(create: (context) => resultScaleBloc),
+        BlocProvider<ResultScale2Bloc>(create: (context) => resultScale2Bloc)
       ],
       child: MultiBlocListener(
         listeners: [
@@ -52,14 +55,33 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                         : '',
                     activityNo:
                         _weighingCubit.state.selectedOperation.activityNo));
-                resultScaleBloc.add(SendDataResultScale(
-                    orderNo: _weighingCubit.state.selectedOrder.orderNo ?? '',
-                    activityNo:
-                        _weighingCubit.state.selectedOperation.activityNo,
-                    activityWh:
-                        _weighingCubit.state.selectedContainer.activityWh ??
-                            ''));
-
+                if (_weighingCubit.state.selectedOperation.operationDesc !=
+                    _weighingCubit.state.selectedOperation.operationDesc2) {
+                  resultScaleBloc.add(SendDataResultScale(
+                      orderNo: _weighingCubit.state.selectedOrder.orderNo ?? '',
+                      activityNo:
+                          _weighingCubit.state.selectedOperation.activityNo,
+                      activityWh:
+                          _weighingCubit.state.selectedContainer.activityWh ??
+                              ''));
+                } else {
+                  resultScale2Bloc.add(SendDataResultScale2(
+                      orderNo:
+                          _weighingCubit.state.selectedOrder.orderNo != null
+                              ? _weighingCubit.state.selectedOrder.orderNo!
+                              : '',
+                      activityNo:
+                          _weighingCubit.state.selectedOperation.activityNo,
+                      activityWh: _weighingCubit.state.operationType == 'DECOCT'
+                          ? ''
+                          : _weighingCubit.state.selectedContainer.activityWh !=
+                                  null
+                              ? _weighingCubit
+                                  .state.selectedContainer.activityWh!
+                              : '',
+                      objectName:
+                          _weighingCubit.state.selectedOperation.objectName!));
+                }
                 _weighingCubit.setTab(WeighingStatus.scale);
                 _weighingCubit.setPrevTab(WeighingStatus.chooseOperation);
                 _weighingCubit.resetResultScale();
@@ -86,6 +108,12 @@ class _ChooseOperationsState extends State<ChooseOperations> {
               listener: (context, state) {
             if (state is ResultScaleLoaded) {
               _weighingCubit.setResultScaleList(state.resultScale.d!.results!);
+            }
+          }),
+          BlocListener<ResultScale2Bloc, ResultScale2State>(
+              listener: (context, state) {
+            if (state is ResultScale2Loaded) {
+              _weighingCubit.setResultScales2(state.resultScale2.d!.results!);
             }
           }),
         ],

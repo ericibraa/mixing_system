@@ -124,6 +124,10 @@ class WeighingCubit extends Cubit<WeighingState> {
     emit(state.copyWith(resultScales: resultScaleList));
   }
 
+  void setResultScales2(List<ResultScaleList> resultScales2) {
+    emit(state.copyWith(resultScales2: resultScales2));
+  }
+
   void setContainerCounter(int sumContainer) {
     emit(state.copyWith(containerCounter: sumContainer));
   }

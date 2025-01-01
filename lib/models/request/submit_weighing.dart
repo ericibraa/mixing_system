@@ -35,6 +35,7 @@ class SubmitWeighing {
   String? finishDate;
   String? finishTime;
   String? lotNo;
+  String? objectName;
 
   SubmitWeighing(
       {this.orderNo,
@@ -61,7 +62,8 @@ class SubmitWeighing {
       this.line,
       this.finishDate,
       this.finishTime,
-      this.lotNo});
+      this.lotNo,
+      this.objectName});
 
   SubmitWeighing.fromJson(Map<String, dynamic> json) {
     orderNo = json['OrderNo'];
@@ -89,6 +91,7 @@ class SubmitWeighing {
     finishDate = json['FinishDate'];
     finishTime = json['FinishTime'];
     lotNo = json['LotNo'];
+    objectName = json['ObjectName'];
   }
 
   Map<String, dynamic> toJson() {
@@ -118,6 +121,7 @@ class SubmitWeighing {
     data['FinishDate'] = finishDate;
     data['FinishTime'] = finishTime;
     data['LotNo'] = lotNo;
+    data['ObjectName'] = objectName;
     return data;
   }
 }

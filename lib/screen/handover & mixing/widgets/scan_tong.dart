@@ -161,6 +161,15 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                   _handoverCubit.setTab(HandoverStatus.handover);
                 }
               }
+            } else if (state is SubmitHandoverError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           })
         ],

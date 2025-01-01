@@ -145,6 +145,7 @@ class HandoverCubit extends Cubit<HandoverState> {
               } else {
                 isMatch = fullpack[k].activityDmp == activityNo[2] &&
                     fullpack[k].counter == activityNo[5];
+                    print("-=-=-=--=");
               }
               break;
             case 9:
@@ -171,6 +172,7 @@ class HandoverCubit extends Cubit<HandoverState> {
                   fullpack[k].copyWith(isScannedFullpack: true, scanFlag: 'X');
               completedFullpack++;
               fullpack[k] = fullpacks;
+              print("=====================");
               errorType = ErrorScanType.noError;
               break;
             }

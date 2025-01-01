@@ -34,6 +34,7 @@ class WeighingState extends Equatable {
   final String operator;
   final String pengawas;
   final List<ResultScaleList> resultScales;
+  final List<ResultScaleList> resultScales2;
   final int containerCounter;
   final String productiSupervisor;
   final String line;
@@ -69,6 +70,7 @@ class WeighingState extends Equatable {
       this.operator = "",
       this.pengawas = "",
       this.resultScales = const [],
+      this.resultScales2 = const [],
       this.containerCounter = 1,
       this.productiSupervisor = '',
       this.line = "",
@@ -104,6 +106,7 @@ class WeighingState extends Equatable {
       String? operator,
       String? pengawas,
       List<ResultScaleList>? resultScales,
+      List<ResultScaleList>? resultScales2,
       int? containerCounter,
       String? productiSupervisor,
       String? line,
@@ -139,6 +142,7 @@ class WeighingState extends Equatable {
         operator: operator ?? this.operator,
         pengawas: pengawas ?? this.pengawas,
         resultScales: resultScales ?? this.resultScales,
+        resultScales2: resultScales2 ?? this.resultScales2,
         containerCounter: containerCounter ?? this.containerCounter,
         productiSupervisor: productiSupervisor ?? this.productiSupervisor,
         line: line ?? this.line,
@@ -176,6 +180,7 @@ class WeighingState extends Equatable {
         operator,
         pengawas,
         resultScales,
+        resultScales2,
         containerCounter,
         productiSupervisor,
         line,

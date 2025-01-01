@@ -14,7 +14,9 @@ class WadahSetProvider extends Provider {
                 " RoutingNo eq '$routingNo' and ActivityNo eq '$activityNo' and OperationType eq '$operationType'",
             "\$format": 'json'
           });
-      return TongResponse.fromJson(response.data);
+          var data = response.data;
+          print(data);
+      return TongResponse.fromJson(data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

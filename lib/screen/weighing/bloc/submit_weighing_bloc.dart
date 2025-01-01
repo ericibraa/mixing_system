@@ -33,12 +33,12 @@ class SubmitWeighingBloc
         }
         if (event.weighingState.expiredSet.expiredNo != '0,000') {
           if (event.weighingState.expiredSet.unit == 'DAY') {
-            expiredDateParse = finishTimeWeighing.add(Duration(
+            expiredDateParse = event.weighingState.startWork!.add(Duration(
                 days: int.parse(event.weighingState.expiredSet.expiredNo!)));
             finalExpDate = DateFormat('yyyyMMdd').format(expiredDateParse);
             finalExpTime = DateFormat('HHmmss').format(expiredDateParse);
           } else {
-            expiredDateParse = finishTimeWeighing.add(Duration(
+            expiredDateParse = event.weighingState.startWork!.add(Duration(
                 hours: int.parse(event.weighingState.expiredSet.expiredNo!)));
             finalExpDate = DateFormat('yyyyMMdd').format(expiredDateParse);
             finalExpTime = DateFormat('HHmmss').format(expiredDateParse);
@@ -71,12 +71,11 @@ class SubmitWeighingBloc
             line: event.weighingState.line,
             finishDate: DateFormat('yyyyMMdd').format(finishTimeWeighing),
             finishTime: DateFormat('HHmmss').format(finishTimeWeighing),
-            lotNo: lotNo);
+            lotNo: lotNo,
+            objectName: event.weighingState.selectedOperation.objectName);
 
         final weighing =
             await _submitWeighingRepository.submitweighing(submitWeighing);
-        print('++++++++++++++++++++++++++++++');
-        print(weighing.toString());
         emit(SubmitWeighingSuccess(submitWeighing: weighing));
       } on ErrorResponse catch (e) {
         if (e.error != null && e.error!.message != null) {
