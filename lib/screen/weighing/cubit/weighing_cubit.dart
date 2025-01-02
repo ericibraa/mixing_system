@@ -168,4 +168,8 @@ class WeighingCubit extends Cubit<WeighingState> {
   void setChooseOperations(List<ResultOperation> chooseOperations) {
     emit(state.copyWith(chooseOperations: chooseOperations));
   }
+
+  void setIsclone(bool isClone) {
+    emit(state.copyWith(isClone: isClone));
+  }
 }

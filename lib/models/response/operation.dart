@@ -79,6 +79,7 @@ class ResultOperation extends Equatable {
       };
   ResultOperation copyWith({
     String? operationDesc,
+    String? objectName,
   }) {
     return ResultOperation(
         routingNo: routingNo,
@@ -91,7 +92,7 @@ class ResultOperation extends Equatable {
         operationApps: operationApps,
         lastOperation: lastOperation,
         operationDesc2: operationDesc2,
-        objectName: objectName);
+        objectName: objectName ?? this.objectName);
   }
 
   @override

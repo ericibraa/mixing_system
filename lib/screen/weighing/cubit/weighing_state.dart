@@ -44,6 +44,7 @@ class WeighingState extends Equatable {
   final DateTime? startWork;
   final bool onChangeStartWork;
   final List<ResultsMaterial> materials;
+  final bool isClone;
 
   const WeighingState(
       {this.plant = "",
@@ -79,7 +80,8 @@ class WeighingState extends Equatable {
       this.totalContainer = '',
       this.startWork,
       this.onChangeStartWork = false,
-      this.materials = const []});
+      this.materials = const [],
+      this.isClone = false});
 
   WeighingState copyWith(
       {String? plant,
@@ -115,7 +117,8 @@ class WeighingState extends Equatable {
       String? totalContainer,
       DateTime? startWork,
       bool? onChangeStartWork,
-      List<ResultsMaterial>? materials}) {
+      List<ResultsMaterial>? materials,
+      bool? isClone}) {
     return WeighingState(
         plant: plant ?? this.plant,
         materialCode: materialCode ?? this.materialCode,
@@ -151,7 +154,8 @@ class WeighingState extends Equatable {
         totalContainer: totalContainer ?? this.totalContainer,
         startWork: startWork ?? this.startWork,
         onChangeStartWork: onChangeStartWork ?? this.onChangeStartWork,
-        materials: materials ?? this.materials);
+        materials: materials ?? this.materials,
+        isClone: isClone ?? this.isClone);
   }
 
   @override
@@ -188,6 +192,7 @@ class WeighingState extends Equatable {
         resultsOpr,
         totalContainer,
         onChangeStartWork,
-        materials
+        materials,
+        isClone
       ];
 }

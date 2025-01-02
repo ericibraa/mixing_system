@@ -57,6 +57,7 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                         _weighingCubit.state.selectedOperation.activityNo));
                 if (_weighingCubit.state.selectedOperation.operationDesc !=
                     _weighingCubit.state.selectedOperation.operationDesc2) {
+                  _weighingCubit.setIsclone(false);
                   resultScaleBloc.add(SendDataResultScale(
                       orderNo: _weighingCubit.state.selectedOrder.orderNo ?? '',
                       activityNo:
@@ -65,6 +66,7 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                           _weighingCubit.state.selectedContainer.activityWh ??
                               ''));
                 } else {
+                  _weighingCubit.setIsclone(true);
                   resultScale2Bloc.add(SendDataResultScale2(
                       orderNo:
                           _weighingCubit.state.selectedOrder.orderNo != null

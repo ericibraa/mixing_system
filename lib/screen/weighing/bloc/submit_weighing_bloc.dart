@@ -72,7 +72,9 @@ class SubmitWeighingBloc
             finishDate: DateFormat('yyyyMMdd').format(finishTimeWeighing),
             finishTime: DateFormat('HHmmss').format(finishTimeWeighing),
             lotNo: lotNo,
-            objectName: event.weighingState.selectedOperation.objectName);
+            objectName: event.weighingState.isClone
+                ? event.weighingState.selectedOperation.objectName
+                : '');
 
         final weighing =
             await _submitWeighingRepository.submitweighing(submitWeighing);

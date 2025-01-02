@@ -294,9 +294,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
         listeners: [
           BlocListener<WeighingCubit, WeighingState>(
             listener: (context, state) {
-              print("=-=-=-=--=-=-=");
-              print(state.selectedOperation.operationDesc !=
-                  state.selectedOperation.operationDesc2);
               if (state.selectedOperation.operationDesc !=
                   state.selectedOperation.operationDesc2) {
                 scale.text = state.selectedEquipment.equipmentDesc;
@@ -333,7 +330,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       .setContainerCounter(int.parse(wadah.wadah!) + 1);
                 }
               } else {
-                print("++++++++++++KEDUA INI");
                 scale.text = state.selectedEquipment.equipmentDesc;
                 bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
                 netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
@@ -1465,6 +1461,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                               PrinterResponse.fromMap(value);
                                           Status status =
                                               printerResponse.statusInfo.status;
+                                              print("=====================");
                                           print(status);
                                           if (printerResponse.errorCode ==
                                               ErrorCode.SUCCESS) {
@@ -1485,6 +1482,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                             Cause cause = printerResponse
                                                 .statusInfo.cause;
                                             print(cause);
+                                            print("============================error");
                                           }
                                         });
                                       } else {
