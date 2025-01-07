@@ -145,12 +145,12 @@ class HandoverCubit extends Cubit<HandoverState> {
               } else {
                 isMatch = fullpack[k].activityDmp == activityNo[2] &&
                     fullpack[k].counter == activityNo[5];
-                    print("-=-=-=--=");
               }
               break;
             case 9:
               isMatch = fullpack[k].bOMItem == activityNo[3] &&
-                  fullpack[k].counter == activityNo[6];
+                  fullpack[k].counter == activityNo[6] &&
+                  int.parse(fullpack[k].batch) == int.parse(activityNo[8]);
               break;
           }
           if (fullpack[k].isScannedFullpack ||
@@ -172,7 +172,6 @@ class HandoverCubit extends Cubit<HandoverState> {
                   fullpack[k].copyWith(isScannedFullpack: true, scanFlag: 'X');
               completedFullpack++;
               fullpack[k] = fullpacks;
-              print("=====================");
               errorType = ErrorScanType.noError;
               break;
             }
@@ -226,7 +225,8 @@ class HandoverCubit extends Cubit<HandoverState> {
               break;
             case 9:
               isMatch = materialSets[k].bOMItem == activityNo[3] &&
-                  materialSets[k].counter == activityNo[6];
+                  materialSets[k].counter == activityNo[6] &&
+                  int.parse(fullpack[k].batch) == int.parse(activityNo[8]);
               break;
           }
           if (materialSets[k].scanFlag == "X") {

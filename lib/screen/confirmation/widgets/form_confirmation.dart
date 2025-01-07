@@ -28,6 +28,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
   final finishExecution = TextEditingController();
   final postingDate = TextEditingController();
   final numberOfLabor = TextEditingController();
+  // final reason = TextEditingController();
   var laborTimeValue = 0.0;
 
   @override
@@ -469,6 +470,20 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                   readOnly: true,
                 ),
               ),
+              // Padding(
+              //     padding: const EdgeInsets.only(bottom: 20),
+              //     child: TextFormField(
+              //       maxLines: null,
+              //       controller: reason,
+              //       keyboardType:
+              //           TextInputType.multiline, // Enables multi-line input
+              //       decoration: InputDecoration(
+              //         border: OutlineInputBorder(
+              //           borderRadius: BorderRadius.circular(12),
+              //         ),
+              //         labelText: 'Reason (Optional)',
+              //       ),
+              //     ))
             ])));
       },
     );
