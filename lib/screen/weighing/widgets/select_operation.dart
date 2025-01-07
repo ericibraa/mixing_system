@@ -139,20 +139,12 @@ class _SelectOperationState extends State<SelectOperation> {
                                   selectedOperation.activityNo;
 
                           return Card(
-                            elevation:
-                                weighingState.operations[index].lastOperation ==
-                                        ''
-                                    ? 7
-                                    : 0,
+                            elevation:7,
                             shadowColor: Colors.blueGrey[100],
                             margin: const EdgeInsets.symmetric(vertical: 8),
-                            color:
-                                weighingState.operations[index].lastOperation ==
-                                        ''
-                                    ? isSelected
+                            color: isSelected
                                         ? Colors.black
-                                        : Colors.grey[100]
-                                    : Colors.grey[400],
+                                        : Colors.grey[100],
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -167,14 +159,9 @@ class _SelectOperationState extends State<SelectOperation> {
                                           ?.copyWith(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
-                                            color: weighingState
-                                                        .operations[index]
-                                                        .lastOperation ==
-                                                    ''
-                                                ? isSelected
+                                            color: isSelected
                                                     ? Colors.white
-                                                    : Colors.black
-                                                : Colors.grey[600],
+                                                    : Colors.black,
                                           )),
                                   const SizedBox(height: 10),
                                   Row(
@@ -191,14 +178,9 @@ class _SelectOperationState extends State<SelectOperation> {
                                                 .textTheme
                                                 .bodySmall
                                                 ?.copyWith(
-                                                  color: weighingState
-                                                              .operations[index]
-                                                              .lastOperation ==
-                                                          ''
-                                                      ? isSelected
+                                                  color: isSelected
                                                           ? Colors.white
-                                                          : Colors.black
-                                                      : Colors.grey[600],
+                                                          : Colors.black,
                                                 ),
                                           ),
                                           const SizedBox(height: 4),
@@ -208,14 +190,9 @@ class _SelectOperationState extends State<SelectOperation> {
                                                 .textTheme
                                                 .bodyLarge
                                                 ?.copyWith(
-                                                  color: weighingState
-                                                              .operations[index]
-                                                              .lastOperation ==
-                                                          ''
-                                                      ? isSelected
-                                                          ? Colors.white
-                                                          : Colors.black
-                                                      : Colors.grey[600],
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Colors.black,
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                           ),
@@ -231,14 +208,9 @@ class _SelectOperationState extends State<SelectOperation> {
                                                 .textTheme
                                                 .bodySmall
                                                 ?.copyWith(
-                                                  color: weighingState
-                                                              .operations[index]
-                                                              .lastOperation ==
-                                                          ''
-                                                      ? isSelected
-                                                          ? Colors.white
-                                                          : Colors.black
-                                                      : Colors.grey[600],
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Colors.black,
                                                 ),
                                           ),
                                           const SizedBox(height: 4),
@@ -265,39 +237,34 @@ class _SelectOperationState extends State<SelectOperation> {
                                   ),
                                 ],
                               ),
-                              onTap: weighingState
-                                          .operations[index].lastOperation ==
-                                      ''
-                                  ? selectedOperation.operationDesc2!.isEmpty
-                                      ? () {
-                                          _weighingCubit.setSelectedOperation(
-                                              selectedOperation);
-                                          weighingBloc.add(SendDataWeighing(
-                                              routingNo:
-                                                  selectedOperation.routingNo,
-                                              internalCntr: selectedOperation
-                                                  .internalCntr,
-                                              activityNo:
-                                                  selectedOperation.activityNo,
-                                              operationType:
-                                                  weighingState.operationType,
-                                              operationApps:
-                                                  weighingState.operationApps));
-                                        }
-                                      : () {
-                                          final List<ResultOperation>
-                                              operations = [
-                                            selectedOperation,
-                                            selectedOperation.copyWith(
-                                                operationDesc: selectedOperation
-                                                    .operationDesc2)
-                                          ];
-                                          _weighingCubit
-                                              .setChooseOperations(operations);
-                                          _weighingCubit.setTab(
-                                              WeighingStatus.chooseOperation);
-                                        }
-                                  : null,
+                              onTap: selectedOperation.operationDesc2!.isEmpty
+                                  ? () {
+                                      _weighingCubit.setSelectedOperation(
+                                          selectedOperation);
+                                      weighingBloc.add(SendDataWeighing(
+                                          routingNo:
+                                              selectedOperation.routingNo,
+                                          internalCntr:
+                                              selectedOperation.internalCntr,
+                                          activityNo:
+                                              selectedOperation.activityNo,
+                                          operationType:
+                                              weighingState.operationType,
+                                          operationApps:
+                                              weighingState.operationApps));
+                                    }
+                                  : () {
+                                      final List<ResultOperation> operations = [
+                                        selectedOperation,
+                                        selectedOperation.copyWith(
+                                            operationDesc: selectedOperation
+                                                .operationDesc2)
+                                      ];
+                                      _weighingCubit
+                                          .setChooseOperations(operations);
+                                      _weighingCubit.setTab(
+                                          WeighingStatus.chooseOperation);
+                                    },
                             ),
                           );
                         },

@@ -212,6 +212,7 @@ class HandoverCubit extends Cubit<HandoverState> {
       }
       if (!isFound) {
         for (var k = 0; k < materialSets.length; k++) {
+          print("================================");
           switch (activityNo.length) {
             case 6:
               isMatch = materialSets[k].bOMItem == activityNo[3] &&
@@ -224,9 +225,11 @@ class HandoverCubit extends Cubit<HandoverState> {
 
               break;
             case 9:
-              isMatch = materialSets[k].bOMItem == activityNo[3] &&
-                  materialSets[k].counter == activityNo[6] &&
-                  int.parse(fullpack[k].batch) == int.parse(activityNo[8]);
+              isMatch = (materialSets[k].bOMItem == activityNo[3] &&
+                      materialSets[k].counter == activityNo[6]) ||
+                  (materialSets[k].bOMItem == activityNo[3] &&
+                      materialSets[k].counter == activityNo[6] &&
+                      int.parse(fullpack[k].batch) == int.parse(activityNo[8]));
               break;
           }
           if (materialSets[k].scanFlag == "X") {
