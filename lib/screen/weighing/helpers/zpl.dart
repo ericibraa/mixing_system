@@ -74,7 +74,7 @@ class ZplData {
           ^FO0,55^A0N,30^FB570,,,C^FDPRODUK DALAM PROSES^FS     ; Title 
           ^FO30,110^FDProduct^FS
           ^FO200,110^FD$materialCode^FS       ; Product code
-          ^FO28,145^A0N,30 ^FB355,2,5,L^FD$materialDesc^FS     ; Product name
+          ^FO28,145^A0N,26 ^FB355,2,5,L^FD$materialDesc^FS     ; Product name
           ^FO28,215^A0N,30^FDBatch^FS
           ^FO200,215^A0N,30^FD$batchFG^FS        ; Batch number
           ^FO30,250^FDPrO^FS
