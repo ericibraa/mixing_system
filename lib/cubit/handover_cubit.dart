@@ -231,7 +231,7 @@ class HandoverCubit extends Cubit<HandoverState> {
                       materialSets[k].counter == activityNo[6]) ||
                   (materialSets[k].bOMItem == activityNo[3] &&
                       materialSets[k].counter == activityNo[6] &&
-                      int.parse(fullpack[k].batch) == int.parse(activityNo[8]));
+                      int.parse(materialSets[k].batch) == int.parse(activityNo[8]));
               break;
           }
           if (materialSets[k].scanFlag == "X") {
