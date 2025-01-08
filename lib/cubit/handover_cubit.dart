@@ -148,10 +148,10 @@ class HandoverCubit extends Cubit<HandoverState> {
               }
               break;
             case 9:
-              isMatch = (materialSets[k].bOMItem == activityNo[3] &&
-                      materialSets[k].counter == activityNo[6]) ||
-                  (materialSets[k].bOMItem == activityNo[3] &&
-                      materialSets[k].counter == activityNo[6] &&
+              isMatch = (fullpack[k].bOMItem == activityNo[3] &&
+                      fullpack[k].counter == activityNo[6]) ||
+                  (fullpack[k].bOMItem == activityNo[3] &&
+                      fullpack[k].counter == activityNo[6] &&
                       int.parse(fullpack[k].batch) == int.parse(activityNo[8]));
               break;
           }
