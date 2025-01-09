@@ -44,6 +44,7 @@ class ResultsMaterialset extends Equatable {
   final bool isScanned;
   final String activityWh;
   final String batch;
+  final String? materialDoc;
 
   const ResultsMaterialset(
       {required this.routingNo,
@@ -63,7 +64,8 @@ class ResultsMaterialset extends Equatable {
       required this.scanTime,
       this.isScanned = false,
       required this.activityWh,
-      required this.batch});
+      required this.batch,
+      this.materialDoc = ""});
 
   ResultsMaterialset copyWith({required bool isScanned, String? scanFlag}) {
     return ResultsMaterialset(
@@ -84,7 +86,8 @@ class ResultsMaterialset extends Equatable {
         scanTime: scanTime,
         isScanned: isScanned,
         activityWh: activityWh,
-        batch: batch);
+        batch: batch,
+        materialDoc: materialDoc);
   }
 
   factory ResultsMaterialset.fromJson(Map<String, dynamic> json) =>
@@ -105,7 +108,8 @@ class ResultsMaterialset extends Equatable {
           scanDate: json['ScanDate'],
           scanTime: json['ScanTime'],
           activityWh: json['ActivityWh'],
-          batch: json['Batch']);
+          batch: json['Batch'],
+          materialDoc: json['MaterialDoc']);
 
   @override
   List<Object> get props => [
@@ -126,6 +130,6 @@ class ResultsMaterialset extends Equatable {
         scanTime,
         isScanned,
         activityWh,
-        batch
+        batch,
       ];
 }

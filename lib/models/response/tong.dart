@@ -148,7 +148,8 @@ class ResultsFullPack extends Equatable {
   final String scanFlag;
   final String handoverFlag;
   final bool isScannedFullpack;
-  final String batch;
+  final String? batch;
+  final String? materialDoc;
 
   const ResultsFullPack(
       {required this.routingNo,
@@ -167,7 +168,8 @@ class ResultsFullPack extends Equatable {
       this.scanFlag = '',
       this.handoverFlag = '',
       this.isScannedFullpack = false,
-      required this.batch});
+      this.batch = "",
+      this.materialDoc = ""});
   ResultsFullPack copyWith(
       {required bool isScannedFullpack, String? scanFlag}) {
     return ResultsFullPack(
@@ -187,7 +189,8 @@ class ResultsFullPack extends Equatable {
         scanFlag: scanFlag ?? this.scanFlag,
         handoverFlag: handoverFlag,
         isScannedFullpack: isScannedFullpack,
-        batch: batch);
+        batch: batch,
+        materialDoc: materialDoc);
   }
 
   factory ResultsFullPack.fromJson(Map<String, dynamic> json) =>
@@ -207,7 +210,8 @@ class ResultsFullPack extends Equatable {
           activityDmp: json['ActivityDmp'] ?? '',
           handoverFlag: json['HandoverFlag'] ?? '',
           scanFlag: json['ScanFlag'] ?? '',
-          batch: json['Batch']);
+          batch: json['Batch'],
+          materialDoc: json['MaterialDoc']);
 
   @override
   List<Object> get props => [
@@ -225,6 +229,5 @@ class ResultsFullPack extends Equatable {
         activityWh,
         handoverFlag,
         isScannedFullpack,
-        batch
       ];
 }

@@ -49,6 +49,8 @@ class _ChooseOperationsState extends State<ChooseOperations> {
             listener: (context, state) {
               if (state is WeighingLoaded) {
                 scaleBloc.add(SendDataScale(plant: _weighingCubit.state.plant));
+                _weighingCubit
+                    .selectedWeighing(state.weighing.d!.resultsTong![0]);
                 expiredSetBloc.add(GetExpiredSet(
                     orderNo: _weighingCubit.state.selectedOrder.orderNo != null
                         ? _weighingCubit.state.selectedOrder.orderNo!
@@ -64,7 +66,8 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                           _weighingCubit.state.selectedOperation.activityNo,
                       activityWh:
                           _weighingCubit.state.selectedContainer.activityWh ??
-                              ''));
+                              '',
+                      operationType: _weighingCubit.state.operationType));
                 } else {
                   _weighingCubit.setIsclone(true);
                   resultScale2Bloc.add(SendDataResultScale2(
@@ -82,7 +85,8 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                                   .state.selectedContainer.activityWh!
                               : '',
                       objectName:
-                          _weighingCubit.state.selectedOperation.objectName!));
+                          _weighingCubit.state.selectedOperation.objectName!,
+                      operationType: _weighingCubit.state.operationType));
                 }
                 _weighingCubit.setTab(WeighingStatus.scale);
                 _weighingCubit.setPrevTab(WeighingStatus.chooseOperation);

@@ -197,7 +197,8 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                                             ? ''
                                             : dataWeighing.activityWh != null
                                                 ? dataWeighing.activityWh!
-                                                : ''));
+                                                : '',
+                                    operationType: _weighingCubit.state.operationType));
                                 _weighingCubit.setTab(WeighingStatus.scale);
                                 _weighingCubit
                                     .setPrevTab(WeighingStatus.chooseOperation);

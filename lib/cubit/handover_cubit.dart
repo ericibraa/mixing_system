@@ -152,7 +152,17 @@ class HandoverCubit extends Cubit<HandoverState> {
                       fullpack[k].counter == activityNo[6]) ||
                   (fullpack[k].bOMItem == activityNo[3] &&
                       fullpack[k].counter == activityNo[6] &&
-                      int.parse(fullpack[k].batch) == int.parse(activityNo[8]));
+                      int.parse(fullpack[k].batch!) ==
+                          int.parse(activityNo[8]));
+              break;
+            case 10:
+              isMatch = (fullpack[k].bOMItem == activityNo[3] &&
+                      fullpack[k].counter == activityNo[6]) ||
+                  (fullpack[k].bOMItem == activityNo[3] &&
+                      fullpack[k].counter == activityNo[6] &&
+                      int.parse(fullpack[k].batch!) ==
+                          int.parse(activityNo[8]) &&
+                      fullpack[k].materialDoc == activityNo[9]);
               break;
           }
           if (fullpack[k].isScannedFullpack ||
@@ -214,7 +224,6 @@ class HandoverCubit extends Cubit<HandoverState> {
       }
       if (!isFound) {
         for (var k = 0; k < materialSets.length; k++) {
-          print("================================");
           switch (activityNo.length) {
             case 6:
               isMatch = materialSets[k].bOMItem == activityNo[3] &&
@@ -231,8 +240,17 @@ class HandoverCubit extends Cubit<HandoverState> {
                       materialSets[k].counter == activityNo[6]) ||
                   (materialSets[k].bOMItem == activityNo[3] &&
                       materialSets[k].counter == activityNo[6] &&
-                      int.parse(materialSets[k].batch) == int.parse(activityNo[8]));
+                      int.parse(materialSets[k].batch) ==
+                          int.parse(activityNo[8]));
               break;
+            case 10:
+              isMatch = (materialSets[k].bOMItem == activityNo[3] &&
+                      materialSets[k].counter == activityNo[6]) ||
+                  (materialSets[k].bOMItem == activityNo[3] &&
+                      materialSets[k].counter == activityNo[6] &&
+                      int.parse(materialSets[k].batch) ==
+                          int.parse(activityNo[8]) &&
+                      materialSets[k].materialDoc == activityNo[9]);
           }
           if (materialSets[k].scanFlag == "X") {
             if (isMatch) {

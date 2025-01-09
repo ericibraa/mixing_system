@@ -31,7 +31,7 @@ class SubmitWeighingBloc
             lotNo = event.weighingState.scaleWeighing.lot;
           }
         }
-        if (event.weighingState.expiredSet.expiredNo != '0,000') {
+        if (event.weighingState.expiredSet.expiredNo != '0') {
           if (event.weighingState.expiredSet.unit == 'DAY') {
             expiredDateParse = event.weighingState.startWork!.add(Duration(
                 days: int.parse(event.weighingState.expiredSet.expiredNo!)));

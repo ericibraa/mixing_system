@@ -4,11 +4,11 @@ import 'package:dumping_system/provider/provider.dart';
 
 class ResultScale2Provider extends Provider {
   Future<ResultScaleListResponse> fetchresultscale2(String orderNo,
-      String activityNo, String activityWh, String objectName) async {
+      String activityNo, String activityWh, String objectName, String operationType) async {
     try {
       var filter =
           "OrderNo eq '$orderNo' and ActivityNo eq '$activityNo' and ObjectName eq '$objectName'";
-      if (activityWh != '') {
+      if (activityWh != '' && operationType != 'DECOCT') {
         filter += " and ActivityWh eq '$activityWh'";
       }
       Response response = await dio.get(

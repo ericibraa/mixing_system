@@ -70,7 +70,8 @@ class _SelectOperationState extends State<SelectOperation> {
                           _weighingCubit.state.selectedOperation.activityNo,
                       activityWh:
                           _weighingCubit.state.selectedContainer.activityWh ??
-                              ''));
+                              '',
+                      operationType: _weighingCubit.state.operationType));
 
                   _weighingCubit.setTab(WeighingStatus.scale);
                   _weighingCubit.setPrevTab(WeighingStatus.weighing);

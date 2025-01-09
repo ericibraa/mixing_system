@@ -11,12 +11,14 @@ class SendDataResultScale2 extends ResultScale2Event {
   final String activityNo;
   final String activityWh;
   final String objectName;
+  final String operationType;
 
   SendDataResultScale2(
       {required this.orderNo,
       required this.activityNo,
       required this.activityWh,
-      required this.objectName});
+      required this.objectName,
+      required this.operationType});
 
   @override
   List<Object> get props => [orderNo, activityNo, activityWh, objectName];

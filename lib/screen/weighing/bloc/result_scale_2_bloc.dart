@@ -18,7 +18,8 @@ class ResultScale2Bloc extends Bloc<ResultScale2Event, ResultScale2State> {
             event.orderNo,
             event.activityNo,
             event.activityWh,
-            event.objectName);
+            event.objectName,
+            event.operationType);
         emit(ResultScale2Loaded(resultScale2: resultScale2));
       } catch (e) {
         emit(ResultScale2Error());

@@ -394,7 +394,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                   null
                               ? _weighingCubit
                                   .state.selectedContainer.activityWh!
-                              : ''));
+                              : '',
+                      operationType: _weighingCubit.state.operationType));
                 } else {
                   resultScale2Bloc.add(SendDataResultScale2(
                       orderNo:
@@ -411,7 +412,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                   .state.selectedContainer.activityWh!
                               : '',
                       objectName:
-                          _weighingCubit.state.selectedOperation.objectName!));
+                          _weighingCubit.state.selectedOperation.objectName!,
+                      operationType: _weighingCubit.state.operationType));
                 }
                 var stagingTime = '';
                 String weighingTime =
@@ -1461,7 +1463,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                               PrinterResponse.fromMap(value);
                                           Status status =
                                               printerResponse.statusInfo.status;
-                                              print("=====================");
+                                          print("=====================");
                                           print(status);
                                           if (printerResponse.errorCode ==
                                               ErrorCode.SUCCESS) {
@@ -1482,7 +1484,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                             Cause cause = printerResponse
                                                 .statusInfo.cause;
                                             print(cause);
-                                            print("============================error");
+                                            print(
+                                                "============================error");
                                           }
                                         });
                                       } else {

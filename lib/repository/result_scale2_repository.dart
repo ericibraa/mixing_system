@@ -5,8 +5,8 @@ class ResultScale2Repository {
   final _provider = ResultScale2Provider();
 
   Future<ResultScaleListResponse> fetchresultscale2(
-      String orderNo, String activityNo, String activityWh, String objectName) {
+      String orderNo, String activityNo, String activityWh, String objectName, String operationType) {
     return _provider.fetchresultscale2(
-        orderNo, activityNo, activityWh, objectName);
+        orderNo, activityNo, activityWh, objectName, operationType);
   }
 }

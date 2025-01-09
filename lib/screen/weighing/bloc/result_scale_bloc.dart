@@ -15,7 +15,7 @@ class ResultScaleBloc extends Bloc<ResultScaleEvent, ResultScaleState> {
       emit(ResultScaleLoading());
       try {
         final resultScale = await _resultScaleRepository.fetchresultscale(
-            event.orderNo, event.activityNo, event.activityWh);
+            event.orderNo, event.activityNo, event.activityWh, event.operationType);
         emit(ResultScaleLoaded(resultScale: resultScale));
       } catch (e) {
         emit(ResultScaleError());
