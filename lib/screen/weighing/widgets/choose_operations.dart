@@ -48,7 +48,6 @@ class _ChooseOperationsState extends State<ChooseOperations> {
           BlocListener<WeighingBloc, WeighingBlocState>(
             listener: (context, state) {
               if (state is WeighingLoaded) {
-                scaleBloc.add(SendDataScale(plant: _weighingCubit.state.plant));
                 _weighingCubit
                     .selectedWeighing(state.weighing.d!.resultsTong![0]);
                 expiredSetBloc.add(GetExpiredSet(
@@ -92,13 +91,6 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                 _weighingCubit.setPrevTab(WeighingStatus.chooseOperation);
                 _weighingCubit.resetResultScale();
                 _weighingCubit.resetScaleWeighing();
-              }
-            },
-          ),
-          BlocListener<ScaleBloc, ScaleState>(
-            listener: (context, state) {
-              if (state is ScaleLoaded) {
-                _weighingCubit.setEquipments(state.scale.d!.results!);
               }
             },
           ),

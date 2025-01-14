@@ -148,21 +148,25 @@ class HandoverCubit extends Cubit<HandoverState> {
               }
               break;
             case 9:
-              isMatch = (fullpack[k].bOMItem == activityNo[3] &&
-                      fullpack[k].counter == activityNo[6]) ||
-                  (fullpack[k].bOMItem == activityNo[3] &&
-                      fullpack[k].counter == activityNo[6] &&
-                      int.parse(fullpack[k].batch!) ==
-                          int.parse(activityNo[8]));
+              if (fullpack[k].batch!.isEmpty) {
+                isMatch = (fullpack[k].bOMItem == activityNo[3] &&
+                    fullpack[k].counter == activityNo[6]);
+              } else {
+                isMatch = (fullpack[k].bOMItem == activityNo[3] &&
+                    fullpack[k].counter == activityNo[6] &&
+                    int.parse(fullpack[k].batch!) == int.parse(activityNo[8]));
+              }
               break;
             case 10:
-              isMatch = (fullpack[k].bOMItem == activityNo[3] &&
-                      fullpack[k].counter == activityNo[6]) ||
-                  (fullpack[k].bOMItem == activityNo[3] &&
-                      fullpack[k].counter == activityNo[6] &&
-                      int.parse(fullpack[k].batch!) ==
-                          int.parse(activityNo[8]) &&
-                      fullpack[k].materialDoc == activityNo[9]);
+              if (fullpack[k].batch!.isEmpty) {
+                isMatch = (fullpack[k].bOMItem == activityNo[3] &&
+                    fullpack[k].counter == activityNo[6]);
+              } else {
+                isMatch = (fullpack[k].bOMItem == activityNo[3] &&
+                    fullpack[k].counter == activityNo[6] &&
+                    int.parse(fullpack[k].batch!) == int.parse(activityNo[8]) &&
+                    fullpack[k].materialDoc == activityNo[9]);
+              }
               break;
           }
           if (fullpack[k].isScannedFullpack ||
@@ -180,8 +184,7 @@ class HandoverCubit extends Cubit<HandoverState> {
             }
             lastPrioEmpty = fullpack[k].priority;
             if (isMatch) {
-              var fullpacks =
-                  fullpack[k].copyWith(isScannedFullpack: true, scanFlag: 'X');
+              var fullpacks = fullpack[k].copyWith(isScannedFullpack: true);
               completedFullpack++;
               fullpack[k] = fullpacks;
               errorType = ErrorScanType.noError;
@@ -236,21 +239,27 @@ class HandoverCubit extends Cubit<HandoverState> {
 
               break;
             case 9:
-              isMatch = (materialSets[k].bOMItem == activityNo[3] &&
-                      materialSets[k].counter == activityNo[6]) ||
-                  (materialSets[k].bOMItem == activityNo[3] &&
-                      materialSets[k].counter == activityNo[6] &&
-                      int.parse(materialSets[k].batch) ==
-                          int.parse(activityNo[8]));
+              if (materialSets[k].batch.isEmpty) {
+                isMatch = (materialSets[k].bOMItem == activityNo[3] &&
+                    materialSets[k].counter == activityNo[6]);
+              } else {
+                isMatch = (materialSets[k].bOMItem == activityNo[3] &&
+                    materialSets[k].counter == activityNo[6] &&
+                    int.parse(materialSets[k].batch) ==
+                        int.parse(activityNo[8]));
+              }
               break;
             case 10:
-              isMatch = (materialSets[k].bOMItem == activityNo[3] &&
-                      materialSets[k].counter == activityNo[6]) ||
-                  (materialSets[k].bOMItem == activityNo[3] &&
-                      materialSets[k].counter == activityNo[6] &&
-                      int.parse(materialSets[k].batch) ==
-                          int.parse(activityNo[8]) &&
-                      materialSets[k].materialDoc == activityNo[9]);
+              if (materialSets[k].batch.isEmpty) {
+                isMatch = (materialSets[k].bOMItem == activityNo[3] &&
+                    materialSets[k].counter == activityNo[6]);
+              } else {
+                isMatch = (materialSets[k].bOMItem == activityNo[3] &&
+                    materialSets[k].counter == activityNo[6] &&
+                    int.parse(materialSets[k].batch) ==
+                        int.parse(activityNo[8]) &&
+                    materialSets[k].materialDoc == activityNo[9]);
+              }
           }
           if (materialSets[k].scanFlag == "X") {
             if (isMatch) {
@@ -267,8 +276,7 @@ class HandoverCubit extends Cubit<HandoverState> {
             }
             lastPrioEmpty = materialSets[k].priority;
             if (isMatch) {
-              var materialSet =
-                  materialSets[k].copyWith(isScanned: true, scanFlag: "X");
+              var materialSet = materialSets[k].copyWith(isScanned: true);
               completedMaterialset++;
               materialSets[k] = materialSet;
               errorType = ErrorScanType.noError;

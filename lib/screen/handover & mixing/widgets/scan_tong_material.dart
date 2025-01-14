@@ -98,7 +98,8 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
               if (_handoverCubit.state.startTime == '') {
                 _handoverCubit.setStartDate();
               }
-              flagMaterialsBloc.add(GetFlagMaterials(hasScanned));
+              flagMaterialsBloc.add(GetFlagMaterials(hasScanned,
+                  _handoverCubit.state.selectedOrder.orderNo ?? ''));
             }
             break;
           case ErrorScanType.dataNull:

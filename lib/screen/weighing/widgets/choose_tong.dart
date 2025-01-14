@@ -71,13 +71,6 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                 }
               },
             ),
-            BlocListener<ScaleBloc, ScaleState>(
-              listener: (context, state) {
-                if (state is ScaleLoaded) {
-                  _weighingCubit.setEquipments(state.scale.d!.results!);
-                }
-              },
-            ),
           ],
           child: BlocBuilder<WeighingCubit, WeighingState>(
             builder: (context, weighingState) {
@@ -174,9 +167,6 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                                 _weighingCubit.selectedWeighing(dataWeighing);
                                 _weighingCubit
                                     .setTab(WeighingStatus.scaleWeighing);
-
-                                scaleBloc.add(
-                                    SendDataScale(plant: weighingState.plant));
                                 expiredSetBloc.add(GetExpiredSet(
                                     orderNo:
                                         weighingState.selectedOrder.orderNo!,

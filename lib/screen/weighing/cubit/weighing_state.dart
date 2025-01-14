@@ -1,11 +1,13 @@
 part of 'weighing_cubit.dart';
 
 enum WeighingStatus {
+  chooseWeighing,
   weighing,
   scaleWeighing,
   scale,
   chooseOperation,
-  selectOperation
+  selectOperation,
+  printTara
 }
 
 @immutable
@@ -52,8 +54,8 @@ class WeighingState extends Equatable {
       this.date = "",
       this.operationApps = "",
       this.operationType = "",
-      this.tab = WeighingStatus.weighing,
-      this.prevTab = WeighingStatus.weighing,
+      this.tab = WeighingStatus.chooseWeighing,
+      this.prevTab = WeighingStatus.chooseWeighing,
       this.selectedOrder = const ResultsOrder(),
       this.orders = const [],
       this.operations = const [],

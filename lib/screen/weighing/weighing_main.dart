@@ -3,6 +3,8 @@ import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
 import 'package:dumping_system/screen/weighing/widgets/choose_operations.dart';
 import 'package:dumping_system/screen/weighing/widgets/choose_tong.dart';
+import 'package:dumping_system/screen/weighing/widgets/choose_weighing.dart';
+import 'package:dumping_system/screen/weighing/widgets/print_tara.dart';
 import 'package:dumping_system/screen/weighing/widgets/scale_weighing.dart';
 import 'package:dumping_system/screen/weighing/widgets/select_operation.dart';
 import 'package:dumping_system/screen/weighing/widgets/weighing.dart';
@@ -10,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WeighingMainPage extends StatelessWidget {
-  const WeighingMainPage({Key? key}) : super(key: key);
+  const WeighingMainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -58,11 +60,13 @@ class _MainViewState extends State<MainView> {
               return IndexedStack(
                 index: state.tab.index,
                 children: const [
+                  ChooseWeighing(),
                   WeighingScreen(),
                   ChooseTongScreen(),
                   ScaleWeighingScreen(),
                   ChooseOperations(),
                   SelectOperation(),
+                  PrintTara()
                 ],
               );
             },

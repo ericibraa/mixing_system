@@ -19,12 +19,14 @@ class HandoverFlagBloc extends Bloc<HandoverFlagEvent, HandoverFlagState> {
         String activityNo = event.handoverFlag[2];
         String activityWh = event.handoverFlag[6];
         String counter = event.handoverFlag[5];
+        String originalOrder = event.originalOrder;
 
         HandoverFlag handoverFlag = HandoverFlag(
             orderNo: orderNo,
             activityNo: activityNo,
             activityWh: activityWh,
-            counter: counter);
+            counter: counter,
+            originalOrder: originalOrder);
         final flag =
             await _handoverFlagRepository.fetchHandoverFlag(handoverFlag);
         emit(HandoverFlagLoaded(handoverFlag: flag));

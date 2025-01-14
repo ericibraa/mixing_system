@@ -55,8 +55,6 @@ class _SelectOperationState extends State<SelectOperation> {
                     _weighingCubit
                         .selectedWeighing(state.weighing.d!.resultsTong![0]);
                   }
-                  scaleBloc
-                      .add(SendDataScale(plant: _weighingCubit.state.plant));
                   expiredSetBloc.add(GetExpiredSet(
                       orderNo:
                           _weighingCubit.state.selectedOrder.orderNo != null
@@ -78,13 +76,6 @@ class _SelectOperationState extends State<SelectOperation> {
                 }
               }
             }),
-            BlocListener<ScaleBloc, ScaleState>(
-              listener: (context, state) {
-                if (state is ScaleLoaded) {
-                  _weighingCubit.setEquipments(state.scale.d!.results!);
-                }
-              },
-            ),
             BlocListener<ExpiredSetBloc, ExpiredSetState>(
                 listener: (context, state) {
               if (state is ExpiredSetLoaded) {

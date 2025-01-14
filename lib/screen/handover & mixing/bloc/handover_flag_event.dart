@@ -10,6 +10,7 @@ abstract class HandoverFlagEvent extends Equatable {
 
 class FlagHandover extends HandoverFlagEvent {
   final List<dynamic> handoverFlag;
+  final String originalOrder;
 
-  const FlagHandover({required this.handoverFlag});
+  const FlagHandover({required this.handoverFlag, required this.originalOrder});
 }

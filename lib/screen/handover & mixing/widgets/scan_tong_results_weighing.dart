@@ -87,7 +87,9 @@ class _ScanTongResultsWeighingScreenState
           });
           break;
         case ErrorScanType.noError:
-          handoverFlagBloc.add(FlagHandover(handoverFlag: hasScanned));
+          handoverFlagBloc.add(FlagHandover(
+              handoverFlag: hasScanned,
+              originalOrder: _handoverCubit.state.selectedOrder.orderNo ?? ''));
           break;
         case ErrorScanType.dataNull:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
