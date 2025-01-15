@@ -77,7 +77,6 @@ class SubmitConfirmationRequest extends Equatable {
         operationApps,
         operator,
         pengawas,
-        yieldToLinesNav
       ];
 
   factory SubmitConfirmationRequest.fromJson(Map<String, dynamic> json) =>
@@ -101,10 +100,6 @@ class SubmitConfirmationRequest extends Equatable {
         operationApps: json['OperationApps'],
         operator: json['Operator'],
         pengawas: json['Pengawas'],
-        yieldToLinesNav: json["YieldToLinesNav"] == null
-            ? []
-            : List<YieldToLinesNav>.from(json["YieldToLinesNav"]
-                .map((x) => YieldToLinesNav.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() {
