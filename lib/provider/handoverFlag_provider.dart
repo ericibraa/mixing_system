@@ -19,6 +19,13 @@ class HandoverflagProvider extends Provider {
     try {
       String? token = await storage.read(key: 'token');
       var authReturn = await AuthProvider().loginWithToken(token!);
+
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 5),
+        sendTimeout: const Duration(seconds: 5),
+      ));
+
       Response response = await dio.post(
           "${apiUrl.dumpingApi}/ZDMP_POST_ORDER_SRV/HandoverFlagSet",
           data: jsonEncode(handoverFlag),
@@ -36,7 +43,16 @@ class HandoverflagProvider extends Provider {
         return 'error';
       }
     } on DioException catch (e) {
-      throw ErrorResponse.fromJson(e.response!.data);
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
+        // Return error message for timeout
+        return 'Request Timeout, please try again!';
+        // return 'timeout';
+      } else {
+        // Handle other Dio exceptions
+        throw ErrorResponse.fromJson(e.response?.data);
+      }
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

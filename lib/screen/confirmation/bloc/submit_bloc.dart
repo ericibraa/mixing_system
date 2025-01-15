@@ -40,7 +40,8 @@ class SubmitBloc extends Bloc<SubmitEvent, SubmitState> {
                 laborHour: event.submitConfirmation.yieldSet.laborHour,
                 operationApps: '40',
                 operator: event.submitConfirmation.operator,
-                pengawas: event.submitConfirmation.pengawas);
+                pengawas: event.submitConfirmation.pengawas,
+                yieldToLinesNav: event.submitConfirmation.reason);
         SubmitConfirmationResponse confirmation =
             await _submitConfirmationRepository
                 .submitConfirmation(submitConfirmationRequest);

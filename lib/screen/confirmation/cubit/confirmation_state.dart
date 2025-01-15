@@ -24,6 +24,7 @@ class ConfirmationState extends Equatable {
   final DateTime? startTime;
   final bool isComplete;
   final bool isLoading;
+  final List<YieldToLinesNav> reason;
 
   const ConfirmationState(
       {this.tab = ConfirmationStatus.confirmation,
@@ -45,7 +46,8 @@ class ConfirmationState extends Equatable {
       this.line = '',
       this.startTime,
       this.isComplete = false,
-      this.isLoading = false});
+      this.isLoading = false,
+      this.reason = const []});
 
   ConfirmationState copyWith(
       {ConfirmationStatus? tab,
@@ -67,7 +69,8 @@ class ConfirmationState extends Equatable {
       String? line,
       DateTime? startTime,
       bool? isComplete,
-      bool? isLoading}) {
+      bool? isLoading,
+      List<YieldToLinesNav>? reason}) {
     return ConfirmationState(
         tab: tab ?? this.tab,
         operator: operator ?? this.operator,
@@ -88,7 +91,8 @@ class ConfirmationState extends Equatable {
         line: line ?? this.line,
         startTime: startTime ?? this.startTime,
         isComplete: isComplete ?? this.isComplete,
-        isLoading: isLoading ?? this.isLoading);
+        isLoading: isLoading ?? this.isLoading,
+        reason: reason ?? this.reason);
   }
 
   @override
@@ -111,6 +115,7 @@ class ConfirmationState extends Equatable {
         yieldSet,
         line,
         isComplete,
-        isLoading
+        isLoading,
+        reason
       ];
 }

@@ -1,4 +1,5 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
+import 'package:dumping_system/models/request/submit_confirmation.dart';
 import 'package:dumping_system/screen/confirmation/bloc/submit_bloc.dart';
 import 'package:dumping_system/screen/confirmation/cubit/confirmation_cubit.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
@@ -28,7 +29,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
   final finishExecution = TextEditingController();
   final postingDate = TextEditingController();
   final numberOfLabor = TextEditingController();
-  // final reason = TextEditingController();
+  final reason = TextEditingController();
   var laborTimeValue = 0.0;
 
   @override
@@ -470,20 +471,43 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                   readOnly: true,
                 ),
               ),
-              // Padding(
-              //     padding: const EdgeInsets.only(bottom: 20),
-              //     child: TextFormField(
-              //       maxLines: null,
-              //       controller: reason,
-              //       keyboardType:
-              //           TextInputType.multiline, // Enables multi-line input
-              //       decoration: InputDecoration(
-              //         border: OutlineInputBorder(
-              //           borderRadius: BorderRadius.circular(12),
-              //         ),
-              //         labelText: 'Reason (Optional)',
-              //       ),
-              //     ))
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: TextFormField(
+                    maxLines: null,
+                    controller: reason,
+                    keyboardType: TextInputType.multiline,
+                    onChanged: (value) {
+                      List<String> splitText(String input, int maxLength) {
+                        List<String> result = [];
+                        for (int i = 0; i < input.length; i += maxLength) {
+                          result.add(input.substring(
+                              i,
+                              i + maxLength > input.length
+                                  ? input.length
+                                  : i + maxLength));
+                        }
+                        return result;
+                      }
+
+                      List<String> textParts = splitText(value, 132);
+
+                      List<YieldToLinesNav> yieldToLinesNav = [];
+                      for (var part in textParts) {
+                        yieldToLinesNav.add(YieldToLinesNav(text: part));
+                      }
+
+                      _confirmationCubit.setReason(yieldToLinesNav);
+
+                      print(yieldToLinesNav);
+                    },
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      labelText: 'Reason (Optional)',
+                    ),
+                  ))
             ])));
       },
     );

@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/request/submit_confirmation.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
@@ -105,5 +106,9 @@ class ConfirmationCubit extends Cubit<ConfirmationState> {
 
   void setComplete(bool isComplete) {
     emit(state.copyWith(isComplete: isComplete));
+  }
+
+  void setReason(List<YieldToLinesNav> reason) {
+    emit(state.copyWith(reason: reason));
   }
 }

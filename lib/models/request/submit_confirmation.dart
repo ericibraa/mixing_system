@@ -13,49 +13,51 @@ class SubmitConfirmationResponse {
 }
 
 class SubmitConfirmationRequest extends Equatable {
-  final String? routingNo;
-  final String? internalCntr;
-  final String? orderNo;
-  final String? activityNo;
-  final String? yieldQty;
-  final String? unitYield;
-  final String? startDateOpr;
-  final String? startTimeOpr;
-  final String? startDateConf;
-  final String? startTimeConf;
-  final String? finishDate;
-  final String? finishTime;
-  final String? line;
-  final String? postDate;
-  final String? machineHour;
-  final String? laborHour;
-  final String? operationApps;
-  final String? operator;
-  final String? pengawas;
+  final String routingNo;
+  final String internalCntr;
+  final String orderNo;
+  final String activityNo;
+  final String yieldQty;
+  final String unitYield;
+  final String startDateOpr;
+  final String startTimeOpr;
+  final String startDateConf;
+  final String startTimeConf;
+  final String finishDate;
+  final String finishTime;
+  final String line;
+  final String postDate;
+  final String machineHour;
+  final String laborHour;
+  final String operationApps;
+  final String operator;
+  final String pengawas;
+  final List<YieldToLinesNav> yieldToLinesNav;
 
   const SubmitConfirmationRequest(
-      {this.routingNo,
-      this.internalCntr,
-      this.orderNo,
-      this.activityNo,
-      this.yieldQty,
-      this.unitYield,
-      this.startDateOpr,
-      this.startTimeOpr,
-      this.startDateConf,
-      this.startTimeConf,
-      this.finishDate,
-      this.finishTime,
-      this.line,
-      this.postDate,
-      this.machineHour,
-      this.laborHour,
-      this.operationApps,
-      this.operator,
-      this.pengawas});
+      {this.routingNo = "",
+      this.internalCntr = "",
+      this.orderNo = "",
+      this.activityNo = "",
+      this.yieldQty = "",
+      this.unitYield = "",
+      this.startDateOpr = "",
+      this.startTimeOpr = "",
+      this.startDateConf = "",
+      this.startTimeConf = "",
+      this.finishDate = "",
+      this.finishTime = "",
+      this.line = "",
+      this.postDate = "",
+      this.machineHour = "",
+      this.laborHour = "",
+      this.operationApps = "",
+      this.operator = "",
+      this.pengawas = "",
+      this.yieldToLinesNav = const []});
 
   @override
-  List<Object?> get props => [
+  List<Object> get props => [
         routingNo,
         internalCntr,
         orderNo,
@@ -74,7 +76,8 @@ class SubmitConfirmationRequest extends Equatable {
         laborHour,
         operationApps,
         operator,
-        pengawas
+        pengawas,
+        yieldToLinesNav
       ];
 
   factory SubmitConfirmationRequest.fromJson(Map<String, dynamic> json) =>
@@ -98,6 +101,10 @@ class SubmitConfirmationRequest extends Equatable {
         operationApps: json['OperationApps'],
         operator: json['Operator'],
         pengawas: json['Pengawas'],
+        yieldToLinesNav: json["YieldToLinesNav"] == null
+            ? []
+            : List<YieldToLinesNav>.from(json["YieldToLinesNav"]
+                .map((x) => YieldToLinesNav.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() {
@@ -121,6 +128,25 @@ class SubmitConfirmationRequest extends Equatable {
     data['OperationApps'] = operationApps;
     data['Operator'] = operator;
     data['Pengawas'] = pengawas;
+    if (yieldToLinesNav.isNotEmpty) {
+      data['YieldToLinesNav'] = yieldToLinesNav.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}
+
+class YieldToLinesNav {
+  String? text;
+
+  YieldToLinesNav({this.text});
+
+  YieldToLinesNav.fromJson(Map<String, dynamic> json) {
+    text = json['Text'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['Text'] = text;
     return data;
   }
 }

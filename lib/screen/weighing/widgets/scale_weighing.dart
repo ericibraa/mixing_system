@@ -326,8 +326,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   scale.text = state.resultScales[0].equipmentDesc!;
                   _weighingCubit
                       .setTotalContainer(state.resultScales[0].totalWadah!);
-                  _weighingCubit
-                      .setContainerCounter(int.parse(wadah.wadah!) + 1);
+                  var cancelWadah =
+                      state.resultScales[0].cancelWadah!.split(';');
+                  if (state.resultScales[0].cancelWadah!.isEmpty) {
+                    _weighingCubit
+                        .setContainerCounter(int.parse(wadah.wadah!) + 1);
+                  } else {
+                    _weighingCubit
+                        .setContainerCounter(int.parse(cancelWadah[0]));
+                  }
                 }
               } else {
                 scale.text = state.selectedEquipment.equipmentDesc;
@@ -360,8 +367,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   scale.text = state.resultScales2[0].equipmentDesc!;
                   _weighingCubit
                       .setTotalContainer(state.resultScales2[0].totalWadah!);
-                  _weighingCubit
-                      .setContainerCounter(int.parse(wadah.wadah!) + 1);
+                  var cancelWadah =
+                      state.resultScales2[0].cancelWadah!.split(';');
+                  if (state.resultScales2[0].cancelWadah!.isEmpty) {
+                    _weighingCubit
+                        .setContainerCounter(int.parse(wadah.wadah!) + 1);
+                  } else {
+                    _weighingCubit
+                        .setContainerCounter(int.parse(cancelWadah[0]));
+                  }
                 }
               }
             },
@@ -746,9 +760,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       width: double.infinity,
                       height: 50,
                       child: weighingState.containerCounter <=
-                              int.parse(weighingState.totalContainer != ''
-                                  ? weighingState.totalContainer
-                                  : '0')
+                                  int.parse(weighingState.totalContainer != ''
+                                      ? weighingState.totalContainer
+                                      : '0') ||
+                              (weighingState.resultScales.isNotEmpty &&
+                                  weighingState.resultScales.length <
+                                      int.parse(
+                                          weighingState.totalContainer != ''
+                                              ? weighingState.totalContainer
+                                              : '0'))
                           ? TextButton(
                               onPressed: checkOperationType()
                                   ? () {
