@@ -10,6 +10,7 @@ import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:vibration/vibration.dart';
 
@@ -34,6 +35,7 @@ class _ScanTongResultsWeighingScreenState
   String scannedBarcode = "";
   final line = TextEditingController();
   List<dynamic> hasScanned = [];
+  bool isLoading = false;
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -159,11 +161,30 @@ class _ScanTongResultsWeighingScreenState
           }),
           BlocListener<HandoverFlagBloc, HandoverFlagState>(
               listener: (context, state) {
-            if (state is HandoverFlagLoaded) {
+            if (state is HandoverFlagLoading) {
+              setState(() {
+                isLoading = true;
+              });
+            } else if (state is HandoverFlagLoaded) {
+              setState(() {
+                isLoading = false;
+              });
               wadahSetBloc.add(GetWadahSet(
                   _handoverCubit.state.selectedOperation.routingNo,
                   _handoverCubit.state.tongs[0].activityNo!,
                   _handoverCubit.state.operationType));
+            } else if (state is HandoverFlagError) {
+              setState(() {
+                isLoading = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
           BlocListener<WadahSetBloc, WadahSetState>(listener: (context, state) {
@@ -388,49 +409,252 @@ class _ScanTongResultsWeighingScreenState
                 child: SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child: handoverState.operationType == 'CB'
-                      ? handoverState.fullpack
-                                      .where((item) => item.handoverFlag == 'X')
-                                      .length ==
-                                  handoverState.fullpack.length &&
-                              line.text.isNotEmpty
-                          ? TextButton(
-                              onPressed: () {
-                                submitHandoverBloc.add(
-                                    SubmitHandover(orderData: handoverState));
-                              },
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                  child: isLoading
+                      ? TextButton(
+                          onPressed: null,
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.grey,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Sending scanned data",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall!
+                                    .copyWith(color: Colors.white),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    "Complete",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                  ),
-                                ],
+                              const LoadingIndicator(
+                                indicatorType: Indicator.ballPulse,
+                                colors: [Colors.white],
+                                strokeWidth: 1,
                               ),
-                            )
-                          : handoverState.fullpack
-                                  .where((item) => item.handoverFlag == 'X')
-                                  .isEmpty
+                            ],
+                          ))
+                      : handoverState.operationType == 'CB'
+                          ? handoverState.fullpack
+                                          .where((item) =>
+                                              item.handoverFlag == 'X')
+                                          .length ==
+                                      handoverState.fullpack.length &&
+                                  line.text.isNotEmpty
                               ? TextButton(
+                                  onPressed: () {
+                                    submitHandoverBloc.add(SubmitHandover(
+                                        orderData: handoverState));
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        "Complete",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : handoverState.fullpack
+                                      .where((item) => item.handoverFlag == 'X')
+                                      .isEmpty
+                                  ? TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ScanBarcodeScreen(
+                                              onBarcodeScanned: (barcode) {
+                                                _scanOperator(barcode);
+                                              },
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      style: TextButton.styleFrom(
+                                        backgroundColor: Colors.black,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.qr_code_scanner_rounded,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            "Scan Barcode",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : Row(
+                                      children: [
+                                        Expanded(
+                                          child: TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ScanBarcodeScreen(
+                                                    onBarcodeScanned:
+                                                        (barcode) {
+                                                      _scanOperator(barcode);
+                                                    },
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            style: TextButton.styleFrom(
+                                              backgroundColor: Colors.black,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.qr_code_scanner_rounded,
+                                                  color: Colors.white,
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Text(
+                                                  "Scan Barcode",
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        Expanded(
+                                          child: TextButton(
+                                            onPressed: () {
+                                              submitHandoverBloc.add(
+                                                  SubmitHandover(
+                                                      orderData:
+                                                          handoverState));
+                                            },
+                                            style: TextButton.styleFrom(
+                                              backgroundColor: Colors.green,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.check,
+                                                  color: Colors.white,
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Text(
+                                                  "Save",
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    )
+                          : handoverState.fullpack
+                                          .where((item) =>
+                                              item.handoverFlag == 'X')
+                                          .length ==
+                                      handoverState.fullpack.length &&
+                                  line.text.isNotEmpty
+                              ? TextButton(
+                                  onPressed: () {
+                                    submitHandoverBloc.add(SubmitHandover(
+                                        orderData: handoverState));
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        "Complete",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : TextButton(
                                   onPressed: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
@@ -469,174 +693,7 @@ class _ScanTongResultsWeighingScreenState
                                       ),
                                     ],
                                   ),
-                                )
-                              : Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ScanBarcodeScreen(
-                                                onBarcodeScanned: (barcode) {
-                                                  _scanOperator(barcode);
-                                                },
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Colors.black,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons.qr_code_scanner_rounded,
-                                              color: Colors.white,
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Text(
-                                              "Scan Barcode",
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    Expanded(
-                                      child: TextButton(
-                                        onPressed: () {
-                                          submitHandoverBloc.add(SubmitHandover(
-                                              orderData: handoverState));
-                                        },
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons.check,
-                                              color: Colors.white,
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Text(
-                                              "Save",
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                )
-                      : handoverState.fullpack
-                                      .where((item) => item.handoverFlag == 'X')
-                                      .length ==
-                                  handoverState.fullpack.length &&
-                              line.text.isNotEmpty
-                          ? TextButton(
-                              onPressed: () {
-                                submitHandoverBloc.add(
-                                    SubmitHandover(orderData: handoverState));
-                              },
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    "Complete",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : TextButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => ScanBarcodeScreen(
-                                      onBarcodeScanned: (barcode) {
-                                        _scanOperator(barcode);
-                                      },
-                                    ),
-                                  ),
-                                );
-                              },
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.qr_code_scanner_rounded,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    "Scan Barcode",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
                 ),
               ),
             ),

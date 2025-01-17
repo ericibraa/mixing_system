@@ -36,6 +36,8 @@ class HandoverFlagBloc extends Bloc<HandoverFlagEvent, HandoverFlagState> {
         } else {
           emit(const HandoverFlagError('Server Error'));
         }
+      } on Exception catch (e) {
+        emit(HandoverFlagError(e.toString()));
       }
     });
   }

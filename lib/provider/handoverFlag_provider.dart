@@ -47,7 +47,8 @@ class HandoverflagProvider extends Provider {
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
         // Return error message for timeout
-        return 'Request Timeout, please try again!';
+        throw Exception(
+            "Request Timeout, check your connection and please try again!");
         // return 'timeout';
       } else {
         // Handle other Dio exceptions
@@ -55,7 +56,8 @@ class HandoverflagProvider extends Provider {
       }
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
-      throw Exception("Exception occurred: $error stackTrace: $stacktrace");
+      throw Exception(
+          "Request Timeout, check your connection and please try again!");
     }
   }
 }

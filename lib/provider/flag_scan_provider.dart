@@ -25,7 +25,6 @@ class FlagScanProvider extends Provider {
         receiveTimeout: const Duration(seconds: 5),
         sendTimeout: const Duration(seconds: 5),
       ));
-
       Response response = await dio.post(
           "${apiUrl.dumpingApi}/ZDMP_POST_ORDER_SRV/MaterialFlagSet",
           data: jsonEncode(flagMaterials),
@@ -47,15 +46,15 @@ class FlagScanProvider extends Provider {
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
         // Return error message for timeout
-        return 'Request Timeout, please try again!';
-        // return 'timeout';
+        throw Exception(
+            "Request Timeout, check your connection and please try again!");
       } else {
-        // Handle other Dio exceptions
         throw ErrorResponse.fromJson(e.response?.data);
       }
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
-      throw Exception("Exception occurred: $error stackTrace: $stacktrace");
+      throw Exception(
+          "Request Timeout, check your connection and please try again!");
     }
   }
 }

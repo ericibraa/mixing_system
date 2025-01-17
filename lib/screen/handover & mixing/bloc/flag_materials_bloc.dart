@@ -97,6 +97,8 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
         } else {
           emit(const FlagMaterialsError('Server Error'));
         }
+      } on Exception catch (e) {
+        emit(FlagMaterialsError(e.toString()));
       }
     });
   }

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:go_router/go_router.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:vibration/vibration.dart';
 
@@ -28,6 +29,7 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
   FlagMaterialsBloc flagMaterialsBloc = FlagMaterialsBloc();
   String scannedBarcode = "";
   List<dynamic> hasScanned = [];
+  bool isLoading = false;
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -159,15 +161,25 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
           BlocListener<FlagMaterialsBloc, FlagMaterialsState>(
               listener: (context, state) {
             switch (state) {
+              case FlagMaterialsLoading():
+                setState(() {
+                  isLoading = true;
+                });
+                break;
               case FlagMaterialsSuccess():
+                setState(() {
+                  isLoading = false;
+                });
                 materialSetBloc.add(SendDataMaterialset(
                     routingNo: _handoverCubit.state.selectedOperation.routingNo,
                     activityNo: _handoverCubit.state.tong,
                     operationType:
                         _handoverCubit.state.selectedOrder.operationType!));
-
                 break;
               case FlagMaterialsError():
+                setState(() {
+                  isLoading = false;
+                });
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(state.error),
                   backgroundColor: Colors.red,
@@ -391,44 +403,65 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
                             ),
                           )
                         : TextButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => ScanBarcodeScreen(
-                                    onBarcodeScanned: (barcode) {
-                                      _scanOperator(barcode);
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => ScanBarcodeScreen(
+                                          onBarcodeScanned: (barcode) {
+                                            _scanOperator(barcode);
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
                             style: TextButton.styleFrom(
-                              backgroundColor: Colors.black,
+                              backgroundColor:
+                                  isLoading ? Colors.grey : Colors.black,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.qr_code_scanner_rounded,
-                                  color: Colors.white,
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  "Scan Barcode",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                            child: isLoading
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Sending scanned data",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall!
+                                            .copyWith(color: Colors.white),
                                       ),
-                                ),
-                              ],
-                            ),
+                                      const LoadingIndicator(
+                                        indicatorType: Indicator.ballPulse,
+                                        colors: [Colors.white],
+                                        strokeWidth: 1,
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.qr_code_scanner_rounded,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        "Scan Barcode",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
                           ),
                   ),
                 ),
