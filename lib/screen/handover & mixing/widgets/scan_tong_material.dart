@@ -29,6 +29,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
   FlagMaterialsBloc flagMaterialsBloc = FlagMaterialsBloc();
   String scannedBarcode = "";
   List<dynamic> hasScanned = [];
+  bool isLoading = false;
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -194,11 +195,21 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
           BlocListener<FlagMaterialsBloc, FlagMaterialsState>(
               listener: (context, state) {
             switch (state) {
+              case FlagMaterialsLoading():
+                setState(() {
+                  isLoading = true;
+                });
+                break;
               case FlagMaterialsSuccess():
-                _handoverCubit.setIsLoadingMaterialSet(true);
+                setState(() {
+                  isLoading = false;
+                });
 
                 break;
               case FlagMaterialsError():
+                setState(() {
+                  isLoading = false;
+                });
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(state.error),
                   backgroundColor: Colors.red,
@@ -208,6 +219,10 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                   ),
                 ));
                 break;
+              default:
+                setState(() {
+                  isLoading = false;
+                });
             }
           })
         ],

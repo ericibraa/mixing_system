@@ -12,11 +12,12 @@ class DioClient {
     return _instance;
   }
 
-  final BaseOptions options = BaseOptions(
-    receiveTimeout: const Duration(seconds: 5),
-    connectTimeout: const Duration(seconds: 5),
-    sendTimeout: const Duration(seconds: 5),
-  );
+final BaseOptions options = BaseOptions(
+  receiveTimeout: const Duration(milliseconds: 5000),
+  connectTimeout: const Duration(milliseconds: 5000),
+  sendTimeout: const Duration(milliseconds: 5000),  
+);
+
 
   Future<void> initDio() async {
     dio = Dio(options);

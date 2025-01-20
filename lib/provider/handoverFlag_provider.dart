@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:dumping_system/core/dio/dio_client.dart';
 import 'package:dumping_system/models/request/handover_flag.dart';
 import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/provider/auth_provider.dart';
@@ -15,16 +16,13 @@ FlutterSecureStorage storage = const FlutterSecureStorage(
 );
 
 class HandoverflagProvider extends Provider {
+  final DioClient dioClient = DioClient();
   Future<String> fetchHandoverFlag(HandoverFlag handoverFlag) async {
     try {
       String? token = await storage.read(key: 'token');
       var authReturn = await AuthProvider().loginWithToken(token!);
 
-      final dio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 5),
-        receiveTimeout: const Duration(seconds: 5),
-        sendTimeout: const Duration(seconds: 5),
-      ));
+      await dioClient.initDio();
 
       Response response = await dio.post(
           "${apiUrl.dumpingApi}/ZDMP_POST_ORDER_SRV/HandoverFlagSet",
@@ -46,12 +44,9 @@ class HandoverflagProvider extends Provider {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        // Return error message for timeout
         throw Exception(
             "Request Timeout, check your connection and please try again!");
-        // return 'timeout';
       } else {
-        // Handle other Dio exceptions
         throw ErrorResponse.fromJson(e.response?.data);
       }
     } catch (error, stacktrace) {

@@ -185,6 +185,10 @@ class _ScanTongResultsWeighingScreenState
                   borderRadius: BorderRadius.circular(10.0),
                 ),
               ));
+            } else {
+              setState(() {
+                isLoading = false;
+              });
             }
           }),
           BlocListener<WadahSetBloc, WadahSetState>(listener: (context, state) {

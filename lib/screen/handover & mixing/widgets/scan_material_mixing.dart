@@ -189,6 +189,10 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
                   ),
                 ));
                 break;
+              default:
+                setState(() {
+                  isLoading = false;
+                });
             }
           }),
           BlocListener<MaterialSetBloc, MaterialSetState>(
