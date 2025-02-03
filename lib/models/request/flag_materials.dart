@@ -9,6 +9,7 @@ class FlagMaterials {
   String? activityWh;
   String? wadah;
   String? originalOrder;
+  String? materialDoc;
 
   FlagMaterials(
       {this.orderNo,
@@ -20,7 +21,8 @@ class FlagMaterials {
       this.batch,
       this.activityWh,
       this.wadah,
-      this.originalOrder});
+      this.originalOrder,
+      this.materialDoc});
 
   FlagMaterials.fromJson(Map<String, dynamic> json) {
     orderNo = json['OrderNo'];
@@ -33,6 +35,7 @@ class FlagMaterials {
     activityWh = json['ActivityWh'];
     wadah = json['Wadah'];
     originalOrder = json['OriginalOrder'];
+    materialDoc = json['MaterialDoc'];
   }
 
   Map<String, dynamic> toJson() {
@@ -47,6 +50,7 @@ class FlagMaterials {
     data['ActivityWh'] = activityWh;
     data['Wadah'] = wadah;
     data['OriginalOrder'] = originalOrder;
+    data['MaterialDoc'] = materialDoc;
     return data;
   }
 }

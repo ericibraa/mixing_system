@@ -24,6 +24,7 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
         String recipient = '';
         String wadah = '';
         String originalOrder = '';
+        String materialDoc = '';
         switch (event.flagMaterials.length) {
           case 10:
             orderNo = event.flagMaterials[1];
@@ -36,6 +37,7 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
             activityWh = activityWh;
             wadah = wadah;
             originalOrder = event.orderNo;
+            materialDoc = event.flagMaterials[9];
             break;
           case 9:
             orderNo = event.flagMaterials[1];
@@ -48,6 +50,7 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
             activityWh = activityWh;
             wadah = wadah;
             originalOrder = event.orderNo;
+            materialDoc = materialDoc;
             break;
           case 6:
             orderNo = event.flagMaterials[1];
@@ -56,10 +59,11 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
             materialNo = event.flagMaterials[4];
             recipient = "W";
             fullpackItem = fullpackItem;
-            batch = fullpackItem;
+            batch = batch;
             activityWh = activityWh;
             wadah = wadah;
             originalOrder = event.orderNo;
+            materialDoc = materialDoc;
             break;
           case 7:
             orderNo = event.flagMaterials[0];
@@ -68,11 +72,11 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
             materialNo = materialNo;
             recipient = recipient;
             fullpackItem = fullpackItem;
-            batch = fullpackItem;
+            batch = batch;
             activityWh = event.flagMaterials[6];
             wadah = event.flagMaterials[5].toString().split("/")[0];
             originalOrder = event.orderNo;
-
+            materialDoc = materialDoc;
             break;
         }
 
@@ -86,7 +90,8 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
           orderNo: orderNo,
           recipient: recipient,
           wadah: wadah,
-          originalOrder: originalOrder
+          originalOrder: originalOrder,
+          materialDoc: materialDoc
         );
         final flagMaterial =
             await _flagScanRepository.fetchSubmitFlag(flagMaterials);
