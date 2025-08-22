@@ -123,108 +123,113 @@ class _ChooseOperationsState extends State<ChooseOperations> {
               ),
               body: Padding(
                 padding: const EdgeInsets.all(20),
-                child: ListView.builder(
-                  itemCount: weighingState.chooseOperations.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final selectedOperation =
-                        weighingState.chooseOperations[index];
-
-                    return Card(
-                      elevation:
-                          weighingState.chooseOperations[index].lastOperation ==
-                                  ''
-                              ? 7
-                              : 0,
-                      shadowColor: Colors.blueGrey[100],
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      color: Colors.grey[100],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: ListTile(
-                        title: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(selectedOperation.operationDesc,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                    )),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Operation number",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Colors.black,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      selectedOperation.activityNo,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      "Operation Apps",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Colors.black,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      selectedOperation.operationApps,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ListView.builder(
+                    reverse: true,
+                    shrinkWrap: true,
+                    itemCount: weighingState.chooseOperations.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final selectedOperation =
+                          weighingState.chooseOperations[index];
+                  
+                      return Card(
+                        elevation:
+                            weighingState.chooseOperations[index].lastOperation ==
+                                    ''
+                                ? 7
+                                : 0,
+                        shadowColor: Colors.blueGrey[100],
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        color: Colors.grey[100],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        onTap: () {
-                          _weighingCubit
-                              .setSelectedOperation(selectedOperation);
-                          weighingBloc.add(SendDataWeighing(
-                              routingNo: selectedOperation.routingNo,
-                              internalCntr: selectedOperation.internalCntr,
-                              activityNo: selectedOperation.activityNo,
-                              operationType: weighingState.operationType,
-                              operationApps: weighingState.operationApps));
-                        },
-                      ),
-                    );
-                  },
+                        child: ListTile(
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(selectedOperation.operationDesc,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                      )),
+                              const SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Operation number",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Colors.black,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        selectedOperation.activityNo,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Operation Apps",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Colors.black,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        selectedOperation.operationApps,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            _weighingCubit
+                                .setSelectedOperation(selectedOperation);
+                            weighingBloc.add(SendDataWeighing(
+                                routingNo: selectedOperation.routingNo,
+                                internalCntr: selectedOperation.internalCntr,
+                                activityNo: selectedOperation.activityNo,
+                                operationType: weighingState.operationType,
+                                operationApps: weighingState.operationApps));
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             );
