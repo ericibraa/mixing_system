@@ -4,6 +4,7 @@ import 'package:dumping_system/screen/weighing/bloc/result_scale_2_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/submit_weighing_bloc.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:dumping_system/bloc/auth_bloc.dart';
@@ -40,6 +41,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   final netto = TextEditingController();
   final line = TextEditingController();
   final lot = TextEditingController();
+  bool isLdConect = false;
   Socket? socket;
   String weight = "";
   String scannedBarcode = '';
@@ -73,6 +75,10 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
       if (mounted) {
         _weighingCubit.resetScaleWeighing();
         _weighingCubit.setSelectedEquipment(scannedBarcode);
+        if (_weighingCubit.state.productiSupervisor == 'LQD') {
+          isLdConect = true;
+          _weighingCubit.setStartWork();
+        }
         if (_weighingCubit.state.selectedEquipment.equipmentNo.isNotEmpty) {
           _weighingCubit.setScaleWeighing(_weighingCubit.state.scaleWeighing
               .copyWith(
@@ -82,7 +88,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   regex: _weighingCubit.state.selectedEquipment.regex,
                   urlAddress:
                       _weighingCubit.state.selectedEquipment.urlAddress));
-          tCPListen();
+          if (_weighingCubit.state.productiSupervisor != 'LQD') {
+            tCPListen();
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: const Text("Invalid equipment"),
@@ -121,6 +129,16 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
     _weighingCubit.resetScaleWeighing();
   }
 
+  _onChangeNettoLqd(value) {
+    scaleD = Scale(
+      netto: double.parse(value),
+      bruto: double.parse(value),
+      unit: 'l',
+      numberOfContainer: numberOfContainer.text,
+    );
+    _weighingCubit.setScaleWeighing(scaleD);
+  }
+
   bool checkOperationType() {
     switch (_weighingCubit.state.operationType) {
       case 'DECOCT':
@@ -155,6 +173,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
           return true;
         }
         break;
+      case 'LIQUID MIXING':
+        if (numberOfContainer.text.isNotEmpty &&
+            netto.text.isNotEmpty &&
+            line.text.isNotEmpty) {
+          return true;
+        }
+        ;
     }
     return false;
   }
@@ -230,14 +255,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 lot: lot.text);
             _weighingCubit.setLine(line.text);
             _weighingCubit.setScaleWeighing(scaleD);
-            // _weighingCubit.setScaleWeighing(_weighingCubit.state.scaleWeighing
-            //     .copyWith(
-            //         bruto: brutoFloat,
-            //         netto: nettoFloat,
-            //         tara: taraFloat,
-            //         unit: dataReg[2],
-            //         moistureContent:
-            //             '${topMoistureContent.text};${middleMoistureContent.text};${bottomMoistureContent.text}'));
             dataString = "";
           }
         },
@@ -297,8 +314,10 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
               if (state.selectedOperation.operationDesc !=
                   state.selectedOperation.operationDesc2) {
                 scale.text = state.selectedEquipment.equipmentDesc;
-                bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
-                netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
+                if (state.productiSupervisor != 'SLQ') {
+                  bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
+                  netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
+                }
                 ResultScaleList wadah = ResultScaleList();
                 if (state.resultScales.isNotEmpty) {
                   wadah = state.resultScales.reduce((current, next) =>
@@ -338,8 +357,10 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 }
               } else {
                 scale.text = state.selectedEquipment.equipmentDesc;
-                bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
-                netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
+                if (state.productiSupervisor != 'SLQ') {
+                  bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
+                  netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
+                }
                 ResultScaleList wadah = ResultScaleList();
                 if (state.resultScales2.isNotEmpty) {
                   wadah = state.resultScales2.reduce((current, next) =>
@@ -441,7 +462,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       "${state.submitWeighing.submitWeighing!.expiredDate!.substring(6, 8)}.${state.submitWeighing.submitWeighing!.expiredDate!.substring(4, 6)}.${state.submitWeighing.submitWeighing!.expiredDate!.substring(0, 4)} "
                       "${state.submitWeighing.submitWeighing!.expiredTime!.substring(0, 2)}:${state.submitWeighing.submitWeighing!.expiredTime!.substring(2, 4)}:${state.submitWeighing.submitWeighing!.expiredTime!.substring(4, 6)}";
                 }
-
+                _weighingCubit.setStartWork();
                 var zplData = ZplData(
                         materialCode: _weighingCubit.state.materialCode,
                         materialDesc:
@@ -526,7 +547,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                     print(cause);
                   }
                 });
-                _weighingCubit.setStartWork();
                 break;
               case SubmitWeighingError():
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -994,94 +1014,74 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                           ),
                         ),
                       ),
-                    if (weighingState.productiSupervisor != 'LQD') ...[
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: TextFormField(
+                        controller: scale,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ScanBarcodeScreen(
+                                onBarcodeScanned: (barcode) {
+                                  _scanBarcode(barcode);
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            labelText: 'Scan Scale',
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            suffixIcon:
+                                const Icon(Icons.qr_code_scanner_rounded)),
+                        readOnly: true,
+                      ),
+                    ),
+                    if (weighingState.isConnectedTcp) ...[
                       Padding(
                         padding: const EdgeInsets.only(bottom: 20),
                         child: TextFormField(
-                          controller: scale,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => ScanBarcodeScreen(
-                                  onBarcodeScanned: (barcode) {
-                                    _scanBarcode(barcode);
-                                  },
-                                ),
-                              ),
-                            );
-                          },
+                          controller: bruto,
                           decoration: InputDecoration(
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              labelText: 'Scan Scale',
+                              labelText: 'Bruto',
+                              hintText: '0.0',
                               filled: true,
                               fillColor: Colors.grey.shade100,
-                              suffixIcon:
-                                  const Icon(Icons.qr_code_scanner_rounded)),
+                              suffix: Text(weighingState.scaleWeighing.unit
+                                  .toUpperCase())),
                           readOnly: true,
                         ),
                       ),
-                      if (weighingState.isConnectedTcp) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: TextFormField(
-                            controller: bruto,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                labelText: 'Bruto',
-                                hintText: '0.0',
-                                filled: true,
-                                fillColor: Colors.grey.shade100,
-                                suffix: Text(weighingState.scaleWeighing.unit
-                                    .toUpperCase())),
-                            readOnly: true,
-                          ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: TextFormField(
+                          controller: tara,
+                          onChanged: (value) {
+                            var tara = double.parse(value);
+                            _weighingCubit.setScaleWeighing(_weighingCubit
+                                .state.scaleWeighing
+                                .copyWith(tara: tara));
+                          },
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              labelText: 'Tara',
+                              hintText: "0",
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              suffix: Text(weighingState.scaleWeighing.unit
+                                  .toUpperCase())),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: TextFormField(
-                            controller: tara,
-                            onChanged: (value) {
-                              var tara = double.parse(value);
-                              _weighingCubit.setScaleWeighing(_weighingCubit
-                                  .state.scaleWeighing
-                                  .copyWith(tara: tara));
-                            },
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                labelText: 'Tara',
-                                hintText: "0",
-                                filled: true,
-                                fillColor: Colors.grey.shade100,
-                                suffix: Text(weighingState.scaleWeighing.unit
-                                    .toUpperCase())),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: TextFormField(
-                            controller: netto,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                labelText: 'Netto',
-                                hintText: "0.0",
-                                filled: true,
-                                fillColor: Colors.grey.shade100,
-                                suffix: Text(weighingState.scaleWeighing.unit
-                                    .toUpperCase())),
-                            readOnly: true,
-                          ),
-                        ),
-                      ]
-                    ] else ...[
+                      ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 20),
                         child: TextFormField(
@@ -1091,12 +1091,36 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               labelText: 'Netto',
+                              hintText: "0.0",
                               filled: true,
                               fillColor: Colors.grey.shade100,
-                              suffix: const Text("L")),
+                              suffix: Text(weighingState.scaleWeighing.unit
+                                  .toUpperCase())),
+                          readOnly: true,
                         ),
                       ),
                     ],
+                    if (weighingState.productiSupervisor == 'LQD' && isLdConect)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: TextFormField(
+                          controller: netto,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              labelText: 'Netto',
+                              hintText: "0.0",
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              suffix: const Text("L")),
+                          onChanged: (value) {
+                            _onChangeNettoLqd(value);
+                          },
+                        ),
+                      ),
                     if (weighingState.selectedOperation.operationDesc !=
                         weighingState.selectedOperation.operationDesc2) ...[
                       if (weighingState.resultScales.isNotEmpty) ...[
