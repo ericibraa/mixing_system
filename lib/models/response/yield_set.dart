@@ -45,6 +45,7 @@ class ResultsYieldSet extends Equatable {
   final String operationApps;
   final String operator;
   final String pengawas;
+  final String labor;
 
   const ResultsYieldSet({
     this.routingNo = '',
@@ -66,6 +67,7 @@ class ResultsYieldSet extends Equatable {
     this.operationApps = '',
     this.operator = '',
     this.pengawas = '',
+    this.labor = ''
   });
 
   ResultsYieldSet copyWith({
@@ -88,6 +90,7 @@ class ResultsYieldSet extends Equatable {
     String? operationApps,
     String? operator,
     String? pengawas,
+    String? labor
   }) {
     return ResultsYieldSet(
       routingNo: routingNo ?? this.routingNo,
@@ -109,6 +112,7 @@ class ResultsYieldSet extends Equatable {
       operationApps: operationApps ?? this.operationApps,
       operator: operator ?? this.operator,
       pengawas: pengawas ?? this.pengawas,
+      labor: labor ?? this.labor
     );
   }
 
@@ -133,6 +137,7 @@ class ResultsYieldSet extends Equatable {
         operationApps: json['OperationApps'],
         operator: json['Operator'],
         pengawas: json['Pengawas'],
+        labor: json['Labor']
       );
 
   @override
@@ -156,5 +161,6 @@ class ResultsYieldSet extends Equatable {
         operationApps,
         operator,
         pengawas,
+        labor
       ];
 }

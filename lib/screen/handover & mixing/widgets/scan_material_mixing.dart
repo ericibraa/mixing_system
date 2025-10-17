@@ -515,7 +515,7 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
                         children: [
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
                               child: Text(
                                 '${materialSet.materialNo.isNotEmpty ? "${materialSet.materialNo} -" : ''} ${materialSet.materialDesc} - ${materialSet.bOMItem} - ${materialSet.quantity.replaceAll('.', ',')} ${materialSet.uom} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
                                 style: Theme.of(context).textTheme.bodyMedium,

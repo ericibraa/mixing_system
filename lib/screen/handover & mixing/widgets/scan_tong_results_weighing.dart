@@ -727,7 +727,7 @@ class _ScanTongResultsWeighingScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   alignment: Alignment.center,
                   child: Text(
                     "Handover containers",

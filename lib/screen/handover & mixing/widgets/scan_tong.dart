@@ -661,7 +661,7 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
                             '${tong.operationDesc} ${tong.activityNo}',
                             style: Theme.of(context).textTheme.bodyMedium,
@@ -688,7 +688,7 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
                             '${fullpack.materialNo} - ${fullpack.materialDesc} ${fullpack.counter}',
                             style: Theme.of(context).textTheme.bodyMedium,

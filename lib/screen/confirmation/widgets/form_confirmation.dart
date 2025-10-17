@@ -31,12 +31,12 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
   final numberOfLabor = TextEditingController();
   final reason = TextEditingController();
   var laborTimeValue = 0.0;
+  bool isChangeLabor = false;
 
   @override
   void initState() {
     authBloc = BlocProvider.of<AuthBloc>(context);
     _confirmationCubit = BlocProvider.of<ConfirmationCubit>(context);
-    numberOfLabor.text = '1';
     super.initState();
   }
 
@@ -73,6 +73,16 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
               yield.text = state.yieldSet.yieldQty;
               machineTime.text = state.yieldSet.machineHour;
               laborTime.text = state.yieldSet.laborHour;
+              if (!isChangeLabor) {
+                numberOfLabor.text = state.yieldSet.labor;
+                laborTimeValue = double.parse(state.yieldSet.machineHour) *
+                    double.parse(state.yieldSet.labor);
+                _confirmationCubit.setYieldSet(
+                  _confirmationCubit.state.yieldSet.copyWith(
+                    laborHour: laborTimeValue.toStringAsFixed(3),
+                  ),
+                );
+              }
               startExecution.text =
                   '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
               postingDate.text =
@@ -114,7 +124,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     onPressed: () {
                       _confirmationCubit
                           .setTab(ConfirmationStatus.chooseOperation);
-                      numberOfLabor.text = '1';
+                      isChangeLabor = false;
                     },
                     icon: const Icon(Icons.chevron_left_rounded),
                   ),
@@ -376,10 +386,10 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                   controller: machineTime,
                   keyboardType: TextInputType.number,
                   onChanged: (value) {
-                    var data = _confirmationCubit.state.yieldSet;
+                    var data = confirmationState.yieldSet;
 
-                    laborTimeValue =
-                        double.parse(value) * double.parse(numberOfLabor.text);
+                    laborTimeValue = double.parse(value) *
+                        double.parse(confirmationState.yieldSet.labor);
 
                     _confirmationCubit.setYieldSet(data.copyWith(
                         machineHour: value,
@@ -418,16 +428,6 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                 child: TextFormField(
                   controller: numberOfLabor,
                   keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    var data = _confirmationCubit.state.yieldSet;
-
-                    laborTimeValue =
-                        double.parse(data.machineHour) * double.parse(value);
-                    print(laborTime);
-
-                    _confirmationCubit.setYieldSet(data.copyWith(
-                        laborHour: laborTimeValue.toStringAsFixed(3)));
-                  },
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -437,6 +437,24 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     filled: true,
                     fillColor: Colors.grey.shade100,
                   ),
+                  onFieldSubmitted: (value) {
+                    isChangeLabor = true;
+                    if (value.isNotEmpty) {
+                      final machineHour = double.tryParse(
+                              confirmationState.yieldSet.machineHour) ??
+                          0;
+                      final labor = double.tryParse(value) ?? 0;
+
+                      final laborTimeValue = machineHour * labor;
+                      print('Labor Time: $laborTimeValue');
+
+                      _confirmationCubit.setYieldSet(
+                        confirmationState.yieldSet.copyWith(
+                          laborHour: laborTimeValue.toStringAsFixed(3),
+                        ),
+                      );
+                    }
+                  },
                 ),
               ),
               Padding(

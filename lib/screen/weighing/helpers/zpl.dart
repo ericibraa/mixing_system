@@ -87,8 +87,8 @@ class ZplData {
           ^FO200,345^FB350,2,5,L^FD$workCenterDesc^FS      ; Machine info
           ^FO30,390^FDOperation/Lot^FS
           ^FO200,390^FD${operationType == 'DECOCT' ? '$operationDesc / $lot' : lot.isNotEmpty ? '$operationDesc / $lot' : operationDesc}^FS       ; Operation/lot
-          ^FO30,420^FDOperator/PWS^FS
-          ^FO200,420^FD$operator/$pengawas^FS             ; Operator/PWS info
+          ^FO30,420^FDOprt/Pgws^FS
+          ^FO200,420^FD$operator/$pengawas^FS             ; Oprt/Pgws info
           ^FO30,450^FDWeighing Time^FS
           ^FO200,450^FD$startWork^FS        ; Date and time
           ^FO30,480^FD${expiredNo != '0,000' ? 'Staging Time' : ''}^FS

@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:dumping_system/models/response/result_scale.dart';
+import 'package:dumping_system/models/response/volume.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_2_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/submit_weighing_bloc.dart';
+import 'package:dumping_system/screen/weighing/bloc/volume_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -30,11 +32,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   WeighingCubit _weighingCubit = WeighingCubit();
   ResultScale scaleData = const ResultScale();
   SubmitWeighingBloc submitWeighingBloc = SubmitWeighingBloc();
+  VolumeBloc volumeBloc = VolumeBloc();
   final temperature = TextEditingController();
   final topMoistureContent = TextEditingController();
   final middleMoistureContent = TextEditingController();
   final bottomMoistureContent = TextEditingController();
   final numberOfContainer = TextEditingController();
+  final volumeLiterLqd = TextEditingController();
   final scale = TextEditingController();
   final bruto = TextEditingController();
   final tara = TextEditingController();
@@ -56,6 +60,11 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   ResultScale2Bloc resultScale2Bloc = ResultScale2Bloc();
   int totalCont = 0;
   ScaleBloc scaleBloc = ScaleBloc();
+  List<ResultVolume> volume = [];
+  List<DropdownMenuEntry<String>> menuEntries = [];
+  String? volumeValue;
+  bool isLast = false;
+  bool isFirst = false;
 
   void scanLine(Barcode? barcode) async {
     if (barcode != null && barcode.displayValue != null) {
@@ -78,6 +87,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
         if (_weighingCubit.state.productiSupervisor == 'LQD') {
           isLdConect = true;
           _weighingCubit.setStartWork();
+          scaleD = Scale(
+            bruto: double.parse(volumeValue!),
+            netto: double.parse(volumeValue!),
+            numberOfContainer: numberOfContainer.text,
+            unit: 'l',
+          );
+          _weighingCubit.setScaleWeighing(scaleD);
         }
         if (_weighingCubit.state.selectedEquipment.equipmentNo.isNotEmpty) {
           _weighingCubit.setScaleWeighing(_weighingCubit.state.scaleWeighing
@@ -123,6 +139,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
     if (data is Authenticated) {
       plant = data.weerks;
     }
+
     tara.text = "";
     numberOfContainer.text = '';
     _weighingCubit.resetResultScale();
@@ -305,7 +322,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
           create: (context) => _weighingCubit,
         ),
         BlocProvider.value(value: submitWeighingBloc),
-        BlocProvider<ResultScale2Bloc>(create: (context) => resultScale2Bloc)
+        BlocProvider<ResultScale2Bloc>(create: (context) => resultScale2Bloc),
+        BlocProvider<VolumeBloc>(create: (context) => volumeBloc)
       ],
       child: MultiBlocListener(
         listeners: [
@@ -313,10 +331,25 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
             listener: (context, state) {
               if (state.selectedOperation.operationDesc !=
                   state.selectedOperation.operationDesc2) {
+                volumeBloc.add(GetVolume(plant: state.plant));
+                if (isFirst == false) {
+                  if (state.containerCounter ==
+                      int.parse(state.totalContainer)) {
+                    isLast = true;
+                    isFirst = true;
+                  }
+                }
                 scale.text = state.selectedEquipment.equipmentDesc;
-                if (state.productiSupervisor != 'SLQ') {
+                if (state.productiSupervisor != 'LQD') {
                   bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
                   netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
+                } else {
+                  print(isLast);
+                  if (isLast == true) {
+                    netto.clear();
+                    bruto.clear();
+                  }
+                  isLast = false;
                 }
                 ResultScaleList wadah = ResultScaleList();
                 if (state.resultScales.isNotEmpty) {
@@ -357,9 +390,18 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 }
               } else {
                 scale.text = state.selectedEquipment.equipmentDesc;
-                if (state.productiSupervisor != 'SLQ') {
+                if (state.productiSupervisor != 'LQD') {
                   bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
                   netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
+                } else {
+                  volumeBloc.add(GetVolume(plant: state.plant));
+                  if (state.containerCounter ==
+                      int.parse(state.totalContainer)) {
+                    if (!isLast) {
+                      netto.clear();
+                    }
+                    isLast = true;
+                  }
                 }
                 ResultScaleList wadah = ResultScaleList();
                 if (state.resultScales2.isNotEmpty) {
@@ -414,6 +456,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 temperature.clear();
                 lot.clear();
                 tara.clear();
+                if (_weighingCubit.state.productiSupervisor == 'LQD') {
+                  scaleD = Scale(
+                    netto: _weighingCubit.state.scaleWeighing.netto,
+                    bruto: _weighingCubit.state.scaleWeighing.netto,
+                    unit: 'l',
+                    numberOfContainer: numberOfContainer.text,
+                  );
+                  _weighingCubit.setScaleWeighing(scaleD);
+                }
                 if (_weighingCubit.state.selectedOperation.operationDesc !=
                     _weighingCubit.state.selectedOperation.operationDesc2) {
                   resultScaleBloc.add(SendDataResultScale(
@@ -582,6 +633,21 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
               _weighingCubit.setResultScales2(state.resultScale2.d!.results!);
               line.text = state.resultScale2.d!.results![0].line!;
               _weighingCubit.setLine(line.text);
+            }
+          }),
+          BlocListener<VolumeBloc, VolumeState>(listener: (context, state) {
+            if (state is VolumeLoaded) {
+              volume = state.volume.d!.results!;
+              setState(() {
+                menuEntries = volume
+                    .map((e) => DropdownMenuEntry<String>(
+                          value: e.volume!,
+                          label: e.volume!,
+                        ))
+                    .toList();
+
+                volumeValue ??= volume.isNotEmpty ? volume.first.volume! : '';
+              });
             }
           })
         ],
@@ -972,6 +1038,38 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                           ],
                         ),
                       ),
+                    if (weighingState.productiSupervisor == 'LQD') ...[
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final w = constraints.maxWidth;
+                            return DropdownMenu<String>(
+                              width: w,
+                              menuStyle: MenuStyle(
+                                minimumSize:
+                                    WidgetStateProperty.all(Size(w, 0)),
+                                maximumSize: WidgetStateProperty.all(
+                                    Size(w, double.infinity)),
+                              ),
+                              dropdownMenuEntries: menuEntries,
+                              initialSelection: volumeValue,
+                              onSelected: (String? value) {
+                                setState(() => volumeValue = value);
+                                netto.text = value!;
+                                bruto.text = value;
+                                scaleD = Scale(
+                                    bruto: double.parse(volumeValue!),
+                                    netto: double.parse(volumeValue!),
+                                    numberOfContainer: numberOfContainer.text);
+                                _weighingCubit.setScaleWeighing(scaleD);
+                              },
+                              label: const Text('Volume'),
+                            );
+                          },
+                        ),
+                      )
+                    ],
                     Padding(
                       padding: const EdgeInsets.only(bottom: 20),
                       child: TextFormField(
@@ -1116,7 +1214,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               filled: true,
                               fillColor: Colors.grey.shade100,
                               suffix: const Text("L")),
-                          onChanged: (value) {
+                          onFieldSubmitted: (value) {
                             _onChangeNettoLqd(value);
                           },
                         ),
