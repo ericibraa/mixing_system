@@ -244,9 +244,8 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
           dataString = dataString.replaceAll(RegExp("[\n\t\r]"), "").trim();
           var dataReg = regExp.firstMatch(dataString);
           if (dataReg != null) {
-            var brutoFloat = double.parse(
-              dataReg[1]!,
-            );
+            var a = dataReg[1]!.replaceAll(",", ".");
+            var brutoFloat = double.parse(a);
             var nettoFloat = brutoFloat;
             var taraFloat = 0.0;
             if (tara.text.isNotEmpty) {
