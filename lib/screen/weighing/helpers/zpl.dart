@@ -27,32 +27,33 @@ class ZplData {
   final String activityNo;
   final String temperature;
 
-  const ZplData(
-      {required this.materialCode,
-      required this.materialDesc,
-      required this.batchFG,
-      required this.orderNo,
-      required this.line,
-      required this.equipmentDesc,
-      required this.workCenterDesc,
-      required this.operationType,
-      required this.operationDesc,
-      required this.lot,
-      required this.operator,
-      required this.pengawas,
-      required this.stagingTime,
-      required this.totalContainer,
-      required this.containerConter,
-      required this.bruto,
-      required this.tara,
-      required this.netto,
-      required this.unit,
-      required this.expiredNo,
-      required this.expiredUnit,
-      required this.startWork,
-      required this.activityWh,
-      required this.activityNo,
-      this.temperature = ''});
+  const ZplData({
+    required this.materialCode,
+    required this.materialDesc,
+    required this.batchFG,
+    required this.orderNo,
+    required this.line,
+    required this.equipmentDesc,
+    required this.workCenterDesc,
+    required this.operationType,
+    required this.operationDesc,
+    required this.lot,
+    required this.operator,
+    required this.pengawas,
+    required this.stagingTime,
+    required this.totalContainer,
+    required this.containerConter,
+    required this.bruto,
+    required this.tara,
+    required this.netto,
+    required this.unit,
+    required this.expiredNo,
+    required this.expiredUnit,
+    required this.startWork,
+    required this.activityWh,
+    required this.activityNo,
+    this.temperature = '',
+  });
 
   String Formatted(double value) {
     var currencyFormatter = NumberFormat.currency(
@@ -64,6 +65,18 @@ class ZplData {
   }
 
   String getZpl() {
+    var temperatureAll = temperature.split(";");
+    var tempStart = '';
+    var tempEnd = '';
+    if (temperature.isNotEmpty) {
+      if (temperatureAll.length < 2) {
+        tempStart = temperatureAll[0];
+        tempEnd = temperatureAll[1];
+      } else {
+        tempStart = temperatureAll[0];
+      }
+    }
+
     return '''
           ^XA
           ^PW560                           ; Set print width for portrait A7 (560 dots, approximately 74mm)
@@ -93,8 +106,9 @@ class ZplData {
           ^FO200,450^FD$startWork^FS        ; Date and time
           ^FO30,480^FD${expiredNo != '0,000' ? 'Staging Time' : ''}^FS
           ^FO200,480^FD$stagingTime^FS       ; Holding time
-          ^FO30,510^FD${operationType == 'DECOCT' ? 'Temperature' : ''}^FS                    ; Temperature
-          ^FO200, 510^FH\\^FD ${operationType == 'DECOCT' ? '$temperature\\F8C' : ''}^FS
+          ^FO30,510^FD${operationType == 'DECOCT' && tempEnd != '' ? 'Temp Start/End' : ''}^FS                    ; Temperature
+          ^FO195,510^FH\\^FD ${operationType == 'DECOCT' && tempStart != '' ? '$tempStart\\F8C' : ''}^FS
+          ^FO250,510^FH\\^FD ${operationType == 'DECOCT' && tempEnd != '' ? ' / $tempEnd\\F8C' : ''}^FS
           ^FO30,550^A0N,26^FD$operationType^FS          ; CB label
           ^FO395,114^FB200,,,R^BQN,2,4^FDQA,$orderNo;$materialCode;$activityNo;$operationType;${Formatted(netto)};${int.parse(containerConter)}/${int.parse(totalContainer)};$activityWh^FS          ; QR code at top right
           ^FO470,580^FDJumlah^FS

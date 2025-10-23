@@ -126,9 +126,8 @@ class _PrintTaraState extends State<PrintTara> {
           dataString = dataString.replaceAll(RegExp("[\n\t\r]"), "").trim();
           var dataReg = regExp.firstMatch(dataString);
           if (dataReg != null) {
-            var taraDouble = double.parse(
-              dataReg[1]!,
-            );
+            var a = dataReg[1]!.replaceAll(",", ".");
+            var taraDouble = double.parse(a);
 
             tara.text = taraDouble.toStringAsFixed(2);
             scale.text = _weighingCubit.state.selectedEquipment.equipmentDesc;

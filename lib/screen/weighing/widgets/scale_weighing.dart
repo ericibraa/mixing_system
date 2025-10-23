@@ -34,6 +34,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   SubmitWeighingBloc submitWeighingBloc = SubmitWeighingBloc();
   VolumeBloc volumeBloc = VolumeBloc();
   final temperature = TextEditingController();
+  final temperatureEnd = TextEditingController();
   final topMoistureContent = TextEditingController();
   final middleMoistureContent = TextEditingController();
   final bottomMoistureContent = TextEditingController();
@@ -159,8 +160,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   bool checkOperationType() {
     switch (_weighingCubit.state.operationType) {
       case 'DECOCT':
-        if (temperature.text.isNotEmpty &&
-            numberOfContainer.text.isNotEmpty &&
+        if (numberOfContainer.text.isNotEmpty &&
             bruto.text.isNotEmpty &&
             tara.text.isNotEmpty &&
             netto.text.isNotEmpty &&
@@ -243,6 +243,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
           dataString += String.fromCharCodes(data);
           dataString = dataString.replaceAll(RegExp("[\n\t\r]"), "").trim();
           var dataReg = regExp.firstMatch(dataString);
+          print(dataReg);
           if (dataReg != null) {
             var a = dataReg[1]!.replaceAll(",", ".");
             var brutoFloat = double.parse(a);
@@ -267,7 +268,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                 moistureContent:
                     '${topMoistureContent.text};${middleMoistureContent.text};${bottomMoistureContent.text}',
                 numberOfContainer: numberOfContainer.text,
-                temperature: temperature.text,
+                temperature: '${temperature.text};${temperatureEnd.text}',
                 lot: lot.text);
             _weighingCubit.setLine(line.text);
             _weighingCubit.setScaleWeighing(scaleD);
@@ -330,12 +331,14 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
             listener: (context, state) {
               if (state.selectedOperation.operationDesc !=
                   state.selectedOperation.operationDesc2) {
-                volumeBloc.add(GetVolume(plant: state.plant));
-                if (isFirst == false) {
-                  if (state.containerCounter ==
-                      int.parse(state.totalContainer)) {
-                    isLast = true;
-                    isFirst = true;
+                if (state.productiSupervisor == 'LQD') {
+                  volumeBloc.add(GetVolume(plant: state.plant));
+                  if (isFirst == false) {
+                    if (state.containerCounter ==
+                        int.parse(state.totalContainer)) {
+                      isLast = true;
+                      isFirst = true;
+                    }
                   }
                 }
                 scale.text = state.selectedEquipment.equipmentDesc;
@@ -361,7 +364,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   if (state.operationType == 'CB') {
                     var moisture =
                         state.resultScales[0].moistureContent!.split(";");
-                    temperature.text = state.resultScales[0].temperature!;
                     if (moisture.length > 1) {
                       topMoistureContent.text = moisture[0];
                       middleMoistureContent.text = moisture[1];
@@ -369,6 +371,17 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                     } else {
                       topMoistureContent.text = moisture[0];
                     }
+                  }
+                  if (state.operationType == 'DECOCT') {
+                    var temperatureAll =
+                        state.resultScales[0].temperature!.split(";");
+                    if (temperatureAll.length > 1) {
+                      temperature.text = temperatureAll[0];
+                      temperatureEnd.text = temperatureAll[1];
+                    } else {
+                      temperature.text = temperatureAll[0];
+                    }
+                    lot.text = state.resultScales[0].lot!;
                   }
                   line.text = state.resultScales[0].line!;
                   numberOfContainer.text =
@@ -388,6 +401,16 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   }
                 }
               } else {
+                if (state.productiSupervisor == 'LQD') {
+                  volumeBloc.add(GetVolume(plant: state.plant));
+                  if (isFirst == false) {
+                    if (state.containerCounter ==
+                        int.parse(state.totalContainer)) {
+                      isLast = true;
+                      isFirst = true;
+                    }
+                  }
+                }
                 scale.text = state.selectedEquipment.equipmentDesc;
                 if (state.productiSupervisor != 'LQD') {
                   bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
@@ -421,6 +444,17 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                     } else {
                       topMoistureContent.text = moisture[0];
                     }
+                  }
+                  if (state.operationType == 'DECOCT') {
+                    var temperatureAll =
+                        state.resultScales2[0].temperature!.split(";");
+                    if (temperatureAll.length > 1) {
+                      temperature.text = temperatureAll[0];
+                      temperatureEnd.text = temperatureAll[1];
+                    } else {
+                      temperature.text = temperatureAll[0];
+                    }
+                    lot.text = state.resultScales2[0].lot!;
                   }
                   line.text = state.resultScales2[0].line!;
                   numberOfContainer.text =
@@ -947,39 +981,82 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                     if (weighingState.operationType == "DECOCT")
                       Padding(
                         padding: const EdgeInsets.only(bottom: 20),
-                        child: TextFormField(
-                          controller: temperature,
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            _weighingCubit.setScaleWeighing(_weighingCubit
-                                .state.scaleWeighing
-                                .copyWith(temperature: value));
-                          },
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            labelText: 'Temperature',
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            suffixIcon: Padding(
-                              padding: const EdgeInsets.only(bottom: 7.0),
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                widthFactor: 1.0,
-                                heightFactor: 1.0,
-                                child: Text(
-                                  '°C',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall!
-                                      .copyWith(
-                                          color: const Color.fromARGB(
-                                              255, 95, 95, 95)),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: temperature,
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  _weighingCubit.setScaleWeighing(_weighingCubit
+                                      .state.scaleWeighing
+                                      .copyWith(temperature: value));
+                                },
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  labelText: 'Temperature Start',
+                                  filled: true,
+                                  fillColor: Colors.grey.shade100,
+                                  suffixIcon: Padding(
+                                    padding: const EdgeInsets.only(bottom: 7.0),
+                                    child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      widthFactor: 1.0,
+                                      heightFactor: 1.0,
+                                      child: Text(
+                                        '°C',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall!
+                                            .copyWith(
+                                                color: const Color.fromARGB(
+                                                    255, 95, 95, 95)),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: TextFormField(
+                                controller: temperatureEnd,
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  _weighingCubit.setScaleWeighing(_weighingCubit
+                                      .state.scaleWeighing
+                                      .copyWith(temperature: value));
+                                },
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  labelText: 'Temperature End',
+                                  filled: true,
+                                  fillColor: Colors.grey.shade100,
+                                  suffixIcon: Padding(
+                                    padding: const EdgeInsets.only(bottom: 7.0),
+                                    child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      widthFactor: 1.0,
+                                      heightFactor: 1.0,
+                                      child: Text(
+                                        '°C',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall!
+                                            .copyWith(
+                                                color: const Color.fromARGB(
+                                                    255, 95, 95, 95)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     if (weighingState.operationType == "CB")

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:awesome_dio_interceptor/awesome_dio_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'interceptors.dart';
 
@@ -23,7 +24,8 @@ final BaseOptions options = BaseOptions(
     dio = Dio(options);
 
     dio.interceptors.addAll({
-      AppInterceptors(),
+      // AppInterceptors(),
+      AwesomeDioInterceptor()
     });
   }
 
