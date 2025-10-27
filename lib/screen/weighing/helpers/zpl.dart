@@ -65,15 +65,16 @@ class ZplData {
   }
 
   String getZpl() {
-    var temperatureAll = temperature.split(";");
-    var tempStart = '';
-    var tempEnd = '';
+    String tempStart = '';
+    String tempEnd = '';
+
     if (temperature.isNotEmpty) {
-      if (temperatureAll.length < 2) {
-        tempStart = temperatureAll[0];
-        tempEnd = temperatureAll[1];
-      } else {
-        tempStart = temperatureAll[0];
+      final parts = temperature.split(';');
+
+      tempStart = parts[0].trim();
+
+      if (parts.length > 1) {
+        tempEnd = parts[1].trim();
       }
     }
 
@@ -99,17 +100,17 @@ class ZplData {
           ^FO30,340^FDMachine^FS
           ^FO200,345^FB350,2,5,L^FD$workCenterDesc^FS      ; Machine info
           ^FO30,390^FDOperation/Lot^FS
-          ^FO200,390^FD${operationType == 'DECOCT' ? '$operationDesc / $lot' : lot.isNotEmpty ? '$operationDesc / $lot' : operationDesc}^FS       ; Operation/lot
-          ^FO30,420^FDOprt/Pgws^FS
-          ^FO200,420^FD$operator/$pengawas^FS             ; Oprt/Pgws info
-          ^FO30,450^FDWeighing Time^FS
-          ^FO200,450^FD$startWork^FS        ; Date and time
-          ^FO30,480^FD${expiredNo != '0,000' ? 'Staging Time' : ''}^FS
-          ^FO200,480^FD$stagingTime^FS       ; Holding time
-          ^FO30,510^FD${operationType == 'DECOCT' && tempEnd != '' ? 'Temp Start/End' : ''}^FS                    ; Temperature
-          ^FO195,510^FH\\^FD ${operationType == 'DECOCT' && tempStart != '' ? '$tempStart\\F8C' : ''}^FS
-          ^FO250,510^FH\\^FD ${operationType == 'DECOCT' && tempEnd != '' ? ' / $tempEnd\\F8C' : ''}^FS
-          ^FO30,550^A0N,26^FD$operationType^FS          ; CB label
+          ^FO200,390^FB350,2,5,L^FD${operationType == 'DECOCT' ? '$operationDesc / $lot' : lot.isNotEmpty ? '$operationDesc / $lot' : operationDesc}^FS       ; Operation/lot
+          ^FO30,435^FDOprt/Pgws^FS
+          ^FO200,435^FD$operator/$pengawas^FS             ; Oprt/Pgws info
+          ^FO30,460^FDWeighing Time^FS
+          ^FO200,460^FD$startWork^FS        ; Date and time
+          ^FO30,490^FD${expiredNo != '0,000' ? 'Staging Time' : ''}^FS
+          ^FO200,490^FD$stagingTime^FS       ; Holding time
+          ^FO30,520^FD${operationType == 'DECOCT' ? 'Temp Start/End' : ''}^FS                    ; Temperature
+          ^FO195,520^FH\\^FD ${operationType == 'DECOCT' ? '$tempStart\\F8C' : ''}^FS
+          ^FO250,520^FH\\^FD ${operationType == 'DECOCT' && tempEnd != '' ? ' / $tempEnd\\F8C' : ''}^FS
+          ^FO30,560^A0N,26^FD$operationType^FS          ; CB label
           ^FO395,114^FB200,,,R^BQN,2,4^FDQA,$orderNo;$materialCode;$activityNo;$operationType;${Formatted(netto)};${int.parse(containerConter)}/${int.parse(totalContainer)};$activityWh^FS          ; QR code at top right
           ^FO470,580^FDJumlah^FS
           ^FO495,745^FD${int.parse(containerConter)}/${int.parse(totalContainer)}^FS        ; Page number

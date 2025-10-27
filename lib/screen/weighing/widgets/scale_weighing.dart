@@ -1375,6 +1375,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                           .ipPrinter.isNotEmpty) {
                                         print(weighingState
                                             .selectedEquipment.ipPrinter);
+                                            print(dataLabel.temperature);
                                         DateTime parsedDate = DateTime.parse(
                                             dataLabel.createdDate!);
                                         String hours = dataLabel.createdTime!
