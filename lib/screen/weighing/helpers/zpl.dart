@@ -52,7 +52,7 @@ class ZplData {
     required this.startWork,
     required this.activityWh,
     required this.activityNo,
-    this.temperature = '',
+    required this.temperature,
   });
 
   String Formatted(double value) {

@@ -372,17 +372,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       topMoistureContent.text = moisture[0];
                     }
                   }
-                  if (state.operationType == 'DECOCT') {
-                    var temperatureAll =
-                        state.resultScales[0].temperature!.split(";");
-                    if (temperatureAll.length > 1) {
-                      temperature.text = temperatureAll[0];
-                      temperatureEnd.text = temperatureAll[1];
-                    } else {
-                      temperature.text = temperatureAll[0];
-                    }
-                    lot.text = state.resultScales[0].lot!;
-                  }
                   line.text = state.resultScales[0].line!;
                   numberOfContainer.text =
                       int.parse(state.resultScales[0].totalWadah!).toString();
@@ -444,17 +433,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                     } else {
                       topMoistureContent.text = moisture[0];
                     }
-                  }
-                  if (state.operationType == 'DECOCT') {
-                    var temperatureAll =
-                        state.resultScales2[0].temperature!.split(";");
-                    if (temperatureAll.length > 1) {
-                      temperature.text = temperatureAll[0];
-                      temperatureEnd.text = temperatureAll[1];
-                    } else {
-                      temperature.text = temperatureAll[0];
-                    }
-                    lot.text = state.resultScales2[0].lot!;
                   }
                   line.text = state.resultScales2[0].line!;
                   numberOfContainer.text =
@@ -987,11 +965,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               child: TextFormField(
                                 controller: temperature,
                                 keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  _weighingCubit.setScaleWeighing(_weighingCubit
-                                      .state.scaleWeighing
-                                      .copyWith(temperature: value));
-                                },
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -1024,11 +997,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               child: TextFormField(
                                 controller: temperatureEnd,
                                 keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  _weighingCubit.setScaleWeighing(_weighingCubit
-                                      .state.scaleWeighing
-                                      .copyWith(temperature: value));
-                                },
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -1375,7 +1343,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                           .ipPrinter.isNotEmpty) {
                                         print(weighingState
                                             .selectedEquipment.ipPrinter);
-                                            print(dataLabel.temperature);
+                                        print(dataLabel.temperature);
                                         DateTime parsedDate = DateTime.parse(
                                             dataLabel.createdDate!);
                                         String hours = dataLabel.createdTime!

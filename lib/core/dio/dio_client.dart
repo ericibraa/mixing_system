@@ -24,7 +24,7 @@ final BaseOptions options = BaseOptions(
     dio = Dio(options);
 
     dio.interceptors.addAll({
-      // AppInterceptors(),
+      AppInterceptors(),
       AwesomeDioInterceptor()
     });
   }
