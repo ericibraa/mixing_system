@@ -6,7 +6,6 @@ import 'package:dumping_system/screen/weighing/bloc/result_scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/submit_weighing_bloc.dart';
 import 'package:dumping_system/screen/weighing/bloc/volume_bloc.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:dumping_system/bloc/auth_bloc.dart';
@@ -83,18 +82,17 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
         scannedBarcode = barcode.displayValue!;
       });
       if (mounted) {
-        _weighingCubit.resetScaleWeighing();
+        // _weighingCubit.resetScaleWeighing();
         _weighingCubit.setSelectedEquipment(scannedBarcode);
         if (_weighingCubit.state.productiSupervisor == 'LQD') {
           isLdConect = true;
           _weighingCubit.setStartWork();
-          scaleD = Scale(
-            bruto: double.parse(volumeValue!),
-            netto: double.parse(volumeValue!),
-            numberOfContainer: numberOfContainer.text,
-            unit: 'l',
-          );
-          _weighingCubit.setScaleWeighing(scaleD);
+          _weighingCubit.setScaleWeighing(_weighingCubit.state.scaleWeighing
+              .copyWith(
+                  bruto: double.parse(volumeValue!),
+                  netto: double.parse(volumeValue!),
+                  numberOfContainer: numberOfContainer.text,
+                  unit: 'l'));
         }
         if (_weighingCubit.state.selectedEquipment.equipmentNo.isNotEmpty) {
           _weighingCubit.setScaleWeighing(_weighingCubit.state.scaleWeighing
@@ -148,13 +146,11 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   }
 
   _onChangeNettoLqd(value) {
-    scaleD = Scale(
-      netto: double.parse(value),
-      bruto: double.parse(value),
-      unit: 'l',
-      numberOfContainer: numberOfContainer.text,
-    );
-    _weighingCubit.setScaleWeighing(scaleD);
+    _weighingCubit.setScaleWeighing(_weighingCubit.state.scaleWeighing.copyWith(
+        bruto: double.parse(value),
+        netto: double.parse(value),
+        numberOfContainer: numberOfContainer.text,
+        unit: 'l'));
   }
 
   bool checkOperationType() {
@@ -196,7 +192,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
             line.text.isNotEmpty) {
           return true;
         }
-        ;
+        break;
     }
     return false;
   }
@@ -256,22 +252,14 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
             if (dataReg[2] == '-') {
               brutoFloat *= -1;
             }
-            scaleD = Scale(
-                scaleName: _weighingCubit.state.scaleWeighing.scaleName,
-                scaleId: _weighingCubit.state.scaleWeighing.scaleId,
-                regex: _weighingCubit.state.scaleWeighing.regex,
-                urlAddress: _weighingCubit.state.scaleWeighing.urlAddress,
-                bruto: brutoFloat,
-                netto: nettoFloat,
-                tara: taraFloat,
-                unit: dataReg[2]!,
-                moistureContent:
-                    '${topMoistureContent.text};${middleMoistureContent.text};${bottomMoistureContent.text}',
-                numberOfContainer: numberOfContainer.text,
-                temperature: '${temperature.text};${temperatureEnd.text}',
-                lot: lot.text);
             _weighingCubit.setLine(line.text);
-            _weighingCubit.setScaleWeighing(scaleD);
+            _weighingCubit.setScaleWeighing(
+              _weighingCubit.state.scaleWeighing.copyWith(
+                  bruto: brutoFloat,
+                  netto: nettoFloat,
+                  tara: taraFloat,
+                  unit: dataReg[2]!),
+            );
             dataString = "";
           }
         },
@@ -311,7 +299,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   void closeConnection() {
     socket != null ? socket!.close() : '';
     _weighingCubit.setConnectedStatus(false);
-    _weighingCubit.resetScaleWeighing();
+    // _weighingCubit.resetScaleWeighing();
   }
 
   @override
@@ -346,7 +334,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   bruto.text = state.scaleWeighing.bruto.toStringAsFixed(2);
                   netto.text = state.scaleWeighing.netto.toStringAsFixed(2);
                 } else {
-                  print(isLast);
                   if (isLast == true) {
                     netto.clear();
                     bruto.clear();
@@ -372,7 +359,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       topMoistureContent.text = moisture[0];
                     }
                   }
-                  line.text = state.resultScales[0].line!;
                   numberOfContainer.text =
                       int.parse(state.resultScales[0].totalWadah!).toString();
                   line.text = state.resultScales[0].line!;
@@ -434,7 +420,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       topMoistureContent.text = moisture[0];
                     }
                   }
-                  line.text = state.resultScales2[0].line!;
                   numberOfContainer.text =
                       int.parse(state.resultScales2[0].totalWadah!).toString();
                   line.text = state.resultScales2[0].line!;
@@ -465,16 +450,18 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   _weighingCubit.setContainerCounter(sumCont + 1);
                 }
                 temperature.clear();
+                temperatureEnd.clear();
                 lot.clear();
                 tara.clear();
                 if (_weighingCubit.state.productiSupervisor == 'LQD') {
-                  scaleD = Scale(
-                    netto: _weighingCubit.state.scaleWeighing.netto,
-                    bruto: _weighingCubit.state.scaleWeighing.netto,
-                    unit: 'l',
-                    numberOfContainer: numberOfContainer.text,
-                  );
-                  _weighingCubit.setScaleWeighing(scaleD);
+                  _weighingCubit.setScaleWeighing(
+                      _weighingCubit.state.scaleWeighing.copyWith(
+                          bruto: double.parse(
+                              state.submitWeighing.submitWeighing!.bruto!),
+                          netto: double.parse(
+                              state.submitWeighing.submitWeighing!.netto!),
+                          numberOfContainer: numberOfContainer.text,
+                          unit: 'l'));
                 }
                 if (_weighingCubit.state.selectedOperation.operationDesc !=
                     _weighingCubit.state.selectedOperation.operationDesc2) {
@@ -588,6 +575,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                   print(status);
                   if (printerResponse.errorCode == ErrorCode.SUCCESS) {
                     print("printer connect");
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: const Text("Label printed"),
                       backgroundColor: Colors.black,
@@ -597,6 +585,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                       ),
                     ));
                   } else {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: const Text("failed to print"),
                       backgroundColor: Colors.red,
@@ -965,6 +954,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               child: TextFormField(
                                 controller: temperature,
                                 keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  _weighingCubit.setScaleWeighing(_weighingCubit
+                                      .state.scaleWeighing
+                                      .copyWith(
+                                          temperature:
+                                              '$value;${temperatureEnd.text}'));
+                                },
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -997,6 +993,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                               child: TextFormField(
                                 controller: temperatureEnd,
                                 keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  _weighingCubit.setScaleWeighing(_weighingCubit
+                                      .state.scaleWeighing
+                                      .copyWith(
+                                          temperature:
+                                              '${temperature.text};$value'));
+                                },
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -1037,6 +1040,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                 controller: topMoistureContent,
                                 keyboardType: TextInputType.number,
                                 readOnly: weighingState.resultScales.isNotEmpty,
+                                onChanged: (value) {
+                                  _weighingCubit.setScaleWeighing(_weighingCubit
+                                      .state.scaleWeighing
+                                      .copyWith(
+                                          moistureContent:
+                                              '$value;${middleMoistureContent.text};${bottomMoistureContent.text}'));
+                                },
                                 decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -1053,6 +1063,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                 controller: middleMoistureContent,
                                 keyboardType: TextInputType.number,
                                 readOnly: weighingState.resultScales.isNotEmpty,
+                                onChanged: (value) {
+                                  _weighingCubit.setScaleWeighing(_weighingCubit
+                                      .state.scaleWeighing
+                                      .copyWith(
+                                          moistureContent:
+                                              '${topMoistureContent.text};$value;${bottomMoistureContent.text}'));
+                                },
                                 decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -1069,6 +1086,13 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                 controller: bottomMoistureContent,
                                 keyboardType: TextInputType.number,
                                 readOnly: weighingState.resultScales.isNotEmpty,
+                                onChanged: (value) {
+                                  _weighingCubit.setScaleWeighing(_weighingCubit
+                                      .state.scaleWeighing
+                                      .copyWith(
+                                          moistureContent:
+                                              '${topMoistureContent.text};${middleMoistureContent.text};$value'));
+                                },
                                 decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -1102,11 +1126,12 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                 setState(() => volumeValue = value);
                                 netto.text = value!;
                                 bruto.text = value;
-                                scaleD = Scale(
-                                    bruto: double.parse(volumeValue!),
-                                    netto: double.parse(volumeValue!),
-                                    numberOfContainer: numberOfContainer.text);
-                                _weighingCubit.setScaleWeighing(scaleD);
+                                _weighingCubit.setScaleWeighing(
+                                    _weighingCubit.state.scaleWeighing.copyWith(
+                                        bruto: double.parse(volumeValue!),
+                                        netto: double.parse(volumeValue!),
+                                        numberOfContainer:
+                                            numberOfContainer.text));
                               },
                               label: const Text('Volume'),
                             );
@@ -1121,6 +1146,9 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                         keyboardType: TextInputType.number,
                         onChanged: (value) {
                           _weighingCubit.setTotalContainer(value);
+                          _weighingCubit.setScaleWeighing(_weighingCubit
+                              .state.scaleWeighing
+                              .copyWith(numberOfContainer: value));
                         },
                         readOnly: weighingState.resultScales.isNotEmpty &&
                             weighingState.selectedOperation.operationDesc !=
@@ -1707,6 +1735,6 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
   void deactivate() {
     super.deactivate();
     closeConnection();
-    _weighingCubit.resetScaleWeighing();
+    // _weighingCubit.resetScaleWeighing();
   }
 }
