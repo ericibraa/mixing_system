@@ -30,6 +30,7 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
   String scannedBarcode = "";
   List<dynamic> hasScanned = [];
   bool isLoading = false;
+  bool disabled = false;
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -45,13 +46,20 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
         scannedBarcode = barcode.displayValue!;
         hasScanned = parseStringAndWrapInMap(scannedBarcode);
       });
-      _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+      _handoverCubit.setScannedTong(
+          parseStringAndWrapInMap(scannedBarcode), scannedBarcode);
       if (hasScanned.length == 4 || hasScanned.length == 5) {
         _handoverCubit.resetCompleteMaterial(false);
-        _handoverCubit.setTongActivity(hasScanned[3]);
+        if (_handoverCubit.state.operationType == "CB") {
+          _handoverCubit.setTongActivity(hasScanned[1]);
+        } else {
+          _handoverCubit.setTongActivity(hasScanned[3]);
+        }
         materialSetBloc.add(SendDataMaterialset(
             routingNo: _handoverCubit.state.selectedOperation.routingNo,
-            activityNo: hasScanned[3],
+            activityNo: _handoverCubit.state.operationType == "CB"
+                ? hasScanned[1]
+                : hasScanned[3],
             operationType: _handoverCubit.state.selectedOrder.operationType!));
       }
       switch (_handoverCubit.state.errorScanType) {
@@ -88,7 +96,18 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
               _handoverCubit.setStartDate();
             }
             flagMaterialsBloc.add(GetFlagMaterials(
-                hasScanned, _handoverCubit.state.selectedOrder.orderNo ?? ''));
+                hasScanned,
+                _handoverCubit.state.selectedOrder.orderNo ?? '',
+                scannedBarcode));
+          } else if (hasScanned.length == 5 &&
+              _handoverCubit.state.operationType == "CB") {
+            if (_handoverCubit.state.startTime == '') {
+              _handoverCubit.setStartDate();
+            }
+            flagMaterialsBloc.add(GetFlagMaterials(
+                hasScanned,
+                _handoverCubit.state.selectedOrder.orderNo ?? '',
+                scannedBarcode));
           }
           break;
         case ErrorScanType.dataNull:
@@ -198,7 +217,7 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
           BlocListener<MaterialSetBloc, MaterialSetState>(
               listener: (context, state) {
             if (state is MaterialSetLoaded) {
-              var materialSets = state.materialset.d!.results!;
+              var materialSets = state.materialset.data.d!.results!;
               if (materialSets.isNotEmpty) {
                 if (materialSets[0].priority == '') {
                   materialSets.sort((a, b) => '${a.scanDate} ${a.scanTime}'
@@ -208,6 +227,15 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
                 }
               }
               _handoverCubit.setMaterialSet(materialSets);
+            } else if (state is MaterialSetError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
         ],
@@ -216,8 +244,22 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
             return Scaffold(
               backgroundColor: Colors.grey[100],
               appBar: AppBar(
-                title: Text(
-                    "Handover Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        "Handover Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                    Text(
+                      "Operator: ${handoverState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${handoverState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                   onPressed: () {
                     _handoverCubit.setTab(HandoverStatus.scantongmaterial);
@@ -374,12 +416,17 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
                                 .length ==
                             handoverState.materialSet.length
                         ? TextButton(
-                            onPressed: () {
-                              submitHandoverMixingBloc.add(SubmitHandoverMixing(
-                                  handoverMixingData: handoverState));
-                            },
+                            onPressed: handoverState.disabled
+                                ? null
+                                : () {
+                                    submitHandoverMixingBloc.add(
+                                        SubmitHandoverMixing(
+                                            handoverMixingData: handoverState));
+                                  },
                             style: TextButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              backgroundColor: handoverState.disabled
+                                  ? Colors.grey
+                                  : Colors.green,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -515,7 +562,8 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
                         children: [
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
                               child: Text(
                                 '${materialSet.materialNo.isNotEmpty ? "${materialSet.materialNo} -" : ''} ${materialSet.materialDesc} - ${materialSet.bOMItem} - ${materialSet.quantity.replaceAll('.', ',')} ${materialSet.uom} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
                                 style: Theme.of(context).textTheme.bodyMedium,

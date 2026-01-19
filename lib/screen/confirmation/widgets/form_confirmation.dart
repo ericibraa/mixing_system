@@ -51,6 +51,16 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
     }
   }
 
+  formattedDate(String dated, String time) {
+    String date = dated;
+    DateTime? parsedDate = DateTime.parse(date);
+    String hours = time.substring(0, 2);
+    String minutes = time.substring(2, 4);
+    String seconds = time.substring(4, 6);
+
+    return '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -65,11 +75,6 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
           BlocListener<ConfirmationCubit, ConfirmationState>(
               listener: (context, state) {
             if (state.tab == ConfirmationStatus.formConfirmation) {
-              String date = state.yieldSet.startDateOpr;
-              DateTime? parsedDate = DateTime.parse(date);
-              String hours = state.yieldSet.startTimeOpr.substring(0, 2);
-              String minutes = state.yieldSet.startTimeOpr.substring(2, 4);
-              String seconds = state.yieldSet.startTimeOpr.substring(4, 6);
               yield.text = state.yieldSet.yieldQty;
               machineTime.text = state.yieldSet.machineHour;
               laborTime.text = state.yieldSet.laborHour;
@@ -83,8 +88,10 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                   ),
                 );
               }
-              startExecution.text =
-                  '${DateFormat('dd-MM-yyyy').format(parsedDate)} $hours:$minutes:$seconds';
+              startExecution.text = formattedDate(
+                  state.yieldSet.startDateOpr, state.yieldSet.startTimeOpr);
+              finishExecution.text = formattedDate(
+                  state.yieldSet.stopDateOpr, state.yieldSet.stopTimeOpr);
               postingDate.text =
                   DateFormat('dd-MM-yyyy').format(DateTime.now());
             }
@@ -119,7 +126,17 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
           builder: (context, confirmationState) {
             return Scaffold(
                 appBar: AppBar(
-                  title: const Text("Confirmation"),
+                  toolbarHeight: 100,
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Confirmation"),
+                      Text(
+                        "Pengawas: ${confirmationState.pengawas}",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
+                    ],
+                  ),
                   leading: IconButton(
                     onPressed: () {
                       _confirmationCubit
@@ -365,96 +382,211 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                 borderRadius: BorderRadius.all(Radius.circular(10))),
             child: Form(
                 child: Column(children: [
-              Padding(
+              Container(
                 padding: const EdgeInsets.only(bottom: 20),
-                child: TextFormField(
-                  controller: yield,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: yield,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            labelText: 'Yield',
+                            filled: true,
+                            fillColor: Colors.grey[350],
+                            suffix: Text(confirmationState.yieldSet.unitYield)),
                       ),
-                      labelText: 'Yield',
-                      filled: true,
-                      fillColor: Colors.grey[350],
-                      suffix: Text(confirmationState.yieldSet.unitYield)),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextFormField(
+                        controller: TextEditingController(
+                            text: confirmationState.yieldSet.stdYield),
+                        readOnly: true,
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            labelText: 'Standard Yield',
+                            filled: true,
+                            fillColor: Colors.grey[350],
+                            suffix: Text(confirmationState.yieldSet.unitYield)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
-                child: TextFormField(
-                  controller: machineTime,
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    var data = confirmationState.yieldSet;
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: machineTime,
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          var data = confirmationState.yieldSet;
 
-                    laborTimeValue = double.parse(value) *
-                        double.parse(confirmationState.yieldSet.labor);
+                          laborTimeValue = double.parse(value) *
+                              double.parse(confirmationState.yieldSet.labor);
 
-                    _confirmationCubit.setYieldSet(data.copyWith(
-                        machineHour: value,
-                        laborHour: laborTimeValue.toStringAsFixed(3)));
-                  },
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    suffixIcon: const Icon(Icons.access_time_rounded),
-                    labelText: 'Machine Time',
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: TextFormField(
-                  controller: laborTime,
-                  keyboardType: TextInputType.number,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    suffixIcon: const Icon(Icons.access_time_rounded),
-                    labelText: 'Labor Time',
-                    filled: true,
-                    fillColor: Colors.grey[350],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: TextFormField(
-                  controller: numberOfLabor,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    suffixIcon: const Icon(Icons.access_time_rounded),
-                    labelText: 'Number Of Labor',
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                  ),
-                  onFieldSubmitted: (value) {
-                    isChangeLabor = true;
-                    if (value.isNotEmpty) {
-                      final machineHour = double.tryParse(
-                              confirmationState.yieldSet.machineHour) ??
-                          0;
-                      final labor = double.tryParse(value) ?? 0;
-
-                      final laborTimeValue = machineHour * labor;
-                      print('Labor Time: $laborTimeValue');
-
-                      _confirmationCubit.setYieldSet(
-                        confirmationState.yieldSet.copyWith(
-                          laborHour: laborTimeValue.toStringAsFixed(3),
+                          _confirmationCubit.setYieldSet(data.copyWith(
+                              machineHour: value,
+                              laborHour: laborTimeValue.toStringAsFixed(3)));
+                        },
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: const Icon(Icons.access_time_rounded),
+                          labelText: 'Machine Time',
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
                         ),
-                      );
-                    }
-                  },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextFormField(
+                        controller: TextEditingController(
+                            text: confirmationState.yieldSet.stdMachineTime),
+                        keyboardType: TextInputType.number,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          labelText: 'Standard Machine Time',
+                          filled: true,
+                          fillColor: Colors.grey[350],
+                          suffixIcon: const Icon(Icons.access_time_rounded),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: laborTime,
+                        keyboardType: TextInputType.number,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: const Icon(Icons.access_time_rounded),
+                          labelText: 'Labor Time',
+                          filled: true,
+                          fillColor: Colors.grey[350],
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextFormField(
+                        controller: TextEditingController(
+                            text: confirmationState.yieldSet.stdLaborTime),
+                        keyboardType: TextInputType.number,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: const Icon(Icons.access_time_rounded),
+                          labelText: 'Standard Labor Time',
+                          filled: true,
+                          fillColor: Colors.grey[350],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: numberOfLabor,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: const Icon(Icons.groups_2_rounded),
+                          labelText: 'Number Of Labor',
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                        ),
+                        onFieldSubmitted: (value) {
+                          isChangeLabor = true;
+                          if (value.isNotEmpty) {
+                            final machineHour = double.tryParse(
+                                    confirmationState.yieldSet.machineHour) ??
+                                0;
+                            final labor = double.tryParse(value) ?? 0;
+
+                            final laborTimeValue = machineHour * labor;
+                            print('Labor Time: $laborTimeValue');
+
+                            _confirmationCubit.setYieldSet(
+                              confirmationState.yieldSet.copyWith(
+                                laborHour: laborTimeValue.toStringAsFixed(3),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextFormField(
+                        controller: TextEditingController(
+                            text: confirmationState.yieldSet.stdNoofLabor),
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: const Icon(Icons.groups_2_rounded),
+                          labelText: 'Standard No Of Labor',
+                          filled: true,
+                          fillColor: Colors.grey[350],
+                        ),
+                        onFieldSubmitted: (value) {
+                          isChangeLabor = true;
+                          if (value.isNotEmpty) {
+                            final machineHour = double.tryParse(
+                                    confirmationState.yieldSet.machineHour) ??
+                                0;
+                            final labor = double.tryParse(value) ?? 0;
+
+                            final laborTimeValue = machineHour * labor;
+                            print('Labor Time: $laborTimeValue');
+
+                            _confirmationCubit.setYieldSet(
+                              confirmationState.yieldSet.copyWith(
+                                laborHour: laborTimeValue.toStringAsFixed(3),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -466,9 +598,25 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     suffixIcon: const Icon(Icons.calendar_today),
-                    labelText: 'Start Execution',
+                    labelText: 'Start Execution Date & Time',
                     filled: true,
-                    fillColor: Colors.grey[400],
+                    fillColor: Colors.grey[350],
+                  ),
+                  readOnly: true,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: TextFormField(
+                  controller: finishExecution,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    suffixIcon: const Icon(Icons.calendar_today),
+                    labelText: 'Finish Execution Date & Time',
+                    filled: true,
+                    fillColor: Colors.grey[350],
                   ),
                   readOnly: true,
                 ),
@@ -484,7 +632,7 @@ class _FormConfirmationScreenState extends State<FormConfirmationScreen> {
                     suffixIcon: const Icon(Icons.calendar_today),
                     labelText: 'Posting Date',
                     filled: true,
-                    fillColor: Colors.grey[400],
+                    fillColor: Colors.grey[350],
                   ),
                   readOnly: true,
                 ),

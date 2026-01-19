@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/repository/operation_confirmation_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -19,8 +20,12 @@ class OperationConfirmationBloc
             await _operationConfirmationRepository.fetchOperationConfirmation(
                 event.routingNo, event.operationType, event.operationApps);
         emit(OperationConfirmationSuccess(operationConfirmation));
-      } catch (e) {
-        emit(OperationConfirmationError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(OperationConfirmationError(e.error!.message!.value!));
+        } else {
+          emit(const OperationConfirmationError('Server Error'));
+        }
       }
     });
   }

@@ -18,4 +18,11 @@ final class MaterialsLoaded extends MaterialsState {
   List<Object> get props => [material];
 }
 
-final class MaterialsError extends MaterialsState {}
+final class MaterialsError extends MaterialsState {
+  final String error;
+
+  const MaterialsError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

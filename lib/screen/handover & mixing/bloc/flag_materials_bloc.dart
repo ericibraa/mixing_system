@@ -25,6 +25,7 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
         String wadah = '';
         String originalOrder = '';
         String materialDoc = '';
+        String priority = '';
         switch (event.flagMaterials.length) {
           case 10:
             orderNo = event.flagMaterials[1];
@@ -51,6 +52,7 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
             wadah = wadah;
             originalOrder = event.orderNo;
             materialDoc = materialDoc;
+            priority = event.flagMaterials[7] == 'G' ? event.qrValue : '';
             break;
           case 6:
             orderNo = event.flagMaterials[1];
@@ -78,21 +80,34 @@ class FlagMaterialsBloc extends Bloc<FlagMaterialsEvent, FlagMaterialsState> {
             originalOrder = event.orderNo;
             materialDoc = materialDoc;
             break;
+          case 5:
+            orderNo = orderNo;
+            activityNo = activityNo;
+            bOmItem = bOmItem;
+            materialNo = materialNo;
+            recipient = event.flagMaterials[4];
+            fullpackItem = fullpackItem;
+            batch = batch;
+            activityWh = activityWh;
+            wadah = wadah;
+            originalOrder = originalOrder;
+            materialDoc = materialDoc;
+            priority = event.flagMaterials[4] == 'G' ? event.qrValue : priority;
         }
 
         FlagMaterials flagMaterials = FlagMaterials(
-          activityNo: activityNo,
-          activityWh: activityWh,
-          bOMItem: bOmItem,
-          batch: batch,
-          fullpackItem: fullpackItem,
-          materialNo: materialNo,
-          orderNo: orderNo,
-          recipient: recipient,
-          wadah: wadah,
-          originalOrder: originalOrder,
-          materialDoc: materialDoc
-        );
+            activityNo: activityNo,
+            activityWh: activityWh,
+            bOMItem: bOmItem,
+            batch: batch,
+            fullpackItem: fullpackItem,
+            materialNo: materialNo,
+            orderNo: orderNo,
+            recipient: recipient,
+            wadah: wadah,
+            originalOrder: originalOrder,
+            materialDoc: materialDoc,
+            priority: priority);
         final flagMaterial =
             await _flagScanRepository.fetchSubmitFlag(flagMaterials);
         emit(FlagMaterialsSuccess(flagMaterial));

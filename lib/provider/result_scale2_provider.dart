@@ -1,10 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/result_scale.dart';
 import 'package:dumping_system/provider/provider.dart';
 
 class ResultScale2Provider extends Provider {
-  Future<ResultScaleListResponse> fetchresultscale2(String orderNo,
-      String activityNo, String activityWh, String objectName, String operationType) async {
+  Future<ResultScaleListResponse> fetchresultscale2(
+      String orderNo,
+      String activityNo,
+      String activityWh,
+      String objectName,
+      String operationType) async {
     try {
       var filter =
           "OrderNo eq '$orderNo' and ActivityNo eq '$activityNo' and ObjectName eq '$objectName'";
@@ -15,6 +20,8 @@ class ResultScale2Provider extends Provider {
           "${apiUrl.dumpingApi}/ZDMP_GET_WEIGHT_SRV/HasilTimbang2Set",
           queryParameters: {"\$filter": filter, "\$format": 'json'});
       return ResultScaleListResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ErrorResponse.fromJson(e.response!.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

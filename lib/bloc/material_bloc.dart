@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/repository/material_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -15,8 +16,12 @@ class MaterialsBloc extends Bloc<MaterialsEvent, MaterialsState> {
       try {
         final material = await _materialRepository.fetchmaterial(event.plant);
         emit(MaterialsLoaded(material));
-      } catch (e) {
-        emit(MaterialsError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(MaterialsError(e.error!.message!.value!));
+        } else {
+          emit(const MaterialsError('Server Error'));
+        }
       }
     });
   }

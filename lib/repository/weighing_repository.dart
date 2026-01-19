@@ -4,7 +4,7 @@ import 'package:dumping_system/provider/weighing_provider.dart';
 class WeighingRepository {
   final _provider = WeighingProvider();
 
-  Future<TongResponse> fetchweighing(
+  Future<WeighingResult> fetchweighing(
     String routingNo,
     String internalCntr,
     String activityNo,

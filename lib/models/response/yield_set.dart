@@ -46,29 +46,40 @@ class ResultsYieldSet extends Equatable {
   final String operator;
   final String pengawas;
   final String labor;
+  final String stdYield;
+  final String stdMachineTime;
+  final String stdLaborTime;
+  final String stdNoofLabor;
+  final String stopDateOpr;
+  final String stopTimeOpr;
 
-  const ResultsYieldSet({
-    this.routingNo = '',
-    this.internalCntr = '',
-    this.orderNo = '',
-    this.activityNo = '',
-    this.yieldQty = '',
-    this.unitYield = '',
-    this.startDateOpr = '',
-    this.startTimeOpr = '',
-    this.startDateConf = '',
-    this.startTimeConf = '',
-    this.finishDate = '',
-    this.finishTime = '',
-    this.line = '',
-    this.postDate = '',
-    this.machineHour = '',
-    this.laborHour = '',
-    this.operationApps = '',
-    this.operator = '',
-    this.pengawas = '',
-    this.labor = ''
-  });
+  const ResultsYieldSet(
+      {this.routingNo = '',
+      this.internalCntr = '',
+      this.orderNo = '',
+      this.activityNo = '',
+      this.yieldQty = '',
+      this.unitYield = '',
+      this.startDateOpr = '',
+      this.startTimeOpr = '',
+      this.startDateConf = '',
+      this.startTimeConf = '',
+      this.finishDate = '',
+      this.finishTime = '',
+      this.line = '',
+      this.postDate = '',
+      this.machineHour = '',
+      this.laborHour = '',
+      this.operationApps = '',
+      this.operator = '',
+      this.pengawas = '',
+      this.labor = '',
+      this.stdYield = '',
+      this.stdMachineTime = '',
+      this.stdLaborTime = '',
+      this.stdNoofLabor = '',
+      this.stopDateOpr = '',
+      this.stopTimeOpr = ''});
 
   ResultsYieldSet copyWith({
     String? routingNo,
@@ -90,55 +101,71 @@ class ResultsYieldSet extends Equatable {
     String? operationApps,
     String? operator,
     String? pengawas,
-    String? labor
+    String? labor,
+    String? stdYield,
+    String? stdMachineTime,
+    String? stdLaborTime,
+    String? stdNoofLabor,
+    String? stopDateOpr,
+    String? stopTimeOpr,
   }) {
     return ResultsYieldSet(
-      routingNo: routingNo ?? this.routingNo,
-      internalCntr: internalCntr ?? this.internalCntr,
-      orderNo: orderNo ?? this.orderNo,
-      activityNo: activityNo ?? this.activityNo,
-      yieldQty: yieldQty ?? this.yieldQty,
-      unitYield: unitYield ?? this.unitYield,
-      startDateOpr: startDateOpr ?? this.startDateOpr,
-      startTimeOpr: startTimeOpr ?? this.startTimeOpr,
-      startDateConf: startDateConf ?? this.startDateConf,
-      startTimeConf: startTimeConf ?? this.startTimeConf,
-      finishDate: finishDate ?? this.finishDate,
-      finishTime: finishTime ?? this.finishTime,
-      line: line ?? this.line,
-      postDate: postDate ?? this.postDate,
-      machineHour: machineHour ?? this.machineHour,
-      laborHour: laborHour ?? this.laborHour,
-      operationApps: operationApps ?? this.operationApps,
-      operator: operator ?? this.operator,
-      pengawas: pengawas ?? this.pengawas,
-      labor: labor ?? this.labor
-    );
+        routingNo: routingNo ?? this.routingNo,
+        internalCntr: internalCntr ?? this.internalCntr,
+        orderNo: orderNo ?? this.orderNo,
+        activityNo: activityNo ?? this.activityNo,
+        yieldQty: yieldQty ?? this.yieldQty,
+        unitYield: unitYield ?? this.unitYield,
+        startDateOpr: startDateOpr ?? this.startDateOpr,
+        startTimeOpr: startTimeOpr ?? this.startTimeOpr,
+        startDateConf: startDateConf ?? this.startDateConf,
+        startTimeConf: startTimeConf ?? this.startTimeConf,
+        finishDate: finishDate ?? this.finishDate,
+        finishTime: finishTime ?? this.finishTime,
+        line: line ?? this.line,
+        postDate: postDate ?? this.postDate,
+        machineHour: machineHour ?? this.machineHour,
+        laborHour: laborHour ?? this.laborHour,
+        operationApps: operationApps ?? this.operationApps,
+        operator: operator ?? this.operator,
+        pengawas: pengawas ?? this.pengawas,
+        labor: labor ?? this.labor,
+        stdYield: stdYield ?? this.stdYield,
+        stdMachineTime: stdMachineTime ?? this.stdMachineTime,
+        stdLaborTime: stdLaborTime ?? this.stdLaborTime,
+        stdNoofLabor: stdNoofLabor ?? this.stdNoofLabor,
+        stopDateOpr: stopDateOpr ?? this.stopDateOpr,
+        stopTimeOpr: stopTimeOpr ?? this.stopTimeOpr);
   }
 
   factory ResultsYieldSet.fromJson(Map<String, dynamic> json) =>
       ResultsYieldSet(
-        routingNo: json['RoutingNo'],
-        internalCntr: json['InternalCntr'],
-        orderNo: json['OrderNo'],
-        activityNo: json['ActivityNo'],
-        yieldQty: json['YieldQty'],
-        unitYield: json['UnitYield'],
-        startDateOpr: json['StartDateOpr'],
-        startTimeOpr: json['StartTimeOpr'],
-        startDateConf: json['StartDateConf'],
-        startTimeConf: json['StartTimeConf'],
-        finishDate: json['FinishDate'],
-        finishTime: json['FinishTime'],
-        line: json['Line'],
-        postDate: json['PostDate'],
-        machineHour: json['MachineHour'],
-        laborHour: json['LaborHour'],
-        operationApps: json['OperationApps'],
-        operator: json['Operator'],
-        pengawas: json['Pengawas'],
-        labor: json['Labor']
-      );
+          routingNo: json['RoutingNo'],
+          internalCntr: json['InternalCntr'],
+          orderNo: json['OrderNo'],
+          activityNo: json['ActivityNo'],
+          yieldQty: json['YieldQty'],
+          unitYield: json['UnitYield'],
+          startDateOpr: json['StartDateOpr'],
+          startTimeOpr: json['StartTimeOpr'],
+          startDateConf: json['StartDateConf'],
+          startTimeConf: json['StartTimeConf'],
+          finishDate: json['FinishDate'],
+          finishTime: json['FinishTime'],
+          line: json['Line'],
+          postDate: json['PostDate'],
+          machineHour: json['MachineHour'],
+          laborHour: json['LaborHour'],
+          operationApps: json['OperationApps'],
+          operator: json['Operator'],
+          pengawas: json['Pengawas'],
+          labor: json['Labor'],
+          stdYield: json['StdYield'],
+          stdMachineTime: json['StdMachineTime'],
+          stdLaborTime: json['StdLaborTime'],
+          stdNoofLabor: json['StdNoofLabor'],
+          stopDateOpr: json['StopDateOpr'],
+          stopTimeOpr: json['StopTimeOpr']);
 
   @override
   List<Object> get props => [
@@ -161,6 +188,12 @@ class ResultsYieldSet extends Equatable {
         operationApps,
         operator,
         pengawas,
-        labor
+        labor,
+        stdYield,
+        stdMachineTime,
+        stdLaborTime,
+        stdNoofLabor,
+        stopDateOpr,
+        stopTimeOpr
       ];
 }

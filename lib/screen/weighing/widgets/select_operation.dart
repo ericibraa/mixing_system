@@ -45,15 +45,17 @@ class _SelectOperationState extends State<SelectOperation> {
             BlocListener<WeighingBloc, WeighingBlocState>(
                 listener: (context, state) {
               if (state is WeighingLoaded) {
-                var weighing = state.weighing.d!.resultsTong!;
+                var weighing = state.weighing.data.d!.resultsTong!;
                 if (weighing.length >= 2) {
-                  _weighingCubit.setWeighing(state.weighing.d!.resultsTong!);
+                  _weighingCubit
+                      .setWeighing(state.weighing.data.d!.resultsTong!);
                   _weighingCubit.setTab(WeighingStatus.scaleWeighing);
                 } else {
-                  _weighingCubit.setWeighing(state.weighing.d!.resultsTong!);
-                  if (state.weighing.d!.resultsTong!.isNotEmpty) {
-                    _weighingCubit
-                        .selectedWeighing(state.weighing.d!.resultsTong![0]);
+                  _weighingCubit
+                      .setWeighing(state.weighing.data.d!.resultsTong!);
+                  if (state.weighing.data.d!.resultsTong!.isNotEmpty) {
+                    _weighingCubit.selectedWeighing(
+                        state.weighing.data.d!.resultsTong![0]);
                   }
                   expiredSetBloc.add(GetExpiredSet(
                       orderNo:
@@ -74,6 +76,22 @@ class _SelectOperationState extends State<SelectOperation> {
                   _weighingCubit.setTab(WeighingStatus.scale);
                   _weighingCubit.setPrevTab(WeighingStatus.weighing);
                 }
+                if (state.weighing.message != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.weighing.message!),
+                    duration: Duration(seconds: 5),
+                    backgroundColor: Colors.red,
+                  ));
+                }
+              } else if (state is WeighingErros) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
               }
             }),
             BlocListener<ExpiredSetBloc, ExpiredSetState>(
@@ -82,6 +100,15 @@ class _SelectOperationState extends State<SelectOperation> {
                 for (var expiredSet in state.expiredSet.d!.resultsExpiredSet!) {
                   _weighingCubit.setExpired(expiredSet);
                 }
+              } else if (state is ExpiredSetError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
               }
             }),
             BlocListener<ResultScaleBloc, ResultScaleState>(
@@ -93,6 +120,15 @@ class _SelectOperationState extends State<SelectOperation> {
                   _weighingCubit.setTotalContainer(
                       state.resultScale.d!.results![0].totalWadah!);
                 }
+              } else if (state is ResultScaleError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
               }
             }),
           ],
@@ -100,7 +136,21 @@ class _SelectOperationState extends State<SelectOperation> {
               builder: (context, weighingState) {
             return Scaffold(
               appBar: AppBar(
-                title: const Text('Choose Operation No'),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Select Operation"),
+                    Text(
+                      "Operator: ${weighingState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${weighingState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                     onPressed: () {
                       _weighingCubit.setTab(WeighingStatus.weighing);
@@ -131,12 +181,10 @@ class _SelectOperationState extends State<SelectOperation> {
                                   selectedOperation.activityNo;
 
                           return Card(
-                            elevation:7,
+                            elevation: 7,
                             shadowColor: Colors.blueGrey[100],
                             margin: const EdgeInsets.symmetric(vertical: 8),
-                            color: isSelected
-                                        ? Colors.black
-                                        : Colors.grey[100],
+                            color: isSelected ? Colors.black : Colors.grey[100],
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -152,8 +200,8 @@ class _SelectOperationState extends State<SelectOperation> {
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                             color: isSelected
-                                                    ? Colors.white
-                                                    : Colors.black,
+                                                ? Colors.white
+                                                : Colors.black,
                                           )),
                                   const SizedBox(height: 10),
                                   Row(
@@ -171,8 +219,8 @@ class _SelectOperationState extends State<SelectOperation> {
                                                 .bodySmall
                                                 ?.copyWith(
                                                   color: isSelected
-                                                          ? Colors.white
-                                                          : Colors.black,
+                                                      ? Colors.white
+                                                      : Colors.black,
                                                 ),
                                           ),
                                           const SizedBox(height: 4),

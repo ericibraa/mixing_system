@@ -20,7 +20,8 @@ class AuthProvider extends Provider {
 
       return {
         'token': base64Encode(utf8.encode('$username:$password')),
-        'csrfToken': csrfToken ?? 'No CSRF token found'
+        'csrfToken': csrfToken ?? 'No CSRF token found',
+        'username' : username
       };
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");

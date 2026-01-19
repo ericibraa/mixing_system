@@ -1,5 +1,15 @@
 import 'package:equatable/equatable.dart';
 
+class MaterialSetResult {
+  final ResponseMaterialset data;
+  final String? message;
+
+  MaterialSetResult({
+    required this.data,
+    this.message,
+  });
+}
+
 class ResponseMaterialset {
   D? d;
 

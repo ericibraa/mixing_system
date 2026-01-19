@@ -44,7 +44,8 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
     if (barcode != null && barcode.displayValue != null) {
       setState(() {
         scannedBarcode = barcode.displayValue!;
-        _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+        _handoverCubit.setScannedTong(
+            parseStringAndWrapInMap(scannedBarcode), scannedBarcode);
       });
       switch (_handoverCubit.state.errorScanType) {
         case ErrorScanType.dataScanned:
@@ -136,6 +137,15 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
                 }
                 print(fullpacks.toList());
                 _handoverCubit.setFullpack(fullpacks);
+              } else if (state is TongError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
               }
             },
           ),
@@ -178,8 +188,22 @@ class _ScanTongMaterialScreenState extends State<ScanTongMaterialScreen> {
             return Scaffold(
               backgroundColor: Colors.grey[100],
               appBar: AppBar(
-                title: Text(
-                    "Handover & Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        "Handover & Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                    Text(
+                      "Operator: ${handoverState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${handoverState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                   onPressed: () {
                     _handoverCubit.setTab(handoverState.prevTab);

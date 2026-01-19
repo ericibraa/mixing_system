@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/result_scale.dart';
 import 'package:dumping_system/repository/result_scale_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -17,8 +18,12 @@ class ResultScaleBloc extends Bloc<ResultScaleEvent, ResultScaleState> {
         final resultScale = await _resultScaleRepository.fetchresultscale(
             event.orderNo, event.activityNo, event.activityWh, event.operationType);
         emit(ResultScaleLoaded(resultScale: resultScale));
-      } catch (e) {
-        emit(ResultScaleError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(ResultScaleError(e.error!.message!.value!));
+        } else {
+          emit(const ResultScaleError('Server Error'));
+        }
       }
     });
   }

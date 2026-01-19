@@ -20,4 +20,11 @@ final class LocationSetLoaded extends LocationSetState {
   List<Object> get props => [locationSet];
 }
 
-final class LocationSetError extends LocationSetState {}
+final class LocationSetError extends LocationSetState {
+  final String error;
+
+  const LocationSetError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

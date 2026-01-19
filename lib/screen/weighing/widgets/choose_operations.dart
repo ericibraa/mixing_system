@@ -49,7 +49,7 @@ class _ChooseOperationsState extends State<ChooseOperations> {
             listener: (context, state) {
               if (state is WeighingLoaded) {
                 _weighingCubit
-                    .selectedWeighing(state.weighing.d!.resultsTong![0]);
+                    .selectedWeighing(state.weighing.data.d!.resultsTong![0]);
                 expiredSetBloc.add(GetExpiredSet(
                     orderNo: _weighingCubit.state.selectedOrder.orderNo != null
                         ? _weighingCubit.state.selectedOrder.orderNo!
@@ -91,6 +91,15 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                 _weighingCubit.setPrevTab(WeighingStatus.chooseOperation);
                 _weighingCubit.resetResultScale();
                 _weighingCubit.resetScaleWeighing();
+              } else if (state is WeighingErros) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
               }
             },
           ),
@@ -100,18 +109,45 @@ class _ChooseOperationsState extends State<ChooseOperations> {
               for (var expiredSet in state.expiredSet.d!.resultsExpiredSet!) {
                 _weighingCubit.setExpired(expiredSet);
               }
+            } else if (state is ExpiredSetError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
           BlocListener<ResultScaleBloc, ResultScaleState>(
               listener: (context, state) {
             if (state is ResultScaleLoaded) {
               _weighingCubit.setResultScaleList(state.resultScale.d!.results!);
+            } else if (state is ResultScaleError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
           BlocListener<ResultScale2Bloc, ResultScale2State>(
               listener: (context, state) {
             if (state is ResultScale2Loaded) {
               _weighingCubit.setResultScales2(state.resultScale2.d!.results!);
+            } else if (state is ResultScale2Error) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
         ],
@@ -119,7 +155,21 @@ class _ChooseOperationsState extends State<ChooseOperations> {
           builder: (context, weighingState) {
             return Scaffold(
               appBar: AppBar(
-                title: const Text("Choose Operation"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Choose Operation"),
+                    Text(
+                      "Operator: ${weighingState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${weighingState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
               ),
               body: Padding(
                 padding: const EdgeInsets.all(20),
@@ -132,13 +182,13 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                     itemBuilder: (BuildContext context, int index) {
                       final selectedOperation =
                           weighingState.chooseOperations[index];
-                  
+
                       return Card(
-                        elevation:
-                            weighingState.chooseOperations[index].lastOperation ==
-                                    ''
-                                ? 7
-                                : 0,
+                        elevation: weighingState
+                                    .chooseOperations[index].lastOperation ==
+                                ''
+                            ? 7
+                            : 0,
                         shadowColor: Colors.blueGrey[100],
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         color: Colors.grey[100],
@@ -160,10 +210,12 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                                       )),
                               const SizedBox(height: 10),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Operation number",
@@ -188,7 +240,8 @@ class _ChooseOperationsState extends State<ChooseOperations> {
                                     ],
                                   ),
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
                                       Text(
                                         "Operation Apps",

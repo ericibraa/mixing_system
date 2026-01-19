@@ -21,4 +21,11 @@ final class YieldSetSuccess extends YieldSetState {
   List<Object> get props => [yieldSet];
 }
 
-final class YieldSetError extends YieldSetState {}
+final class YieldSetError extends YieldSetState {
+  final String error;
+
+  const YieldSetError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

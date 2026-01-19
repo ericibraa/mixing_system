@@ -85,7 +85,7 @@ class HandoverCubit extends Cubit<HandoverState> {
     emit(state.copyWith(line: line));
   }
 
-  void setScannedTong(List<String> activityNo) {
+  void setScannedTong(List<String> activityNo, String scannedBarcode) {
     emit(state.copyWith(
         isLoadingTong: true,
         isLoadingFullpack: true,
@@ -226,8 +226,16 @@ class HandoverCubit extends Cubit<HandoverState> {
         }
       }
       if (!isFound) {
+        print("kesono");
+
+        print("===============================");
+        print(materialSets.length);
         for (var k = 0; k < materialSets.length; k++) {
           switch (activityNo.length) {
+            case 5:
+              isMatch = materialSets[k].activityNo == activityNo[1] &&
+                  materialSets[k].priority == scannedBarcode;
+              break;
             case 6:
               isMatch = materialSets[k].bOMItem == activityNo[3] &&
                   materialSets[k].recipient == "W";
@@ -236,32 +244,35 @@ class HandoverCubit extends Cubit<HandoverState> {
               isMatch = materialSets[k].activityDmp == activityNo[2] &&
                   materialSets[k].counter == activityNo[5] &&
                   materialSets[k].activityWh == activityNo[6];
-
               break;
             case 9:
               if (materialSets[k].batch.isEmpty) {
                 isMatch = (materialSets[k].bOMItem == activityNo[3] &&
                     materialSets[k].counter == activityNo[6]);
+                break;
               } else {
                 isMatch = (materialSets[k].bOMItem == activityNo[3] &&
                     materialSets[k].counter == activityNo[6] &&
                     int.parse(materialSets[k].batch) ==
                         int.parse(activityNo[8]));
+                break;
               }
-              break;
             case 10:
               if (materialSets[k].batch.isEmpty) {
                 isMatch = (materialSets[k].bOMItem == activityNo[3] &&
                     materialSets[k].counter == activityNo[6]);
+                break;
               } else {
                 isMatch = (materialSets[k].bOMItem == activityNo[3] &&
                     materialSets[k].counter == activityNo[6] &&
                     int.parse(materialSets[k].batch) ==
                         int.parse(activityNo[8]) &&
                     materialSets[k].materialDoc == activityNo[9]);
+                break;
               }
           }
           if (materialSets[k].scanFlag == "X") {
+            print(materialSets[k]);
             if (isMatch) {
               errorType = ErrorScanType.dataScanned;
               break;
@@ -269,13 +280,16 @@ class HandoverCubit extends Cubit<HandoverState> {
             continue;
           }
           if (materialSets[k].scanFlag == "") {
-            if (lastPrioEmpty != "" &&
-                lastPrioEmpty != materialSets[k].priority) {
-              errorType = ErrorScanType.incorrectPriority;
-              break;
-            }
-            lastPrioEmpty = materialSets[k].priority;
+            // print(lastPrioEmpty);
+            // print(materialSets[k].priority);
+            // if (lastPrioEmpty != "" &&
+            //     lastPrioEmpty != materialSets[k].priority) {
+            //   errorType = ErrorScanType.incorrectPriority;
+            //   break;
+            // }
+            // lastPrioEmpty = materialSets[k].priority;
             if (isMatch) {
+              print("appppppppppppppppp");
               var materialSet = materialSets[k].copyWith(isScanned: true);
               completedMaterialset++;
               materialSets[k] = materialSet;
@@ -386,5 +400,9 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   void SetMixing(bool isMixing) {
     emit(state.copyWith(isMixing: isMixing));
+  }
+
+  void setDisabled(bool disabled) {
+    emit(state.copyWith(disabled: disabled));
   }
 }

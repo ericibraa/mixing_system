@@ -187,12 +187,27 @@ class _PrintTaraState extends State<PrintTara> {
           builder: (context, weighingState) {
         return Scaffold(
             appBar: AppBar(
-                title: const Text("Print Tara"),
-                leading: IconButton(
-                    onPressed: () {
-                      _weighingCubit.setTab(_weighingCubit.state.prevTab);
-                    },
-                    icon: const Icon(Icons.chevron_left_rounded))),
+              toolbarHeight: 100,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Print Tara"),
+                  Text(
+                    "Operator: ${weighingState.operator}",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  Text(
+                    "Pengawas: ${weighingState.pengawas}",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  )
+                ],
+              ),
+              leading: IconButton(
+                  onPressed: () {
+                    _weighingCubit.setTab(_weighingCubit.state.prevTab);
+                  },
+                  icon: const Icon(Icons.chevron_left_rounded)),
+            ),
             body: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(10),

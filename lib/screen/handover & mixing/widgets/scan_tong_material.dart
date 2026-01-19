@@ -30,6 +30,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
   String scannedBarcode = "";
   List<dynamic> hasScanned = [];
   bool isLoading = false;
+  bool disabled = false;
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -45,7 +46,8 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
         scannedBarcode = barcode.displayValue!;
         hasScanned = parseStringAndWrapInMap(scannedBarcode);
       });
-      _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+      _handoverCubit.setScannedTong(
+          parseStringAndWrapInMap(scannedBarcode), scannedBarcode);
       if (mounted) {
         switch (_handoverCubit.state.errorScanType) {
           case ErrorScanType.dataScanned:
@@ -99,8 +101,10 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
               if (_handoverCubit.state.startTime == '') {
                 _handoverCubit.setStartDate();
               }
-              flagMaterialsBloc.add(GetFlagMaterials(hasScanned,
-                  _handoverCubit.state.selectedOrder.orderNo ?? ''));
+              flagMaterialsBloc.add(GetFlagMaterials(
+                  hasScanned,
+                  _handoverCubit.state.selectedOrder.orderNo ?? '',
+                  scannedBarcode));
             }
             break;
           case ErrorScanType.dataNull:
@@ -145,7 +149,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
           BlocListener<MaterialSetBloc, MaterialSetState>(
               listener: (context, state) {
             if (state is MaterialSetLoaded) {
-              var materialSets = state.materialset.d!.results!;
+              var materialSets = state.materialset.data.d!.results!;
               if (materialSets.isNotEmpty) {
                 if (materialSets[0].priority == '') {
                   materialSets.sort((a, b) => '${a.scanDate} ${a.scanTime}'
@@ -160,6 +164,29 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
               }
               _handoverCubit.setMaterialSet(materialSets);
               _handoverCubit.setTab(HandoverStatus.scanMaterialMixing);
+
+              if (state.materialset.message != null) {
+                _handoverCubit.setDisabled(true);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.materialset.message!),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              } else {
+                _handoverCubit.setDisabled(false);
+              }
+            } else if (state is MaterialSetError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
           BlocListener<SubmitHandoverMixingBloc, SubmitHandoverMixingState>(
@@ -231,8 +258,22 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
             return Scaffold(
               backgroundColor: Colors.grey[100],
               appBar: AppBar(
-                title: Text(
-                    "Handover Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        "Handover Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                    Text(
+                      "Operator: ${handoverState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${handoverState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                   onPressed: () {
                     _handoverCubit.setTab(handoverState.prevTab);

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/expired_set.dart';
 import 'package:dumping_system/provider/provider.dart';
 
@@ -14,6 +15,8 @@ class ExpiredSetProvider extends Provider {
             "\$format": "json"
           });
       return ExpiredsetResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ErrorResponse.fromJson(e.response!.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

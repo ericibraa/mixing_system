@@ -21,4 +21,11 @@ final class OperationTypeLoaded extends OperationTypeState {
   List<Object?> get props => [operationType];
 }
 
-final class OperationTypeError extends OperationTypeState {}
+final class OperationTypeError extends OperationTypeState {
+  final String error;
+
+  const OperationTypeError(this.error);
+
+  @override
+  List<Object?> get props => [error];
+}

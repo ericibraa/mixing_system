@@ -63,6 +63,15 @@ class _ChooseOperationState extends State<ChooseOperation> {
                     _handoverCubit.setTab(HandoverStatus.chooseLocation);
                     _handoverCubit.setPrevTab(HandoverStatus.handover);
                   }
+                } else if (state is LocationSetError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.error),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
                 }
               }),
               BlocListener<TongBloc, TongState>(listener: (context, state) {
@@ -72,6 +81,15 @@ class _ChooseOperationState extends State<ChooseOperation> {
                     _handoverCubit
                         .setFullpack(fullpack.wadToMatNav!.resultsFullPack!);
                   }
+                } else if (state is TongError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.error),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
                 }
               }),
             ],
@@ -79,7 +97,21 @@ class _ChooseOperationState extends State<ChooseOperation> {
                 builder: (context, handoverState) {
               return Scaffold(
                 appBar: AppBar(
-                  title: const Text('Choose Operation No'),
+                  toolbarHeight: 100,
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Choose Operation"),
+                      Text(
+                        "Operator: ${handoverState.operator}",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      Text(
+                        "Pengawas: ${handoverState.pengawas}",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
+                    ],
+                  ),
                   leading: IconButton(
                       onPressed: () {
                         _handoverCubit.setTab(HandoverStatus.handover);

@@ -51,6 +51,15 @@ class _ChooseLocationState extends State<ChooseLocation> {
                   _handoverCubit.setFullpack(fullpacks);
                   _handoverCubit.setTab(HandoverStatus.scanTongResultsWeighing);
                   _handoverCubit.setPrevTab(HandoverStatus.chooseLocation);
+                } else if (state is WadahSetError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.error),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
                 }
               },
             ),
@@ -65,8 +74,9 @@ class _ChooseLocationState extends State<ChooseLocation> {
                   _handoverCubit.setFullpack(fullpacks);
                 }
                 print(_handoverCubit.state.isMixing);
-                var opApps = _handoverCubit.state.locationSets
-                    .any((item) => item.operationApps == '0010' || item.operationApps == '0020' );
+                var opApps = _handoverCubit.state.locationSets.any((item) =>
+                    item.operationApps == '0010' ||
+                    item.operationApps == '0020');
                 if (opApps) {
                   if (!_handoverCubit.state.isMixing) {
                     _handoverCubit.setTab(HandoverStatus.scantong);
@@ -77,6 +87,15 @@ class _ChooseLocationState extends State<ChooseLocation> {
                     _handoverCubit.SetMixing(false);
                   }
                 }
+              } else if (state is TongError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
               }
             }),
           ],
@@ -84,7 +103,21 @@ class _ChooseLocationState extends State<ChooseLocation> {
               builder: (context, handoverState) {
             return Scaffold(
                 appBar: AppBar(
-                  title: const Text("Choose Location"),
+                  toolbarHeight: 100,
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Choose Location"),
+                      Text(
+                        "Operator: ${handoverState.operator}",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      Text(
+                        "Pengawas: ${handoverState.pengawas}",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
+                    ],
+                  ),
                   leading: IconButton(
                     onPressed: () {
                       _handoverCubit.setTab(HandoverStatus.chooseOperation);

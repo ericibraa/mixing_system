@@ -621,6 +621,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
               _weighingCubit.setResultScaleList(state.resultScale.d!.results!);
               line.text = state.resultScale.d!.results![0].line!;
               _weighingCubit.setLine(line.text);
+            } else if (state is ResultScaleError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
           BlocListener<ResultScale2Bloc, ResultScale2State>(
@@ -633,6 +642,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
               _weighingCubit.setResultScales2(state.resultScale2.d!.results!);
               line.text = state.resultScale2.d!.results![0].line!;
               _weighingCubit.setLine(line.text);
+            } else if (state is ResultScale2Error) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
           BlocListener<VolumeBloc, VolumeState>(listener: (context, state) {
@@ -648,6 +666,15 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
 
                 volumeValue ??= volume.isNotEmpty ? volume.first.volume! : '';
               });
+            } else if (state is VolumeError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           })
         ],
@@ -656,8 +683,22 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
             return Scaffold(
               backgroundColor: Colors.grey[100],
               appBar: AppBar(
-                title: Text(
-                    "Scale Weighing ${weighingState.selectedOperation.operationDesc}"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        "Scale Weighing ${weighingState.selectedOperation.operationDesc}"),
+                    Text(
+                      "Operator: ${weighingState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${weighingState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                   onPressed: () {
                     _weighingCubit.setTab(_weighingCubit.state.prevTab);
@@ -860,6 +901,7 @@ class _ScaleWeighingScreenState extends State<ScaleWeighingScreen> {
                                   ? () {
                                       submitWeighingBloc.add(SendDataWeighing(
                                           weighingState: weighingState));
+                                      print(weighingState.scaleWeighing);
                                     }
                                   : null,
                               style: TextButton.styleFrom(

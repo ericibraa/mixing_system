@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/tong.dart';
 import 'package:dumping_system/repository/weighing_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -21,8 +22,12 @@ class WeighingBloc extends Bloc<WeighingEvent, WeighingBlocState> {
             event.operationType,
             event.operationApps);
         emit(WeighingLoaded(weighing: weighing));
-      } catch (e) {
-        emit(WeighingErros());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(WeighingErros(e.error!.message!.value!));
+        } else {
+          emit(const WeighingErros('Server Error'));
+        }
       }
     });
   }

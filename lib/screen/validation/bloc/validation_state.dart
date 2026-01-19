@@ -18,4 +18,11 @@ final class ValidationLoaded extends ValidationState {
   List<Object> get props => [validation];
 }
 
-final class ValidationError extends ValidationState {}
+final class ValidationError extends ValidationState {
+  final String error;
+
+  const ValidationError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

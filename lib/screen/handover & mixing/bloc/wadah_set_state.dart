@@ -20,4 +20,11 @@ final class WadahSetLoaded extends WadahSetState {
   List<Object> get props => [wadahSet];
 }
 
-final class WadahSetError extends WadahSetState {}
+final class WadahSetError extends WadahSetState {
+  final String error;
+
+  const WadahSetError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

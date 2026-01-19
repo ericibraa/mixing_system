@@ -45,7 +45,8 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
     if (barcode != null && barcode.displayValue != null) {
       setState(() {
         scannedBarcode = barcode.displayValue!;
-        _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+        _handoverCubit.setScannedTong(
+            parseStringAndWrapInMap(scannedBarcode), scannedBarcode);
       });
       switch (_handoverCubit.state.errorScanType) {
         case ErrorScanType.dataScanned:
@@ -175,8 +176,22 @@ class _ScanTongScreenState extends State<ScanTongScreen> {
             return Scaffold(
               backgroundColor: Colors.grey[100],
               appBar: AppBar(
-                title: Text(
-                    "Handover - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        "Handover - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                    Text(
+                      "Operator: ${handoverState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${handoverState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                   onPressed: () {
                     _handoverCubit.setTab(HandoverStatus.chooseOperation);

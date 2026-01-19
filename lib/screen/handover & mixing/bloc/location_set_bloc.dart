@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/locationset.dart';
 import 'package:dumping_system/repository/location_set_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -18,8 +19,12 @@ class LocationSetBloc extends Bloc<LocationSetEvent, LocationSetState> {
         final locationSet = await _locationSetRepository.fetchLocationSet(
             event.routingNo, event.internalCntr, event.activityNo);
         emit(LocationSetLoaded(locationSet));
-      } catch (e) {
-        emit(LocationSetError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(LocationSetError(e.error!.message!.value!));
+        } else {
+          emit(const LocationSetError('Server Error'));
+        }
       }
     });
   }

@@ -11,8 +11,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class ValidationScreen extends StatefulWidget {
+  final String to;
   // ignore: use_super_parameters
-  const ValidationScreen({Key? key}) : super(key: key);
+  const ValidationScreen({Key? key, required this.to}) : super(key: key);
 
   @override
   State<ValidationScreen> createState() => _ValidationScreenState();
@@ -92,6 +93,10 @@ class _ValidationScreenState extends State<ValidationScreen> {
 
   Widget validationBody(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+      ),
       body: BlocProvider(
         create: (context) => validationBloc,
         child: MultiBlocListener(
@@ -119,11 +124,19 @@ class _ValidationScreenState extends State<ValidationScreen> {
                     } else {
                       BlocProvider.of<AuthBloc>(context).add(ChangeUserEvent(
                           nrpPengawas: hasScanned[0],
-                          namePengawas: hasScanned[1]));
+                          namePengawas: hasScanned[1],
+                          weerks: validations.werks));
                     }
                   }
                 } else if (state is ValidationError) {
-                  print("kesini error");
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.error),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
                 }
               },
             ),
@@ -159,43 +172,44 @@ class _ValidationScreenState extends State<ValidationScreen> {
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ScanBarcodeScreen(
-                            onBarcodeScanned: (barcode) =>
-                                _scanOperator(barcode, "OPERATOR"),
+                  if (widget.to != '/confirmation')
+                    InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ScanBarcodeScreen(
+                              onBarcodeScanned: (barcode) =>
+                                  _scanOperator(barcode, "OPERATOR"),
+                            ),
                           ),
+                        );
+                      },
+                      child: Container(
+                        constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width / 1.5),
+                        padding: const EdgeInsets.only(
+                            left: 20, top: 25, right: 20, bottom: 25),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      );
-                    },
-                    child: Container(
-                      constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width / 1.5),
-                      padding: const EdgeInsets.only(
-                          left: 20, top: 25, right: 20, bottom: 25),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.person,
-                            size: 30,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: Text(valueOperator.isNotEmpty
-                                ? 'NRP $valueOperator'
-                                : 'OPERATOR'),
-                          ),
-                        ],
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.person,
+                              size: 30,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(valueOperator.isNotEmpty
+                                  ? 'NRP $valueOperator'
+                                  : 'OPERATOR'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   InkWell(
                     onTap: () {
                       Navigator.of(context).push(
@@ -244,19 +258,28 @@ class _ValidationScreenState extends State<ValidationScreen> {
         padding: const EdgeInsets.all(10),
         child: TextButton(
           style: TextButton.styleFrom(
-              backgroundColor:
-                  valueOperator.isNotEmpty && valuePengawas.isNotEmpty
+              backgroundColor: widget.to == '/confirmation'
+                  ? valuePengawas.isNotEmpty
+                      ? Colors.black
+                      : Colors.grey
+                  : valueOperator.isNotEmpty && valuePengawas.isNotEmpty
                       ? Colors.black
                       : Colors.grey,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
               minimumSize: const Size.fromHeight(50)),
-          onPressed: valueOperator.isNotEmpty && valuePengawas.isNotEmpty
-              ? () {
-                  context.push('/home');
-                }
-              : null,
+          onPressed: widget.to == '/confirmation'
+              ? valuePengawas.isNotEmpty
+                  ? () {
+                      context.push(widget.to);
+                    }
+                  : null
+              : valueOperator.isNotEmpty && valuePengawas.isNotEmpty
+                  ? () {
+                      context.push(widget.to);
+                    }
+                  : null,
           child: Text(
             "Log In",
             style: Theme.of(context)

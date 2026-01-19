@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/materialset.dart';
 import 'package:dumping_system/repository/materialset_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -19,8 +20,12 @@ class MaterialSetBloc extends Bloc<MaterialSetEvent, MaterialSetState> {
         // materialset.d!.results!
         //     .sort((a, b) => a.priority.compareTo(b.priority));
         emit(MaterialSetLoaded(materialset));
-      } catch (e) {
-        emit(MaterialSetError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(MaterialSetError(e.error!.message!.value!));
+        } else {
+          emit(const MaterialSetError('Server Error'));
+        }
       }
     });
   }

@@ -10,7 +10,6 @@ import 'package:dumping_system/screen/confirmation/cubit/confirmation_cubit.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 class ConfirmationScreen extends StatefulWidget {
   const ConfirmationScreen({super.key});
@@ -43,31 +42,11 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
     _confirmationCubit = BlocProvider.of<ConfirmationCubit>(context);
     var data = authBloc.state;
     if (data is Authenticated) {
-      _confirmationCubit.setOperator(data.nameOperator);
       _confirmationCubit.setPengawas(data.namePengawas);
       plant.text = data.weerks;
     }
     materialBloc.add(SendPlant(plant: plant.text));
     super.initState();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        _dateController.text = DateFormat('dd-MM-yyyy').format(picked);
-      });
-      operationTypeBloc.add(SendDataOperationType(
-          startDate: _dateController.text,
-          materialCode: productCode.text,
-          plant: plant.text,
-          batchFG: batch.text));
-    }
   }
 
   @override
@@ -91,6 +70,15 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   listener: (context, state) {
                 if (state is MaterialsLoaded) {
                   _confirmationCubit.setMaterials(state.material.d!.results!);
+                } else if (state is MaterialsError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.error),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
                 }
               }),
               BlocListener<OperationTypeBloc, OperationTypeState>(
@@ -100,12 +88,30 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                     _confirmationCubit.setOperationTypes(
                         operationType.oprTypToDescNav!.resultsOprType!);
                   }
+                } else if (state is OperationTypeError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.error),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
                 }
               }),
               BlocListener<OrderBloc, OrderState>(listener: (context, state) {
                 if (state is OrderLoaded) {
                   var order = state.order.d!.results!;
                   _confirmationCubit.setOrders(order);
+                } else if (state is OrderError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.error),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
                 }
               }),
               BlocListener<OperationConfirmationBloc,
@@ -114,6 +120,15 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   _confirmationCubit.setOperations(
                       state.operationConfirmation.d!.resultsOperationNo!);
                   _confirmationCubit.setTab(ConfirmationStatus.chooseOperation);
+                } else if (state is OperationConfirmationError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.error),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ));
                 }
               }),
             ],
@@ -121,7 +136,17 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                 builder: (context, confirmationState) {
               return Scaffold(
                 appBar: AppBar(
-                  title: const Text("Confirmation"),
+                  toolbarHeight: 100,
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Confirmation"),
+                      Text(
+                        "Pengawas: ${confirmationState.pengawas}",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
+                    ],
+                  ),
                   leading: IconButton(
                       onPressed: () {
                         context.go("/home");
@@ -282,26 +307,6 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                     filled: true,
                                     fillColor: Colors.grey.shade100,
                                   ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
-                                child: TextFormField(
-                                  controller: _dateController,
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    suffixIcon:
-                                        const Icon(Icons.calendar_today),
-                                    labelText: 'Select Date',
-                                    filled: true,
-                                    fillColor: Colors.grey.shade100,
-                                  ),
-                                  readOnly: true,
-                                  onTap: () {
-                                    _selectDate(context);
-                                  },
                                 ),
                               ),
                               if (confirmationState

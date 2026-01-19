@@ -17,6 +17,7 @@ class Authenticated extends AuthState {
   final String csrfToken;
   final String nameOperator;
   final String namePengawas;
+  final String plantUsername;
 
   const Authenticated(
       {required this.token,
@@ -25,7 +26,8 @@ class Authenticated extends AuthState {
       this.weerks = '',
       this.csrfToken = '',
       this.nameOperator = '',
-      this.namePengawas = ''});
+      this.namePengawas = '',
+      this.plantUsername = ''});
 
   Authenticated copyWith(
       {String? token,
@@ -34,7 +36,8 @@ class Authenticated extends AuthState {
       String? weerks,
       String? csrfToken,
       String? nameOperator,
-      String? namePengawas}) {
+      String? namePengawas,
+      String? plantUsername}) {
     return Authenticated(
         token: token ?? this.token,
         nrpOperator: nrpOperator ?? this.nrpOperator,
@@ -42,7 +45,8 @@ class Authenticated extends AuthState {
         weerks: weerks ?? this.weerks,
         csrfToken: csrfToken ?? this.csrfToken,
         nameOperator: nameOperator ?? this.nameOperator,
-        namePengawas: namePengawas ?? this.namePengawas);
+        namePengawas: namePengawas ?? this.namePengawas,
+        plantUsername: plantUsername ?? this.plantUsername);
   }
 
   @override
@@ -53,7 +57,8 @@ class Authenticated extends AuthState {
         weerks,
         csrfToken,
         nameOperator,
-        namePengawas
+        namePengawas,
+        plantUsername
       ];
 }
 

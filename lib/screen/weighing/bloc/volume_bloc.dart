@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/volume.dart';
 import 'package:dumping_system/repository/volume_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -15,8 +16,12 @@ class VolumeBloc extends Bloc<VolumeEvent, VolumeState> {
       try {
         final volume = await _volumeRepository.fetchVolume(event.plant);
         emit(VolumeLoaded(volume: volume));
-      } catch(e) {
-        emit(VolumeError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(VolumeError(e.error!.message!.value!));
+        } else {
+          emit(const VolumeError('Server Error'));
+        }
       }
     });
   }

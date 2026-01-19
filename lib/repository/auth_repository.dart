@@ -15,6 +15,7 @@ class AuthRepository {
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final token = await _provider.login(username, password);
+      await persistPlantUsername(username);
       return token;
     } catch (error) {
       print("Login failed: $error");
@@ -57,6 +58,11 @@ class AuthRepository {
     return csrfToken ?? '';
   }
 
+  Future<String> hasPlantUsername() async {
+    var plantUsername = await storage.read(key: "plant-username");
+    return plantUsername ?? '';
+  }
+
   Future<void> persistToken(String token) async {
     await DioClient().setBasicAuth(token);
     await storage.write(key: "token", value: token);
@@ -64,6 +70,16 @@ class AuthRepository {
 
   Future<void> persistCsrfToken(String csrfToken) async {
     await storage.write(key: 'csrf-token', value: csrfToken);
+  }
+
+  Future<void> persistPlantUsername(String username) async {
+    await storage.write(
+        key: 'plant-username',
+        value: username.contains('IFA')
+            ? '0101'
+            : username.contains('CKR')
+                ? '0102'
+                : '0101');
   }
 
   Future<void> persistUser(

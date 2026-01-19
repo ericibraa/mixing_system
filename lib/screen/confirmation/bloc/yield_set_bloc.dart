@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/yield_set.dart';
 import 'package:dumping_system/repository/yield_set_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -17,8 +18,12 @@ class YieldSetBloc extends Bloc<YieldSetEvent, YieldSetState> {
         final yieldSet = await _yieldSetRepository.fetchYieldSet(
             event.routingNo, event.internalCntr, event.activityNo);
         emit(YieldSetSuccess(yieldSet));
-      } catch (e) {
-        emit(YieldSetError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(YieldSetError(e.error!.message!.value!));
+        } else {
+          emit(const YieldSetError('Server Error'));
+        }
       }
     });
   }

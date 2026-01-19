@@ -20,4 +20,11 @@ final class OperationConfirmationSuccess extends OperationConfirmationState {
   List<Object> get props => [operationConfirmation];
 }
 
-final class OperationConfirmationError extends OperationConfirmationState {}
+final class OperationConfirmationError extends OperationConfirmationState {
+  final String error;
+
+  const OperationConfirmationError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

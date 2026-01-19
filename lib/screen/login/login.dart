@@ -51,8 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
           if (state is LoginSuccess) {
             print("Login success");
             BlocProvider.of<AuthBloc>(context).add(ChangeAuthStatus(
-                token: state.token, csrfToken: state.csrfToken));
-            context.push("/validation");
+                token: state.token, csrfToken: state.csrfToken, username: state.username));
+            context.push("/home");
           } else if (state is LoginError) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: const Text("Invalid username or password"),
