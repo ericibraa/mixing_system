@@ -30,7 +30,6 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
   String scannedBarcode = "";
   List<dynamic> hasScanned = [];
   bool isLoading = false;
-  bool disabled = false;
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -227,6 +226,19 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
                 }
               }
               _handoverCubit.setMaterialSet(materialSets);
+              if (state.materialset.message != null) {
+                _handoverCubit.setDisabled(true);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.materialset.message!),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              } else {
+                _handoverCubit.setDisabled(false);
+              }
             } else if (state is MaterialSetError) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text(state.error),
@@ -416,17 +428,20 @@ class _ScanMaterialMixingState extends State<ScanMaterialMixing> {
                                 .length ==
                             handoverState.materialSet.length
                         ? TextButton(
-                            onPressed: handoverState.disabled
-                                ? null
-                                : () {
-                                    submitHandoverMixingBloc.add(
-                                        SubmitHandoverMixing(
-                                            handoverMixingData: handoverState));
-                                  },
+                            onPressed:
+                                // handoverState.disabled
+                                //     ? null
+                                //     :
+                                () {
+                              submitHandoverMixingBloc.add(SubmitHandoverMixing(
+                                  handoverMixingData: handoverState));
+                            },
                             style: TextButton.styleFrom(
-                              backgroundColor: handoverState.disabled
-                                  ? Colors.grey
-                                  : Colors.green,
+                              backgroundColor:
+                                  //  handoverState.disabled
+                                  //     ? Colors.grey
+                                  //     :
+                                  Colors.green,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
