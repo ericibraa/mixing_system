@@ -105,6 +105,7 @@ class ResultScale extends Equatable {
   final String urlAddress;
   final String regex;
   final String ipPrinter;
+  final String printerType;
 
   const ResultScale(
       {this.equipmentNo = '',
@@ -112,7 +113,8 @@ class ResultScale extends Equatable {
       this.plant = '',
       this.urlAddress = '',
       this.regex = '',
-      this.ipPrinter = ''});
+      this.ipPrinter = '',
+      this.printerType = ''});
 
   factory ResultScale.fromJson(Map<String, dynamic> json) => ResultScale(
       equipmentNo: json['EquipmentNo'],
@@ -120,9 +122,20 @@ class ResultScale extends Equatable {
       plant: json['Plant'],
       urlAddress: json['UrlAddress'],
       regex: json['Regex'],
-      ipPrinter: json['IpPrinter']);
+      ipPrinter: json['IpPrinter'],
+      printerType: json['PrinterType'] ??
+          json['PrinterModel'] ??
+          json['PrinterBrand'] ??
+          '');
 
   @override
-  List<Object> get props =>
-      [equipmentNo, equipmentDesc, plant, urlAddress, regex, ipPrinter];
+  List<Object> get props => [
+        equipmentNo,
+        equipmentDesc,
+        plant,
+        urlAddress,
+        regex,
+        ipPrinter,
+        printerType
+      ];
 }

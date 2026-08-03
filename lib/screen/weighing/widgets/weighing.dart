@@ -14,7 +14,6 @@ import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zsdk/zsdk.dart';
 
 class WeighingScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -44,7 +43,6 @@ class _WeighingScreenState extends State<WeighingScreen> {
   String selectedOperation = '';
   WeighingCubit _weighingCubit = WeighingCubit();
   String title = '';
-  final zsdk = ZSDK();
   ResultScaleBloc resultScaleBloc = ResultScaleBloc();
 
   void showSapNotification(

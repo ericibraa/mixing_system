@@ -4,11 +4,11 @@ import 'package:dumping_system/bloc/auth_bloc.dart';
 import 'package:dumping_system/screen/scanner%20barcode/scanner.dart';
 import 'package:dumping_system/screen/weighing/bloc/scale_bloc.dart';
 import 'package:dumping_system/screen/weighing/cubit/weighing_cubit.dart';
+import 'package:dumping_system/screen/weighing/helpers/network_label_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:zsdk/zsdk.dart';
 
 class PrintTara extends StatefulWidget {
   const PrintTara({super.key});
@@ -28,7 +28,7 @@ class _PrintTaraState extends State<PrintTara> {
   final tara = TextEditingController();
   String unit = "";
   final dateTime = TextEditingController();
-  final zsdk = ZSDK();
+  final labelPrinter = NetworkLabelPrinter();
 
   @override
   void initState() {
@@ -304,65 +304,35 @@ class _PrintTaraState extends State<PrintTara> {
                       child: TextButton(
                         onPressed: tara.text.isNotEmpty
                             ? () async {
-                                await zsdk.printZplDataOverTCPIP(
-                                    address: _weighingCubit
-                                        .state.selectedEquipment.ipPrinter,
-                                    port: 9100,
-                                    data: '''
-                              ^XA
-                                ^PW560                           ; Set print width for portrait A7 (560 dots, approximately 74mm)
-                                ^LL800 
-                                ^CFQ
-                                ^FO5,220^GB550,400,2^FS      ; Full border around the label
-                                ^FO30,240^GFA,357,357,7,,::00JF3IFC,007IF3IF8,003IF3IF,001IF3FFE,K033,::0JFI3IFC,07IFI3IFC,07IFI3IF8,03IFI3IF,01IFI3FFE,J0J3,::7IFJ31IFC,7IFK3IFC,7IFK3IF8,3IFK3IF,1IFK3IF,1IFK3FFE,I0L3,::::::::::::::::::::::,:::^FS      ; Logo
-                                ^FO0,255^A0N,30^FB570,,,C^FDPENIMBANGAN^FS     ; Title 
-                                ^FO30,320^FDPlant^FS       : Plant
-                                ^FO200,320^FD${plant.text}^FS       ; Plant Code
-                                ^FO30,355^FDDatetime^FS     ; Datetime
-                                ^FO200,355^FD${dateTime.text}^FS     ; Date time
-                                ^FO30,390^FDScale^FS     ; Scale
-                                ^FO200,390^FD${weighingState.selectedEquipment.equipmentDesc}^FS     ; Scale
-                                ^FO30,425^FDOperator^FS     ; Operator
-                                ^FO200,425^FD${weighingState.operator}^FS     ; Operator
-                                ^CF0,30 
-                                ^FO30,550^FDTotal Weight^FS     ; Total Weight
-                                ^FO290,550^FB180,,,R^FD${tara.text}^FS           ; Aligned value
-                                ^FO330,550^FB200,,,R^FD${unit.toUpperCase()}^FS                    ; Aligned unit
-                              ^XZ''').then((value) {
-                                  final printerResponse =
-                                      PrinterResponse.fromMap(value);
-                                  Status status =
-                                      printerResponse.statusInfo.status;
-                                  print(status);
-                                  if (printerResponse.errorCode ==
-                                      ErrorCode.SUCCESS) {
-                                    print("printer connect");
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content: const Text("Label printed"),
-                                      backgroundColor: Colors.black,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                      ),
-                                    ));
-                                  } else {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content: const Text("failed to print"),
-                                      backgroundColor: Colors.red,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                      ),
-                                    ));
-                                    Cause cause =
-                                        printerResponse.statusInfo.cause;
-                                    print(cause);
-                                  }
-                                });
+                                final printed =
+                                    await labelPrinter.printTaraLabel(
+                                  address: _weighingCubit
+                                      .state.selectedEquipment.ipPrinter,
+                                  printerType: _weighingCubit
+                                      .state.selectedEquipment.printerType,
+                                  data: TaraPrintData(
+                                    plant: plant.text,
+                                    dateTime: dateTime.text,
+                                    scale: weighingState
+                                        .selectedEquipment.equipmentDesc,
+                                    operator: weighingState.operator,
+                                    totalWeight: tara.text,
+                                    unit: unit.toUpperCase(),
+                                  ),
+                                );
+                                // ignore: use_build_context_synchronously
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(
+                                  content: Text(printed
+                                      ? "Label printed"
+                                      : "failed to print"),
+                                  backgroundColor:
+                                      printed ? Colors.black : Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                ));
                               }
                             : null,
                         style: TextButton.styleFrom(
