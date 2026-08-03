@@ -100,7 +100,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           await _authRepository.persistUser(hasnrpOperation, hasnrpPengawas,
               hasNameOperator, hasNamePengawas, hasWeerks);
           await _authRepository.persistCsrfToken(hasCsrfToken);
-          await _authRepository.persistPlantUsername(hasPlantUsername);
           emit(Authenticated(
               token: hasCredentials,
               nrpOperator: hasnrpOperation,

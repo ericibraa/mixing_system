@@ -73,11 +73,10 @@ class AuthRepository {
   }
 
   Future<void> persistPlantUsername(String username) async {
-    await storage.write(
-        key: 'plant-username',
-        value: username.toLowerCase().contains('ckr')
-                ? '0102'
-                : '0101');
+    final value = username == '0102' || username.toLowerCase().contains('ckr')
+        ? '0102'
+        : '0101';
+    await storage.write(key: 'plant-username', value: value);
   }
 
   Future<void> persistUser(
