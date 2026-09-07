@@ -226,9 +226,6 @@ class HandoverCubit extends Cubit<HandoverState> {
         }
       }
       if (!isFound) {
-        print("kesono");
-
-        print("===============================");
         print(materialSets.length);
         for (var k = 0; k < materialSets.length; k++) {
           switch (activityNo.length) {
@@ -280,16 +277,7 @@ class HandoverCubit extends Cubit<HandoverState> {
             continue;
           }
           if (materialSets[k].scanFlag == "") {
-            // print(lastPrioEmpty);
-            // print(materialSets[k].priority);
-            // if (lastPrioEmpty != "" &&
-            //     lastPrioEmpty != materialSets[k].priority) {
-            //   errorType = ErrorScanType.incorrectPriority;
-            //   break;
-            // }
-            // lastPrioEmpty = materialSets[k].priority;
             if (isMatch) {
-              print("appppppppppppppppp");
               var materialSet = materialSets[k].copyWith(isScanned: true);
               completedMaterialset++;
               materialSets[k] = materialSet;

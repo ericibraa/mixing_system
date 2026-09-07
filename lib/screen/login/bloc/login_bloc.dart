@@ -16,7 +16,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             await _loginRepository.login(event.username, event.password);
         print(user);
         emit(LoginSuccess(user['token'], user['csrfToken'], user['username']));
-      } catch (e) {
+      } catch (e, stackTrace) {
+        print("Login Error: $e\n$stackTrace");
         emit(LoginError());
       }
     });

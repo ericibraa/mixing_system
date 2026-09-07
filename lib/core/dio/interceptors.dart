@@ -19,11 +19,14 @@ class AppInterceptors extends Interceptor {
   }
 
   @override
-  Future onError(DioError err, ErrorInterceptorHandler handler) async {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     // Log the error details
     print(
         'ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}');
     print('Error Response Data: ${err.response?.data}');
+    print('Error Type: ${err.type}');
+    print('Error Message: ${err.message}');
+    print('Underlying Error: ${err.error}');
 
     if (err.response?.statusCode == 401) {
       print('Unauthorized access - 401');

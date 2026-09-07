@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:awesome_dio_interceptor/awesome_dio_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'interceptors.dart';
 
@@ -13,20 +12,18 @@ class DioClient {
     return _instance;
   }
 
-final BaseOptions options = BaseOptions(
-  receiveTimeout: const Duration(milliseconds: 5000),
-  connectTimeout: const Duration(milliseconds: 5000),
-  sendTimeout: const Duration(milliseconds: 5000),  
-);
-
+  final BaseOptions options = BaseOptions(
+    receiveTimeout: const Duration(seconds: 10),
+    connectTimeout: const Duration(seconds: 10),
+    sendTimeout: const Duration(seconds: 10),
+  );
 
   Future<void> initDio() async {
     dio = Dio(options);
 
-    dio.interceptors.addAll({
+    dio.interceptors.addAll([
       AppInterceptors(),
-      AwesomeDioInterceptor()
-    });
+    ]);
   }
 
   Future<void> setBasicAuth(String token) async {
