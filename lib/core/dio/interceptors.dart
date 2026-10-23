@@ -1,8 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:dumping_system/core/config/environment.dart';
 
 class AppInterceptors extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    final sapClient = Environment().config.sapClient;
+    options.queryParameters['sap-client'] = sapClient;
+    options.headers['sap-client'] = sapClient;
     print('REQUEST[${options.method}] => PATH: ${options.path}');
     print(options.headers);
     print(options.data);
