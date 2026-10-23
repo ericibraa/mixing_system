@@ -14,7 +14,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (event.token != '') {
         await _authRepository.persistToken(event.token);
         await _authRepository.persistCsrfToken(event.csrfToken);
-        emit(Authenticated(token: event.token));
+        await _authRepository.persistPlantUsername(event.username ?? '');
+        final hasPlantUsername = await _authRepository.hasPlantUsername();
+        emit(
+            Authenticated(token: event.token, plantUsername: hasPlantUsername));
       } else {
         emit(Unauthenticated());
       }
@@ -40,9 +43,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
         if (event.nrpPengawas != null) {
           currentState.copyWith(
-              nrpPengawas: event.nrpPengawas, namePengawas: event.namePengawas);
+            nrpPengawas: event.nrpPengawas,
+            namePengawas: event.namePengawas,
+            weerks: event.weerks ?? currentState.weerks,
+          );
           nrpPengawas = event.nrpPengawas!;
           namePengawas = event.namePengawas != null ? event.namePengawas! : '';
+          weerks = event.weerks!;
         }
         await _authRepository.persistUser(
             nrpOperator, nrpPengawas, nameOperator, namePengawas, weerks);
@@ -59,8 +66,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<DeleteUserEvent>((event, emit) async {
       try {
         final hasCredentials = await _authRepository.hasToken();
+        final hasPlantUsername = await _authRepository.hasPlantUsername();
         await _authRepository.deleteUserData();
-        emit(Authenticated(token: hasCredentials));
+        emit(Authenticated(
+            token: hasCredentials, plantUsername: hasPlantUsername));
       } catch (error) {
         print("Error deleting user data: $error");
       }
@@ -75,6 +84,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final hasCsrfToken = await _authRepository.hasCsrfToken();
         final hasNameOperator = await _authRepository.hasNameOperator();
         final hasNamePengawas = await _authRepository.hasNamePengawas();
+        final hasPlantUsername = await _authRepository.hasPlantUsername();
         print("Init has credentials = $hasCredentials");
         print("Init has operator = $hasnrpOperation");
         print("Init has pengawas = $hasnrpPengawas");
@@ -82,6 +92,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         print("Init has csrf token = $hasCsrfToken");
         print("Init has name Operator = $hasNameOperator");
         print("Init has name Pengawas = $hasNamePengawas");
+        print("Init has plant username = $hasPlantUsername");
         if (hasCredentials == "") {
           emit(Unauthenticated());
         } else {
@@ -96,7 +107,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               weerks: hasWeerks,
               csrfToken: hasCsrfToken,
               nameOperator: hasNameOperator,
-              namePengawas: hasNamePengawas));
+              namePengawas: hasNamePengawas,
+              plantUsername: hasPlantUsername));
         }
       } catch (error) {
         print("Error during initialization: $error");

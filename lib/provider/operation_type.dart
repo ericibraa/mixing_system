@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -22,6 +23,8 @@ class OperationTypeProvider extends Provider {
             "\$format": 'json'
           });
       return OperationTypeResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ErrorResponse.fromJson(e.response!.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

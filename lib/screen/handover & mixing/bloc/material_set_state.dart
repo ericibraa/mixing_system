@@ -12,10 +12,17 @@ final class MaterialSetInitial extends MaterialSetState {}
 final class MaterialSetLoading extends MaterialSetState {}
 
 final class MaterialSetLoaded extends MaterialSetState {
-  final ResponseMaterialset materialset;
+  final MaterialSetResult materialset;
   const MaterialSetLoaded(this.materialset);
   @override
   List<Object> get props => [materialset];
 }
 
-final class MaterialSetError extends MaterialSetState {}
+final class MaterialSetError extends MaterialSetState {
+  final String error;
+
+  const MaterialSetError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

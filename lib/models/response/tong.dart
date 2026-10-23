@@ -1,5 +1,15 @@
 import 'package:equatable/equatable.dart';
 
+class WeighingResult {
+  final TongResponse data;
+  final String? message;
+
+  WeighingResult({
+    required this.data,
+    this.message,
+  });
+}
+
 class TongResponse {
   D? d;
 

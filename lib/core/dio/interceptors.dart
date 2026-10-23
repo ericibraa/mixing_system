@@ -1,8 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:dumping_system/core/config/environment.dart';
 
 class AppInterceptors extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    final sapClient = Environment().config.sapClient;
+    options.queryParameters['sap-client'] = sapClient;
+    options.headers['sap-client'] = sapClient;
     print('REQUEST[${options.method}] => PATH: ${options.path}');
     print(options.headers);
     print(options.data);
@@ -19,11 +23,14 @@ class AppInterceptors extends Interceptor {
   }
 
   @override
-  Future onError(DioError err, ErrorInterceptorHandler handler) async {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     // Log the error details
     print(
         'ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}');
     print('Error Response Data: ${err.response?.data}');
+    print('Error Type: ${err.type}');
+    print('Error Message: ${err.message}');
+    print('Underlying Error: ${err.error}');
 
     if (err.response?.statusCode == 401) {
       print('Unauthorized access - 401');

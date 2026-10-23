@@ -3,7 +3,6 @@ import 'package:dumping_system/screen/handover%20&%20mixing/handover_mixing_main
 import 'package:dumping_system/screen/handover/handover_main.dart';
 import 'package:dumping_system/screen/login/login.dart';
 import 'package:dumping_system/screen/main/home.dart';
-import 'package:dumping_system/screen/validation/validation.dart';
 import 'package:dumping_system/screen/weighing/weighing_main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -16,9 +15,6 @@ class AppRouter {
       initialLocation: "/home",
       routes: [
         GoRoute(path: "/home", builder: (context, state) => const HomeScreen()),
-        GoRoute(
-            path: "/validation",
-            builder: (context, state) => const ValidationScreen()),
         GoRoute(
             path: "/login", builder: (context, state) => const LoginScreen()),
         GoRoute(

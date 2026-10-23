@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/operation_type.dart';
 import 'package:dumping_system/repository/operation_type_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -17,8 +18,12 @@ class OperationTypeBloc extends Bloc<OperationTypeEvent, OperationTypeState> {
         final operationType = await _operationTypeRepository.fetchoperationtype(
             event.startDate, event.materialCode, event.plant, event.batchFG);
         emit(OperationTypeLoaded(operationType: operationType));
-      } catch (e) {
-        emit(OperationTypeError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(OperationTypeError(e.error!.message!.value!));
+        } else {
+          emit(const OperationTypeError('Server Error'));
+        }
       }
     });
   }

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/material.dart';
 import 'package:dumping_system/provider/provider.dart';
 
@@ -8,6 +9,8 @@ class MaterialProvider extends Provider {
       Response response = await dio.get(
           "${apiUrl.dumpingApi}/ZDMP_GET_MATERIAL_SRV/FImp_Material?Plant='$plant'&\$format=json");
       return MaterialResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ErrorResponse.fromJson(e.response!.data);
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
       throw Exception("Exception occurred: $error stackTrace: $stacktrace");

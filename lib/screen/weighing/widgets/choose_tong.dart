@@ -31,50 +31,82 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Choose weighing"),
-        leading: IconButton(
-          onPressed: () {
-            _weighingCubit.setTab(WeighingStatus.weighing);
-          },
-          icon: const Icon(Icons.chevron_left_rounded),
-        ),
-      ),
-      body: MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: _weighingCubit),
-          BlocProvider.value(value: expiredSetBloc),
-          BlocProvider.value(value: scaleBloc),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _weighingCubit),
+        BlocProvider.value(value: expiredSetBloc),
+        BlocProvider.value(value: scaleBloc),
+      ],
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<ExpiredSetBloc, ExpiredSetState>(
+            listener: (context, state) {
+              if (state is ExpiredSetLoaded) {
+                for (var data in state.expiredSet.d!.resultsExpiredSet!) {
+                  expiredSet = data;
+                }
+                _weighingCubit.setExpired(expiredSet);
+              } else if (state is ExpiredSetError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              }
+            },
+          ),
+          BlocListener<ResultScaleBloc, ResultScaleState>(
+            listener: (context, state) {
+              if (state is ResultScaleLoaded) {
+                _weighingCubit
+                    .setResultScaleList(state.resultScale.d!.results!);
+                _weighingCubit.setContainerCounter(
+                    state.resultScale.d!.results!.length + 1);
+                _weighingCubit.setTotalContainer(
+                    state.resultScale.d!.results![0].totalWadah!);
+              } else if (state is ResultScaleError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              }
+            },
+          ),
         ],
-        child: MultiBlocListener(
-          listeners: [
-            BlocListener<ExpiredSetBloc, ExpiredSetState>(
-              listener: (context, state) {
-                if (state is ExpiredSetLoaded) {
-                  for (var data in state.expiredSet.d!.resultsExpiredSet!) {
-                    expiredSet = data;
-                  }
-                  _weighingCubit.setExpired(expiredSet);
-                }
-              },
-            ),
-            BlocListener<ResultScaleBloc, ResultScaleState>(
-              listener: (context, state) {
-                if (state is ResultScaleLoaded) {
-                  _weighingCubit
-                      .setResultScaleList(state.resultScale.d!.results!);
-                  _weighingCubit.setContainerCounter(
-                      state.resultScale.d!.results!.length + 1);
-                  _weighingCubit.setTotalContainer(
-                      state.resultScale.d!.results![0].totalWadah!);
-                }
-              },
-            ),
-          ],
-          child: BlocBuilder<WeighingCubit, WeighingState>(
-            builder: (context, weighingState) {
-              return SingleChildScrollView(
+        child: BlocBuilder<WeighingCubit, WeighingState>(
+          builder: (context, weighingState) {
+            return Scaffold(
+              appBar: AppBar(
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Choose Tong"),
+                    Text(
+                      "Operator: ${weighingState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${weighingState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
+                leading: IconButton(
+                  onPressed: () {
+                    _weighingCubit.setTab(WeighingStatus.weighing);
+                  },
+                  icon: const Icon(Icons.chevron_left_rounded),
+                ),
+              ),
+              body: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -188,7 +220,8 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                                             : dataWeighing.activityWh != null
                                                 ? dataWeighing.activityWh!
                                                 : '',
-                                    operationType: _weighingCubit.state.operationType));
+                                    operationType:
+                                        _weighingCubit.state.operationType));
                                 _weighingCubit.setTab(WeighingStatus.scale);
                                 _weighingCubit
                                     .setPrevTab(WeighingStatus.chooseOperation);
@@ -200,9 +233,9 @@ class _ChooseTongScreenState extends State<ChooseTongScreen> {
                     ],
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

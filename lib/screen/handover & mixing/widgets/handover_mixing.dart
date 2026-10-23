@@ -12,7 +12,6 @@ import 'package:dumping_system/screen/handover%20&%20mixing/bloc/wadah_set_bloc.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 class HandoverMixingScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -41,25 +40,6 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
   String selectedOperation = '';
   HandoverCubit _handoverCubit = HandoverCubit();
   String title = '';
-
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        _dateController.text = DateFormat('dd-MM-yyyy').format(picked);
-      });
-      operationTypeBloc.add(SendDataOperationType(
-          startDate: _dateController.text,
-          materialCode: productCode.text,
-          plant: plant.text,
-          batchFG: batch.text));
-    }
-  }
 
   @override
   void initState() {
@@ -102,6 +82,15 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
             listener: (context, state) {
               if (state is MaterialsLoaded) {
                 _handoverCubit.setMaterials(state.material.d!.results!);
+              } else if (state is MaterialsError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
               }
             },
           ),
@@ -109,6 +98,15 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
             listener: (context, state) {
               if (state is OrderLoaded) {
                 _handoverCubit.setOrders(state.order.d!.results!);
+              } else if (state is OrderError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
               }
             },
           ),
@@ -118,6 +116,15 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
               _handoverCubit
                   .setOperations(state.operation.d!.resultsOperationNo!);
               _handoverCubit.setTab(HandoverStatus.chooseOperation);
+            } else if (state is OperationError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
           BlocListener<OperationTypeBloc, OperationTypeState>(
@@ -128,6 +135,15 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                 _handoverCubit
                     .setOperationType(data.oprTypToDescNav!.resultsOprType!);
               }
+            } else if (state is OperationTypeError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
         ],
@@ -135,7 +151,21 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
           builder: (context, handoverState) {
             return Scaffold(
               appBar: AppBar(
-                title: const Text("Handover & Mixing"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Handover & Mixing"),
+                    Text(
+                      "Operator: ${handoverState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${handoverState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                     onPressed: () {
                       context.go("/home");
@@ -290,25 +320,6 @@ class _HandoverMixingScreenState extends State<HandoverMixingScreen> {
                                   filled: true,
                                   fillColor: Colors.grey.shade100,
                                 ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: TextFormField(
-                                controller: _dateController,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  suffixIcon: const Icon(Icons.calendar_today),
-                                  labelText: 'Select Date',
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
-                                ),
-                                readOnly: true,
-                                onTap: () {
-                                  _selectDate(context);
-                                },
                               ),
                             ),
                             if (handoverState.operationTypeList.isNotEmpty) ...[

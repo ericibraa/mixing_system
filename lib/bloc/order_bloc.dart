@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/order.dart';
 import 'package:dumping_system/repository/order_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -20,8 +21,12 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
             event.operationType,
             event.batchFG);
         emit(OrderLoaded(order));
-      } catch (e) {
-        emit(OrderError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(OrderError(e.error!.message!.value!));
+        } else {
+          emit(const OrderError('Server Error'));
+        }
       }
     });
   }

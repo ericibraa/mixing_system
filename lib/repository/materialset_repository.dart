@@ -4,7 +4,7 @@ import 'package:dumping_system/provider/materialset_provider.dart';
 class MaterialsetRepository {
   final _provider = MaterialsetProvider();
 
-  Future<ResponseMaterialset> fetchmaterialset(
+  Future<MaterialSetResult> fetchmaterialset(
       String routingNo, String activityNo, String operationType) {
     return _provider.fetchmaterialset(routingNo, activityNo, operationType);
   }

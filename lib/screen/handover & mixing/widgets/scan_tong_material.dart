@@ -30,6 +30,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
   String scannedBarcode = "";
   List<dynamic> hasScanned = [];
   bool isLoading = false;
+  bool disabled = false;
 
   List<String> parseStringAndWrapInMap(String input) {
     List<String> parts = input.split(';');
@@ -45,7 +46,8 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
         scannedBarcode = barcode.displayValue!;
         hasScanned = parseStringAndWrapInMap(scannedBarcode);
       });
-      _handoverCubit.setScannedTong(parseStringAndWrapInMap(scannedBarcode));
+      _handoverCubit.setScannedTong(
+          parseStringAndWrapInMap(scannedBarcode), scannedBarcode);
       if (mounted) {
         switch (_handoverCubit.state.errorScanType) {
           case ErrorScanType.dataScanned:
@@ -99,8 +101,10 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
               if (_handoverCubit.state.startTime == '') {
                 _handoverCubit.setStartDate();
               }
-              flagMaterialsBloc.add(GetFlagMaterials(hasScanned,
-                  _handoverCubit.state.selectedOrder.orderNo ?? ''));
+              flagMaterialsBloc.add(GetFlagMaterials(
+                  hasScanned,
+                  _handoverCubit.state.selectedOrder.orderNo ?? '',
+                  scannedBarcode));
             }
             break;
           case ErrorScanType.dataNull:
@@ -145,7 +149,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
           BlocListener<MaterialSetBloc, MaterialSetState>(
               listener: (context, state) {
             if (state is MaterialSetLoaded) {
-              var materialSets = state.materialset.d!.results!;
+              var materialSets = state.materialset.data.d!.results!;
               if (materialSets.isNotEmpty) {
                 if (materialSets[0].priority == '') {
                   materialSets.sort((a, b) => '${a.scanDate} ${a.scanTime}'
@@ -160,6 +164,29 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
               }
               _handoverCubit.setMaterialSet(materialSets);
               _handoverCubit.setTab(HandoverStatus.scanMaterialMixing);
+
+              if (state.materialset.message != null) {
+                _handoverCubit.setDisabled(true);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.materialset.message!),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ));
+              } else {
+                _handoverCubit.setDisabled(false);
+              }
+            } else if (state is MaterialSetError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ));
             }
           }),
           BlocListener<SubmitHandoverMixingBloc, SubmitHandoverMixingState>(
@@ -231,8 +258,22 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
             return Scaffold(
               backgroundColor: Colors.grey[100],
               appBar: AppBar(
-                title: Text(
-                    "Handover Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        "Handover Mixing - ${handoverState.selectedOperation.operationDesc} (${handoverState.selectedOperation.activityNo})"),
+                    Text(
+                      "Operator: ${handoverState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${handoverState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                   onPressed: () {
                     _handoverCubit.setTab(handoverState.prevTab);
@@ -506,7 +547,7 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Text(
                               '${tong.operationDesc} ${tong.activityNo}',
                               style: Theme.of(context).textTheme.bodyMedium,
@@ -532,147 +573,6 @@ class _ScanTongMaterialSetScreenState extends State<ScanTongMaterialSetScreen> {
               )),
         );
       }),
-    );
-  }
-
-  Widget _showMaterialSets(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [BlocProvider.value(value: _handoverCubit)],
-      child: BlocBuilder<HandoverCubit, HandoverState>(
-        builder: (context, handoverState) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text("Materials"),
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 10),
-              child: Column(
-                children: [
-                  for (var materialSet in handoverState.materialSet) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10, right: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Text(
-                                '${materialSet.materialNo.isNotEmpty ? "${materialSet.materialNo} -" : ''} ${materialSet.materialDesc} - ${materialSet.bOMItem} - ${materialSet.quantity.replaceAll('.', ',')} ${materialSet.uom} ${materialSet.counter != '' ? '(${materialSet.counter})' : ''}',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ),
-                          ),
-                          if (materialSet.isScanned ||
-                              materialSet.scanFlag == 'X') ...[
-                            const Icon(
-                              Icons.check,
-                              color: Colors.green,
-                            )
-                          ]
-                        ],
-                      ),
-                    ),
-                    const Divider(
-                      endIndent: 10,
-                      indent: 10,
-                    ),
-                  ]
-                ],
-              ),
-            ),
-            bottomNavigationBar: BottomAppBar(
-              elevation: 10,
-              color: Colors.transparent,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: handoverState.materialSet
-                              .where((test) => test.scanFlag == 'X')
-                              .length ==
-                          handoverState.materialSet.length
-                      ? TextButton(
-                          onPressed: () {
-                            submitHandoverMixingBloc.add(SubmitHandoverMixing(
-                                handoverMixingData: handoverState));
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                "Save",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => ScanBarcodeScreen(
-                                  onBarcodeScanned: (barcode) {
-                                    _scanOperator(barcode);
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.qr_code_scanner_rounded,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                "Scan Barcode",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

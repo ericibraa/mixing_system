@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/validation.dart';
 import 'package:dumping_system/repository/validation_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -17,8 +18,12 @@ class ValidationBloc extends Bloc<ValidationEvent, ValidationState> {
         final validation =
             await _validationRepository.validation(event.nrp, event.title);
         emit(ValidationLoaded(validation));
-      } catch (e) {
-        emit(ValidationError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(ValidationError(e.error!.message!.value!));
+        } else {
+          emit(const ValidationError('Server Error'));
+        }
       }
     });
   }

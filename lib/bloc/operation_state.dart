@@ -18,4 +18,11 @@ final class OperationLoaded extends OperationState {
   List<Object> get props => [operation];
 }
 
-final class OperationError extends OperationState {}
+final class OperationError extends OperationState {
+    final String error;
+
+  const OperationError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

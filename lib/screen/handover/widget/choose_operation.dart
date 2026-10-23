@@ -36,7 +36,21 @@ class _ChooseOperationState extends State<ChooseOperation> {
             builder: (context, handoverState) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Choose Operation No'),
+              toolbarHeight: 100,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Choose Operation"),
+                  Text(
+                    "Operator: ${handoverState.operator}",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  Text(
+                    "Pengawas: ${handoverState.pengawas}",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  )
+                ],
+              ),
               leading: IconButton(
                   onPressed: () {
                     isSelected = false;
@@ -62,25 +76,25 @@ class _ChooseOperationState extends State<ChooseOperation> {
                       itemBuilder: (BuildContext context, int index) {
                         final selectedOperation =
                             handoverState.operations[index];
-        
+
                         isSelected =
                             handoverState.selectedOperation.activityNo ==
                                 selectedOperation.activityNo;
                         return Card(
-                          elevation: handoverState
-                                      .operations[index].lastOperation ==
-                                  ''
-                              ? 7
-                              : 0,
+                          elevation:
+                              handoverState.operations[index].lastOperation ==
+                                      ''
+                                  ? 7
+                                  : 0,
                           shadowColor: Colors.blueGrey[100],
                           margin: const EdgeInsets.symmetric(vertical: 8),
-                          color: handoverState
-                                      .operations[index].lastOperation ==
-                                  ''
-                              ? isSelected
-                                  ? Colors.black
-                                  : Colors.grey[100]
-                              : Colors.grey[400],
+                          color:
+                              handoverState.operations[index].lastOperation ==
+                                      ''
+                                  ? isSelected
+                                      ? Colors.black
+                                      : Colors.grey[100]
+                                  : Colors.grey[400],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -88,8 +102,7 @@ class _ChooseOperationState extends State<ChooseOperation> {
                             title: Padding(
                               padding: const EdgeInsets.all(5),
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     selectedOperation.operationDesc,
@@ -99,10 +112,9 @@ class _ChooseOperationState extends State<ChooseOperation> {
                                         ?.copyWith(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
-                                          color: handoverState.operations
-                                                  .any((element) =>
-                                                      element
-                                                          .lastOperation ==
+                                          color: handoverState.operations.any(
+                                                  (element) =>
+                                                      element.lastOperation ==
                                                       '')
                                               ? isSelected
                                                   ? Colors.white
@@ -126,8 +138,7 @@ class _ChooseOperationState extends State<ChooseOperation> {
                                                 .bodySmall
                                                 ?.copyWith(
                                                   color: handoverState
-                                                              .operations[
-                                                                  index]
+                                                              .operations[index]
                                                               .lastOperation ==
                                                           ''
                                                       ? isSelected
@@ -144,16 +155,14 @@ class _ChooseOperationState extends State<ChooseOperation> {
                                                 .bodyLarge
                                                 ?.copyWith(
                                                   color: handoverState
-                                                              .operations[
-                                                                  index]
+                                                              .operations[index]
                                                               .lastOperation ==
                                                           ''
                                                       ? isSelected
                                                           ? Colors.white
                                                           : Colors.black
                                                       : Colors.grey[600],
-                                                  fontWeight:
-                                                      FontWeight.w500,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
                                           ),
                                         ],
@@ -163,17 +172,17 @@ class _ChooseOperationState extends State<ChooseOperation> {
                                 ],
                               ),
                             ),
-                            onTap: handoverState
-                                        .operations[index].lastOperation ==
-                                    ''
-                                ? () {
-                                    _handoverCubit
-                                        .setOperation(selectedOperation);
-                                    _handoverCubit.setOperationApps('20');
-                                    _handoverCubit
-                                        .setTab(HandoverStatus.scantong);
-                                  }
-                                : null,
+                            onTap:
+                                handoverState.operations[index].lastOperation ==
+                                        ''
+                                    ? () {
+                                        _handoverCubit
+                                            .setOperation(selectedOperation);
+                                        _handoverCubit.setOperationApps('20');
+                                        _handoverCubit
+                                            .setTab(HandoverStatus.scantong);
+                                      }
+                                    : null,
                           ),
                         );
                       },

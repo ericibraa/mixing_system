@@ -11,6 +11,7 @@ abstract class FlagMaterialsEvent extends Equatable {
 class GetFlagMaterials extends FlagMaterialsEvent {
   final List<dynamic> flagMaterials;
   final String orderNo;
+  final String qrValue;
 
-  const GetFlagMaterials(this.flagMaterials, this.orderNo);
+  const GetFlagMaterials(this.flagMaterials, this.orderNo, this.qrValue);
 }

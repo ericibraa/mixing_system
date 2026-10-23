@@ -20,7 +20,8 @@ class AuthProvider extends Provider {
 
       return {
         'token': base64Encode(utf8.encode('$username:$password')),
-        'csrfToken': csrfToken ?? 'No CSRF token found'
+        'csrfToken': csrfToken ?? 'No CSRF token found',
+        'username': username
       };
     } catch (error, stacktrace) {
       print("Exception occurred: $error stackTrace: $stacktrace");
@@ -40,9 +41,11 @@ class AuthProvider extends Provider {
               ));
 
       String? csrfToken = response.headers['x-csrf-token']?.first;
-      String? cookie =
-          "${response.headers['set-cookie']![0]} ${response.headers['set-cookie']![2]}"
-              .replaceAll("path=/", "");
+      List<String>? setCookieList = response.headers['set-cookie'];
+      String? cookie = setCookieList != null && setCookieList.isNotEmpty
+          ? setCookieList.join(' ').replaceAll("path=/", "")
+          : null;
+      print('cookie : ${cookie.toString()}');
       return {
         'token': token,
         'csrfToken': csrfToken ?? 'No CSRF token found',

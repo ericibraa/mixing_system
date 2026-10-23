@@ -9,7 +9,6 @@ import 'package:dumping_system/cubit/handover_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 class HandoverScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -35,25 +34,8 @@ class _HandoverScreenState extends State<HandoverScreen> {
   String selectedOperation = '';
   HandoverCubit _handoverCubit = HandoverCubit();
   bool isSelected = false;
-
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        _dateController.text = DateFormat('dd-MM-yyyy').format(picked);
-      });
-      operationTypeBloc.add(SendDataOperationType(
-          startDate: _dateController.text,
-          materialCode: productCode.text,
-          plant: plant.text,
-          batchFG: batch.text));
-    }
-  }
+  String nameOperator = '';
+  String nrpOperator = '';
 
   @override
   void initState() {
@@ -62,6 +44,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
     var data = authBloc.state;
     if (data is Authenticated) {
       plant.text = data.weerks;
+
       _handoverCubit.setOperator(data.nameOperator);
       _handoverCubit.setPengawas(data.namePengawas);
     }
@@ -126,11 +109,25 @@ class _HandoverScreenState extends State<HandoverScreen> {
           builder: (context, handoverState) {
             return Scaffold(
               appBar: AppBar(
-                title: const Text("Handover"),
+                toolbarHeight: 100,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Handover"),
+                    Text(
+                      "Operator: ${handoverState.operator}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      "Pengawas: ${handoverState.pengawas}",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  ],
+                ),
                 leading: IconButton(
                     onPressed: () {
                       isSelected = false;
-                      context.pop();
+                      context.go("/home");
                     },
                     icon: const Icon(Icons.keyboard_arrow_left_sharp)),
               ),
@@ -284,26 +281,6 @@ class _HandoverScreenState extends State<HandoverScreen> {
                                     filled: true,
                                     fillColor: Colors.grey.shade100,
                                   ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
-                                child: TextFormField(
-                                  controller: _dateController,
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    suffixIcon:
-                                        const Icon(Icons.calendar_today),
-                                    labelText: 'Select Date',
-                                    filled: true,
-                                    fillColor: Colors.grey.shade100,
-                                  ),
-                                  readOnly: true,
-                                  onTap: () {
-                                    _selectDate(context);
-                                  },
                                 ),
                               ),
                               if (handoverState

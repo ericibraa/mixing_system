@@ -19,4 +19,11 @@ final class OrderLoaded extends OrderState {
   List<Object> get props => [order];
 }
 
-final class OrderError extends OrderState {}
+final class OrderError extends OrderState {
+  final String error;
+
+  const OrderError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

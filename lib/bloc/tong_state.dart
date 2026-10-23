@@ -19,4 +19,11 @@ final class TongLoaded extends TongState {
   List<Object> get props => [tong];
 }
 
-final class TongError extends TongState {}
+final class TongError extends TongState {
+  final String error;
+
+  const TongError(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

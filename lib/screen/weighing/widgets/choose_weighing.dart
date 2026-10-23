@@ -43,7 +43,6 @@ class _ChooseWeighingState extends State<ChooseWeighing> {
           BlocListener<ScaleBloc, ScaleState>(
             listener: (context, state) {
               if (state is ScaleLoaded) {
-                print("ddfjgdfgfd");
                 _weighingCubit.setEquipments(state.scale.d!.results!);
               }
             },

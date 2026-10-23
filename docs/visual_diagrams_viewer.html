@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Dumping System — Visual Flowcharts & Sequence Diagrams</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #111827;
+      --bg-surface: #1f2937;
+      --bg-hover: #374151;
+      --border-color: #374151;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --accent: #10b981;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 360px;
+      background-color: var(--bg-card);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-header {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-header h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-header h1 span {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .sidebar-header p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-main);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    .nav-item:hover {
+      background: var(--bg-surface);
+      border-color: var(--border-color);
+    }
+    .nav-item.active {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .nav-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .nav-item.active .nav-num {
+      background: var(--primary);
+      color: #fff;
+    }
+    .nav-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .nav-title {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nav-cat {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Main Viewer Area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #0f172a;
+    }
+    .diagram-panel {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+    .diagram-panel.active {
+      display: flex;
+    }
+    .panel-header {
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .panel-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 3px 8px;
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-outline {
+      background: var(--bg-surface);
+      color: #fff;
+      border: 1px solid var(--border-color);
+    }
+    .btn-outline:hover {
+      background: var(--bg-hover);
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: 1px solid var(--primary);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Canvas Viewport */
+    .canvas-viewport {
+      flex: 1;
+      position: relative;
+      overflow: auto;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      cursor: grab;
+      user-select: none;
+    }
+    .canvas-viewport:active {
+      cursor: grabbing;
+    }
+    .canvas-controls {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      z-index: 100;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+    .canvas-controls button {
+      background: transparent;
+      border: none;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .canvas-controls button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .canvas-content {
+      transform-origin: center center;
+      transition: transform 0.15s ease-out;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .diagram-image {
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1><span>Mobile Dumping</span> Diagrams</h1>
+      <p>Koleksi Lengkap Flowchart & Sequence Diagram</p>
+    </div>
+    <div class="nav-list">
+      
+    <button class="nav-item active" onclick="switchDiagram('01_end_to_end_flowchart')">
+      <span class="nav-num">1</span>
+      <div class="nav-info">
+        <span class="nav-title">1. High-Level End-to-End System Flowchart</span>
+        <span class="nav-cat">System Overview</span>
+      </div>
+    </button>
+  
+
+    <button class="nav-item " onclick="switchDiagram('02_user_validation_flowchart')">
+      <span class="nav-num">2</span>
+      <div class="nav-info">
+        <span class="nav-title">2. Flowchart: Validasi Personel (NRP Scan)</span>
+        <span class="nav-cat">User Validation</span>
+      </div>
+    </button>
+  
+
+    <button class="nav-item " onclick="switchDiagram('03_user_validation_sequence')">
+      <span class="nav-num">3</span>
+      <div class="nav-info">
+        <span class="nav-title">3. Sequence Diagram: Validasi Personel (NRP Scan)</span>
+        <span class="nav-cat">User Validation</span>
+      </div>
+    </button>
+  
+
+    <button class="nav-item " onclick="switchDiagram('04_weighing_flowchart')">
+      <span class="nav-num">4</span>
+      <div class="nav-info">
+        <span class="nav-title">4. Flowchart: Modul Weighing (Penimbangan)</span>
+        <span class="nav-cat">Weighing</span>
+      </div>
+    </button>
+  
+
+    <button class="nav-item " onclick="switchDiagram('05_weighing_sequence')">
+      <span class="nav-num">5</span>
+      <div class="nav-info">
+        <span class="nav-title">5. Sequence Diagram: Weighing &amp; Cetak Label</span>
+        <span class="nav-cat">Weighing</span>
+      </div>
+    </button>
+  
+
+    <button class="nav-item " onclick="switchDiagram('06_handover_mixing_flowchart')">
+      <span class="nav-num">6</span>
+      <div class="nav-info">
+        <span class="nav-title">6. Flowchart: Modul Handover &amp; Mixing</span>
+        <span class="nav-cat">Handover & Mixing</span>
+      </div>
+    </button>
+  
+
+    <button class="nav-item " onclick="switchDiagram('07_handover_mixing_sequence')">
+      <span class="nav-num">7</span>
+      <div class="nav-info">
+        <span class="nav-title">7. Sequence Diagram: Handover &amp; Mixing</span>
+        <span class="nav-cat">Handover & Mixing</span>
+      </div>
+    </button>
+  
+
+    <button class="nav-item " onclick="switchDiagram('08_confirmation_flowchart')">
+      <span class="nav-num">8</span>
+      <div class="nav-info">
+        <span class="nav-title">8. Flowchart: Modul Confirmation</span>
+        <span class="nav-cat">Confirmation</span>
+      </div>
+    </button>
+  
+
+    <button class="nav-item " onclick="switchDiagram('09_confirmation_sequence')">
+      <span class="nav-num">9</span>
+      <div class="nav-info">
+        <span class="nav-title">9. Sequence Diagram: Modul Confirmation</span>
+        <span class="nav-cat">Confirmation</span>
+      </div>
+    </button>
+  
+    </div>
+  </aside>
+
+  <!-- Right Viewer -->
+  <main class="main-content">
+    
+    <div id="panel-01_end_to_end_flowchart" class="diagram-panel active">
+      <div class="panel-header">
+        <div>
+          <h2>1. High-Level End-to-End System Flowchart</h2>
+          <span class="badge">System Overview</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/01_end_to_end_flowchart.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/01_end_to_end_flowchart.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-01_end_to_end_flowchart">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('01_end_to_end_flowchart')" title="Zoom In">+</button>
+          <button onclick="zoomOut('01_end_to_end_flowchart')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('01_end_to_end_flowchart')" title="Reset">100%</button>
+          <button onclick="toggleFit('01_end_to_end_flowchart')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-01_end_to_end_flowchart">
+          <img src="images/01_end_to_end_flowchart.svg" alt="1. High-Level End-to-End System Flowchart" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+
+    <div id="panel-02_user_validation_flowchart" class="diagram-panel ">
+      <div class="panel-header">
+        <div>
+          <h2>2. Flowchart: Validasi Personel (NRP Scan)</h2>
+          <span class="badge">User Validation</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/02_user_validation_flowchart.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/02_user_validation_flowchart.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-02_user_validation_flowchart">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('02_user_validation_flowchart')" title="Zoom In">+</button>
+          <button onclick="zoomOut('02_user_validation_flowchart')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('02_user_validation_flowchart')" title="Reset">100%</button>
+          <button onclick="toggleFit('02_user_validation_flowchart')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-02_user_validation_flowchart">
+          <img src="images/02_user_validation_flowchart.svg" alt="2. Flowchart: Validasi Personel (NRP Scan)" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+
+    <div id="panel-03_user_validation_sequence" class="diagram-panel ">
+      <div class="panel-header">
+        <div>
+          <h2>3. Sequence Diagram: Validasi Personel (NRP Scan)</h2>
+          <span class="badge">User Validation</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/03_user_validation_sequence.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/03_user_validation_sequence.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-03_user_validation_sequence">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('03_user_validation_sequence')" title="Zoom In">+</button>
+          <button onclick="zoomOut('03_user_validation_sequence')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('03_user_validation_sequence')" title="Reset">100%</button>
+          <button onclick="toggleFit('03_user_validation_sequence')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-03_user_validation_sequence">
+          <img src="images/03_user_validation_sequence.svg" alt="3. Sequence Diagram: Validasi Personel (NRP Scan)" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+
+    <div id="panel-04_weighing_flowchart" class="diagram-panel ">
+      <div class="panel-header">
+        <div>
+          <h2>4. Flowchart: Modul Weighing (Penimbangan)</h2>
+          <span class="badge">Weighing</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/04_weighing_flowchart.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/04_weighing_flowchart.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-04_weighing_flowchart">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('04_weighing_flowchart')" title="Zoom In">+</button>
+          <button onclick="zoomOut('04_weighing_flowchart')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('04_weighing_flowchart')" title="Reset">100%</button>
+          <button onclick="toggleFit('04_weighing_flowchart')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-04_weighing_flowchart">
+          <img src="images/04_weighing_flowchart.svg" alt="4. Flowchart: Modul Weighing (Penimbangan)" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+
+    <div id="panel-05_weighing_sequence" class="diagram-panel ">
+      <div class="panel-header">
+        <div>
+          <h2>5. Sequence Diagram: Weighing &amp; Cetak Label</h2>
+          <span class="badge">Weighing</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/05_weighing_sequence.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/05_weighing_sequence.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-05_weighing_sequence">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('05_weighing_sequence')" title="Zoom In">+</button>
+          <button onclick="zoomOut('05_weighing_sequence')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('05_weighing_sequence')" title="Reset">100%</button>
+          <button onclick="toggleFit('05_weighing_sequence')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-05_weighing_sequence">
+          <img src="images/05_weighing_sequence.svg" alt="5. Sequence Diagram: Weighing &amp; Cetak Label" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+
+    <div id="panel-06_handover_mixing_flowchart" class="diagram-panel ">
+      <div class="panel-header">
+        <div>
+          <h2>6. Flowchart: Modul Handover &amp; Mixing</h2>
+          <span class="badge">Handover & Mixing</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/06_handover_mixing_flowchart.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/06_handover_mixing_flowchart.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-06_handover_mixing_flowchart">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('06_handover_mixing_flowchart')" title="Zoom In">+</button>
+          <button onclick="zoomOut('06_handover_mixing_flowchart')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('06_handover_mixing_flowchart')" title="Reset">100%</button>
+          <button onclick="toggleFit('06_handover_mixing_flowchart')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-06_handover_mixing_flowchart">
+          <img src="images/06_handover_mixing_flowchart.svg" alt="6. Flowchart: Modul Handover &amp; Mixing" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+
+    <div id="panel-07_handover_mixing_sequence" class="diagram-panel ">
+      <div class="panel-header">
+        <div>
+          <h2>7. Sequence Diagram: Handover &amp; Mixing</h2>
+          <span class="badge">Handover & Mixing</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/07_handover_mixing_sequence.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/07_handover_mixing_sequence.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-07_handover_mixing_sequence">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('07_handover_mixing_sequence')" title="Zoom In">+</button>
+          <button onclick="zoomOut('07_handover_mixing_sequence')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('07_handover_mixing_sequence')" title="Reset">100%</button>
+          <button onclick="toggleFit('07_handover_mixing_sequence')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-07_handover_mixing_sequence">
+          <img src="images/07_handover_mixing_sequence.svg" alt="7. Sequence Diagram: Handover &amp; Mixing" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+
+    <div id="panel-08_confirmation_flowchart" class="diagram-panel ">
+      <div class="panel-header">
+        <div>
+          <h2>8. Flowchart: Modul Confirmation</h2>
+          <span class="badge">Confirmation</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/08_confirmation_flowchart.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/08_confirmation_flowchart.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-08_confirmation_flowchart">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('08_confirmation_flowchart')" title="Zoom In">+</button>
+          <button onclick="zoomOut('08_confirmation_flowchart')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('08_confirmation_flowchart')" title="Reset">100%</button>
+          <button onclick="toggleFit('08_confirmation_flowchart')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-08_confirmation_flowchart">
+          <img src="images/08_confirmation_flowchart.svg" alt="8. Flowchart: Modul Confirmation" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+
+    <div id="panel-09_confirmation_sequence" class="diagram-panel ">
+      <div class="panel-header">
+        <div>
+          <h2>9. Sequence Diagram: Modul Confirmation</h2>
+          <span class="badge">Confirmation</span>
+        </div>
+        <div class="header-actions">
+          <a href="images/09_confirmation_sequence.svg" target="_blank" class="btn btn-outline" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download SVG
+          </a>
+          <a href="images/09_confirmation_sequence.png" target="_blank" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PNG
+          </a>
+        </div>
+      </div>
+      <div class="canvas-viewport" id="viewport-09_confirmation_sequence">
+        <div class="canvas-controls">
+          <button onclick="zoomIn('09_confirmation_sequence')" title="Zoom In">+</button>
+          <button onclick="zoomOut('09_confirmation_sequence')" title="Zoom Out">−</button>
+          <button onclick="resetZoom('09_confirmation_sequence')" title="Reset">100%</button>
+          <button onclick="toggleFit('09_confirmation_sequence')" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-content" id="content-09_confirmation_sequence">
+          <img src="images/09_confirmation_sequence.svg" alt="9. Sequence Diagram: Modul Confirmation" class="diagram-image" />
+        </div>
+      </div>
+    </div>
+  
+  </main>
+
+  <script>
+    const zoomStates = {};
+
+    function switchDiagram(id) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.diagram-panel').forEach(el => el.classList.remove('active'));
+
+      const targetBtn = Array.from(document.querySelectorAll('.nav-item')).find(btn => btn.getAttribute('onclick').includes(id));
+      if (targetBtn) targetBtn.classList.add('active');
+
+      const targetPanel = document.getElementById('panel-' + id);
+      if (targetPanel) targetPanel.classList.add('active');
+    }
+
+    function getZoom(id) {
+      if (!zoomStates[id]) zoomStates[id] = 1;
+      return zoomStates[id];
+    }
+
+    function setZoom(id, factor) {
+      zoomStates[id] = Math.max(0.2, Math.min(factor, 3.5));
+      const content = document.getElementById('content-' + id);
+      if (content) {
+        content.style.transform = 'scale(' + zoomStates[id] + ')';
+      }
+    }
+
+    function zoomIn(id) { setZoom(id, getZoom(id) + 0.15); }
+    function zoomOut(id) { setZoom(id, getZoom(id) - 0.15); }
+    function resetZoom(id) { setZoom(id, 1); }
+    function toggleFit(id) { setZoom(id, 0.85); }
+  </script>
+</body>
+</html>

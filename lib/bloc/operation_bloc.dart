@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dumping_system/models/response/error.dart';
 import 'package:dumping_system/models/response/operation.dart';
 import 'package:dumping_system/repository/operation_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -22,8 +23,12 @@ class OperationBloc extends Bloc<OperationEvent, OperationState> {
           return 0;
         });
         emit(OperationLoaded(operation));
-      } catch (e) {
-        emit(OperationError());
+      } on ErrorResponse catch (e) {
+        if (e.error != null && e.error!.message != null) {
+          emit(OperationError(e.error!.message!.value!));
+        } else {
+          emit(const OperationError('Server Error'));
+        }
       }
     });
   }

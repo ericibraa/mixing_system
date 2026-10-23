@@ -1,9 +1,9 @@
 import 'package:dumping_system/bloc/auth_bloc.dart';
+import 'package:dumping_system/repository/auth_repository.dart';
 import 'package:dumping_system/screen/login/login.dart';
 import 'package:dumping_system/screen/validation/validation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   // ignore: use_super_parameters
@@ -15,13 +15,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   AuthBloc authBloc = AuthBloc();
+  AuthRepository authRepository = AuthRepository();
   String plant = '';
   String nameOperator = '';
   String nrpOperator = '';
+  String plantUsername = '';
 
   @override
   void initState() {
     authBloc = BlocProvider.of<AuthBloc>(context);
+    authRepository.hasPlantUsername();
     super.initState();
   }
 
@@ -33,26 +36,11 @@ class _HomeScreenState extends State<HomeScreen> {
           plant = state.weerks;
           nameOperator = state.nameOperator;
           nrpOperator = state.nrpOperator;
-          if (state.token.isNotEmpty &&
-              state.nrpOperator.isNotEmpty &&
-              state.nrpPengawas.isNotEmpty &&
-              state.weerks.isNotEmpty) {
+          plantUsername = state.plantUsername;
+          if (state.token.isNotEmpty) {
             return bodyHome(context);
-          } else if (state.token.isNotEmpty &&
-              state.nrpOperator.isEmpty &&
-              state.nrpPengawas.isEmpty &&
-              state.weerks.isEmpty) {
-            return const ValidationScreen();
-          } else if (state.token.isNotEmpty &&
-              state.nrpOperator.isNotEmpty &&
-              state.nrpPengawas.isEmpty &&
-              state.weerks.isNotEmpty) {
-            return const ValidationScreen();
-          } else if (state.token.isNotEmpty &&
-              state.nrpOperator.isEmpty &&
-              state.nrpPengawas.isNotEmpty &&
-              state.weerks.isEmpty) {
-            return const ValidationScreen();
+          } else {
+            return const LoginScreen();
           }
         }
         return const LoginScreen();
@@ -69,42 +57,32 @@ class _HomeScreenState extends State<HomeScreen> {
           fit: BoxFit.cover,
           width: 100,
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: GestureDetector(
-              onTap: () {
-                context.read<AuthBloc>().add(DeleteUserEvent());
-              },
-              child: const Row(
-                children: [
-                  Text('Log Out'),
-                  SizedBox(width: 10),
-                  Icon(
-                    Icons.logout_outlined,
-                    size: 20,
-                  )
-                ],
-              ),
-            ),
-          )
-        ],
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.only(right: 20),
+        //     child: GestureDetector(
+        //       onTap: () {
+        //         context.read<AuthBloc>().add(DeleteUserEvent());
+        //       },
+        //       child: const Row(
+        //         children: [
+        //           Text('Log Out'),
+        //           SizedBox(width: 10),
+        //           Icon(
+        //             Icons.logout_outlined,
+        //             size: 20,
+        //           )
+        //         ],
+        //       ),
+        //     ),
+        //   )
+        // ],
       ),
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'hi, $nameOperator ($nrpOperator)',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(color: Colors.grey),
-                ),
-              ),
               Container(
                 constraints: const BoxConstraints(maxWidth: 400),
                 padding: const EdgeInsets.only(top: 80, bottom: 100),
@@ -117,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              if (plant == '0101') ...[
+              if (plantUsername == '0101') ...[
                 GestureDetector(
                     child: Container(
                         margin: const EdgeInsets.only(bottom: 20),
@@ -147,7 +125,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         ) // button text
                         ),
                     onTap: () {
-                      context.push("/handover");
+                      context.read<AuthBloc>().add(DeleteUserEvent());
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ValidationScreen(
+                            to: "/handover",
+                          ),
+                        ),
+                      );
                     }),
               ],
               GestureDetector(
@@ -179,7 +165,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ) // button text
                       ),
                   onTap: () {
-                    context.push("/handover-mixing");
+                    context.read<AuthBloc>().add(DeleteUserEvent());
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ValidationScreen(
+                          to: "/handover-mixing",
+                        ),
+                      ),
+                    );
                   }),
               GestureDetector(
                   child: Container(
@@ -203,7 +197,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             .merge(const TextStyle(color: Colors.white)),
                       )),
                   onTap: () {
-                    context.push("/weighing");
+                    context.read<AuthBloc>().add(DeleteUserEvent());
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ValidationScreen(
+                          to: "/weighing",
+                        ),
+                      ),
+                    );
                   }),
               GestureDetector(
                   child: Container(
@@ -227,7 +229,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ) // button text
                       ),
                   onTap: () {
-                    context.push("/confirmation");
+                    context.read<AuthBloc>().add(DeleteUserEvent());
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ValidationScreen(
+                          to: "/confirmation",
+                        ),
+                      ),
+                    );
                   })
             ],
           ),
